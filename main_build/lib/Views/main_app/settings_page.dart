@@ -22,6 +22,7 @@ class _SettingsPageState extends State<SettingsPage> {
           icon: const Icon(Icons.arrow_back, color: Colors.white),
           onPressed: () => Navigator.pop(context),
         ),
+        //settings icon
         title: const Text(
           "Settings",
           style: TextStyle(color: Colors.white, fontSize: 20),
@@ -94,10 +95,9 @@ class _SettingsPageState extends State<SettingsPage> {
             // ------------------------------------------------
             GestureDetector(
               onTap: () {
-                Navigator.of(context).pushNamedAndRemoveUntil(
-                  '/login',
-                  (route) => false,
-                );
+                Navigator.of(
+                  context,
+                ).pushNamedAndRemoveUntil('/login', (route) => false);
               },
               child: Row(
                 children: const [
