@@ -23,7 +23,7 @@ class CorelyApp extends StatelessWidget {
       routes: {
         '/': (context) => const LoadingPage(),
         '/welcome': (context) => const StartPage(),
-        '/login': (context) => const LoginPage(),
+        '/login': (context) => const StartPage(),
       },
     );
   }
