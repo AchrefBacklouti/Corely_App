@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 Widget buildPicker(
   List<String> items,
   String selectedValue,
+  bool isDarkMode,
 
   Function(String) onSelected, {
   required double fontSize,
@@ -32,7 +33,9 @@ Widget buildPicker(
             child: Text(
               items[index],
               style: TextStyle(
-                color: isSelected ? Colors.white : Colors.white70,
+                color: isSelected
+                    ? (isDarkMode ? Colors.white : Colors.black)
+                    : (isDarkMode ? Colors.white70 : Colors.black54),
                 fontSize: isSelected ? fontSize + 4 : fontSize,
                 fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
               ),

@@ -1,26 +1,60 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Theme/theme_provider.dart';
+
 import 'package:main_build/Views/on_boarding/on_boarding.dart';
 
-class StartPage extends StatelessWidget {
-  const StartPage({super.key});
+class StartPage extends StatefulWidget {
+  final ThemeProvider? themeProvider;
+
+  const StartPage({super.key, this.themeProvider});
 
   @override
+  State<StartPage> createState() => _StartPageState();
+}
+
+class _StartPageState extends State<StartPage> {
+  @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: const Color.fromARGB(219, 13, 17, 23),
+      backgroundColor: isDarkMode
+          ? AppTheme.darkBackground
+          : AppTheme.lightBackground,
       body: Stack(
         children: [
           // Background image
           Positioned.fill(
-            child: Image.asset(
-              'assets/wpbg.jpg', // replace with your gym photo path
-              fit: BoxFit.cover,
-            ),
+            child: Image.asset('assets/img/wpbg.jpg', fit: BoxFit.cover),
           ),
 
           // Overlay color
           Container(
-            color: const Color(0xE60D1117), // 0xE6 = 90% opacity
+            color: isDarkMode
+                ? AppTheme.darkBackground.withOpacity(0.85)
+                : Colors.white.withOpacity(0.7),
+          ),
+
+          // Theme toggle button
+          SafeArea(
+            child: Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Align(
+                alignment: Alignment.topRight,
+                child: FloatingActionButton(
+                  mini: true,
+                  backgroundColor: AppTheme.yellow,
+                  onPressed: () {
+                    widget.themeProvider?.toggleTheme();
+                  },
+                  child: Icon(
+                    isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                    color: Colors.black,
+                  ),
+                ),
+              ),
+            ),
           ),
 
           // Content
@@ -32,14 +66,19 @@ class StartPage extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 50),
-                  Image.asset('assets/logo.png', fit: BoxFit.cover),
+                  Image.asset(
+                    isDarkMode
+                        ? 'assets/img/logo_dark.png'
+                        : 'assets/img/logo_light.png',
+                    fit: BoxFit.cover,
+                  ),
 
                   // Subtitle
-                  const Text(
+                  Text(
                     'Your all-in-one fitness journey.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white70,
+                      color: isDarkMode ? Colors.white70 : Colors.black54,
                       fontSize: 27,
                       fontWeight: FontWeight.w400,
                     ),
@@ -95,11 +134,13 @@ class StartPage extends StatelessWidget {
 
                   // Log in button
                   TextButton(
-                    onPressed: () {},
-                    child: const Text(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/login');
+                    },
+                    child: Text(
                       'Log In',
                       style: TextStyle(
-                        color: Colors.white,
+                        color: isDarkMode ? Colors.white : Colors.black,
                         fontSize: 27,
                         fontWeight: FontWeight.w500,
                       ),

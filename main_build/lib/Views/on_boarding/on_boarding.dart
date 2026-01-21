@@ -77,26 +77,40 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
+      backgroundColor: isDarkMode
+          ? AppTheme.darkBackground
+          : AppTheme.lightBackground,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            IconButton(
-              icon: const Icon(Icons.arrow_back, color: Colors.white, size: 28),
-              onPressed: _back,
-            ),
+            // Show back button only after first step
+            if (_currentStep > 0)
+              IconButton(
+                icon: Icon(
+                  Icons.arrow_back,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  size: 28,
+                ),
+                onPressed: _back,
+              )
+            else
+              const SizedBox(
+                width: 56,
+              ), // Same width as IconButton for consistent layout
             const SizedBox(width: 8),
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
                   value: progress,
-                  color: Colors.white,
-                  backgroundColor: Colors.black,
+                  color: isDarkMode ? Colors.white : Colors.black,
+                  backgroundColor: isDarkMode ? Colors.black : Colors.grey[300],
                   minHeight: 20,
                 ),
               ),
@@ -109,14 +123,14 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
         child: Column(
           children: [
             const SizedBox(height: 30),
-            const Center(
+            Center(
               child: Text(
                 'Tell us more about you',
                 style: TextStyle(
                   fontSize: 26,
                   fontWeight: FontWeight.w600,
                   fontFamily: 'Livvic',
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : Colors.black,
                 ),
               ),
             ),
@@ -165,133 +179,156 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   // ======================================================
 
   Widget _genderStep() {
-    return Column(
-      key: const ValueKey('gender'),
-      children: [
-        const SizedBox(height: 10),
-        const Text(
-          "Let's start simple — what's your gender?",
-          style: TextStyle(
-            color: Colors.white70,
-            fontSize: 20,
-            fontFamily: 'LindenHill',
-            fontStyle: FontStyle.normal,
-          ),
-        ),
-        const SizedBox(height: 10),
-        Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          key: const ValueKey('gender'),
           children: [
-            _genderButton('female', Icons.female),
-            const SizedBox(height: 15),
-            _genderButton('male', Icons.male),
+            const SizedBox(height: 10),
+            Text(
+              "Let's start simple — what's your gender?",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 20,
+                fontFamily: 'LindenHill',
+                fontStyle: FontStyle.normal,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                _genderButton('female', Icons.female),
+                const SizedBox(height: 15),
+                _genderButton('male', Icons.male),
+              ],
+            ),
           ],
-        ),
-      ],
+        );
+      },
     );
   }
 
   Widget _genderButton(String label, IconData icon) {
     final isSelected = gender == label;
-    return GestureDetector(
-      onTap: () => setState(() => gender = label),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 250),
-        width: 180,
-        height: 180,
-        decoration: BoxDecoration(
-          color: isSelected ? AppTheme.yellow : AppTheme.darkSurface,
-          shape: BoxShape.circle,
-        ),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.start,
-          children: [
-            Icon(
-              icon,
-              size: 120,
-              color: isSelected ? Colors.black : Colors.white,
-              shadows: const [
-                Shadow(
-                  offset: Offset(2, 2),
-                  blurRadius: 4,
-                  color: Colors.black45,
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return GestureDetector(
+          onTap: () => setState(() => gender = label),
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 250),
+            width: 180,
+            height: 180,
+            decoration: BoxDecoration(
+              color: isSelected ? AppTheme.yellow : AppTheme.darkSurface,
+              shape: BoxShape.circle,
+            ),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: [
+                Icon(
+                  icon,
+                  size: 120,
+                  color: isSelected
+                      ? Colors.black
+                      : (isDarkMode ? Colors.white : Colors.black),
+                  shadows: const [
+                    Shadow(
+                      offset: Offset(2, 2),
+                      blurRadius: 4,
+                      color: Colors.black45,
+                    ),
+                  ],
+                ),
+
+                Text(
+                  label,
+                  style: TextStyle(
+                    color: isSelected
+                        ? Colors.black
+                        : (isDarkMode ? Colors.white70 : Colors.black54),
+                    fontFamily: 'Livvic',
+                    fontSize: 28,
+                    fontWeight: FontWeight.w600,
+                    shadows: [
+                      Shadow(
+                        offset: Offset(2, 2),
+                        blurRadius: 6,
+                        color: Colors.black45,
+                      ),
+                    ],
+                  ),
                 ),
               ],
             ),
+          ),
+        );
+      },
+    );
+  }
 
+  Widget _ageStep() {
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          key: const ValueKey('age'),
+          children: [
             Text(
-              label,
+              "Cool — how old are you?",
               style: TextStyle(
-                color: isSelected ? Colors.black : Colors.white70,
-                fontFamily: 'Livvic',
-                fontSize: 28,
-                fontWeight: FontWeight.w600,
-                shadows: [
-                  Shadow(
-                    offset: Offset(2, 2),
-                    blurRadius: 6,
-                    color: Colors.black45,
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 30),
+            Expanded(
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  Align(
+                    alignment: Alignment(0, -0.15),
+                    child: Container(
+                      height: 9,
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 60),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.yellowAccent,
+                      ),
+                    ),
+                  ),
+                  Align(
+                    alignment: Alignment(0, 0.15),
+                    child: Container(
+                      height: 9,
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 60),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.yellowAccent,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: buildPicker(
+                      ages,
+                      age ?? '21',
+                      isDarkMode,
+                      (val) => setState(() => age = val),
+                      fontSize: 36,
+                      selectedHeight: 260,
+                    ),
                   ),
                 ],
               ),
             ),
           ],
-        ),
-      ),
-    );
-  }
-
-  Widget _ageStep() {
-    return Column(
-      key: const ValueKey('age'),
-      children: [
-        const Text(
-          "Cool — how old are you?",
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 30),
-        Expanded(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Align(
-                alignment: Alignment(0, -0.15),
-                child: Container(
-                  height: 9,
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 60),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.yellowAccent,
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment(0, 0.15),
-                child: Container(
-                  height: 9,
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 60),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.yellowAccent,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: buildPicker(
-                  ages,
-                  age ?? '21',
-                  (val) => setState(() => age = val),
-                  fontSize: 36,
-                  selectedHeight: 260,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
+        );
+      },
     );
   }
 
@@ -299,382 +336,437 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     final List<String> weights = selectedUnitWeight == 'kg'
         ? weightsKg
         : weightsLbs;
-    return Column(
-      key: const ValueKey('weight'),
-      children: [
-        const Text(
-          "Almost done 💪 — what's your current weight?",
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 15),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          key: const ValueKey('weight'),
           children: [
-            UnitToggle(
-              leftLabel: 'lbs',
-              rightLabel: 'kg',
-              onChanged: (val) {
-                setState(() {
-                  // If the unit actually changed
-                  if (selectedUnitWeight != val) {
-                    // Convert the current value before switching
-                    double numericValue = double.tryParse(selectedWeight) ?? 0;
-
-                    if (val == 'kg') {
-                      // Convert from lbs → kg
-                      double converted = numericValue / 2.20462;
-                      selectedWeight = converted.round().toString();
-                    } else {
-                      // Convert from kg → lbs
-                      double converted = numericValue * 2.20462;
-                      selectedWeight = converted.round().toString();
-                    }
-
-                    selectedUnitWeight = val;
-                  }
-                });
-              },
+            Text(
+              "Almost done 💪 — what's your current weight?",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+              ),
             ),
-          ],
-        ),
-        Expanded(
-          child: Stack(
-            alignment: Alignment.center,
-            children: [
-              Align(
-                alignment: Alignment(0, -0.15),
-                child: Container(
-                  height: 9,
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 60),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.yellowAccent,
-                  ),
-                ),
-              ),
-              Align(
-                alignment: Alignment(0, 0.15),
-                child: Container(
-                  height: 9,
-                  width: double.infinity,
-                  margin: const EdgeInsets.symmetric(horizontal: 60),
-                  decoration: BoxDecoration(
-                    borderRadius: BorderRadius.circular(10),
-                    color: Colors.yellowAccent,
-                  ),
-                ),
-              ),
-              Padding(
-                padding: const EdgeInsets.symmetric(horizontal: 40),
-                child: buildPicker(
-                  weights, // List<String> items
-                  selectedWeight, // String selectedValue
-                  (val) => setState(() => selectedWeight = val), // Callback
-                  fontSize: 36,
-                  selectedHeight: 280, // Named parameter
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                UnitToggle(
+                  leftLabel: 'lbs',
+                  rightLabel: 'kg',
+                  onChanged: (val) {
+                    setState(() {
+                      // If the unit actually changed
+                      if (selectedUnitWeight != val) {
+                        // Convert the current value before switching
+                        double numericValue =
+                            double.tryParse(selectedWeight) ?? 0;
 
-  Widget _heightStep() {
-    return Column(
-      key: const ValueKey('height'),
-      children: [
-        const Text(
-          "And how tall are you?",
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 15),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            UnitToggle(
-              leftLabel: 'in',
-              rightLabel: 'cm',
-              onChanged: (val) => setState(() => selectedHeightUnit = val),
+                        if (val == 'kg') {
+                          // Convert from lbs → kg
+                          double converted = numericValue / 2.20462;
+                          selectedWeight = converted.round().toString();
+                        } else {
+                          // Convert from kg → lbs
+                          double converted = numericValue * 2.20462;
+                          selectedWeight = converted.round().toString();
+                        }
+
+                        selectedUnitWeight = val;
+                      }
+                    });
+                  },
+                ),
+              ],
             ),
-          ],
-        ),
-        const SizedBox(height: 10),
-        Expanded(
-          child: selectedHeightUnit == 'cm'
-              ? Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Align(
-                      alignment: Alignment(0, -0.15),
-                      child: Container(
-                        height: 9,
-                        width: double.infinity,
-                        margin: const EdgeInsets.symmetric(horizontal: 60),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.yellowAccent,
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: Alignment(0, 0.15),
-                      child: Container(
-                        height: 9,
-                        width: double.infinity,
-                        margin: const EdgeInsets.symmetric(horizontal: 60),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.yellowAccent,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 40),
-                      child: buildPicker(
-                        cmHeights,
-                        selectedHeightCm,
-                        (val) {
-                          setState(() => selectedHeightCm = val);
-                        },
-                        fontSize: 20.0,
-                        selectedHeight: 280,
-                      ),
-                    ),
-                  ],
-                )
-              : Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    // ============ FEET PICKER ============
-                    Expanded(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Align(
-                            alignment: const Alignment(0, -0.15),
-                            child: Container(
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.yellowAccent,
-                              ),
-                            ),
-                          ),
-                          Align(
-                            alignment: const Alignment(0, 0.15),
-                            child: Container(
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.yellowAccent,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: buildPicker(
-                              ftHeights,
-                              selectedHeightFt,
-                              (val) => setState(() => selectedHeightFt = val),
-                              fontSize: 28.0,
-                              selectedHeight: 240,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-
-                    const SizedBox(width: 12),
-
-                    // ============ INCH PICKER ============
-                    Expanded(
-                      child: Stack(
-                        alignment: Alignment.center,
-                        children: [
-                          Align(
-                            alignment: const Alignment(0, -0.15),
-                            child: Container(
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.yellowAccent,
-                              ),
-                            ),
-                          ),
-                          Align(
-                            alignment: const Alignment(0, 0.15),
-                            child: Container(
-                              height: 4,
-                              margin: const EdgeInsets.symmetric(
-                                horizontal: 20,
-                              ),
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(10),
-                                color: Colors.yellowAccent,
-                              ),
-                            ),
-                          ),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 10),
-                            child: buildPicker(
-                              inHeights,
-                              selectedHeightIn,
-                              (val) => setState(() => selectedHeightIn = val),
-                              fontSize: 28.0,
-                              selectedHeight: 240,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-        ),
-      ],
-    );
-  }
-
-  Widget _goalStep() {
-    return Column(
-      key: const ValueKey('goal'),
-      children: [
-        const Text(
-          "What's your main goal right now?",
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 30),
-        ...goals.map((goal) {
-          final selected = selectedGoal == goal;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 18.0),
-            child: GestureDetector(
-              onTap: () => setState(() => selectedGoal = goal),
-              child: Row(
+            Expanded(
+              child: Stack(
+                alignment: Alignment.center,
                 children: [
-                  Container(
-                    width: 25,
-                    height: 25,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: Colors.white, width: 2),
-                      color: selected ? Colors.white70 : Colors.transparent,
+                  Align(
+                    alignment: Alignment(0, -0.15),
+                    child: Container(
+                      height: 9,
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 60),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.yellowAccent,
+                      ),
                     ),
-                    child: selected
-                        ? const Icon(
-                            Icons.check,
-                            color: AppTheme.darkBackground,
-                            size: 20,
-                          )
-                        : null,
                   ),
-                  const SizedBox(width: 10),
-                  Text(
-                    goal,
-                    style: const TextStyle(color: Colors.white, fontSize: 20),
+                  Align(
+                    alignment: Alignment(0, 0.15),
+                    child: Container(
+                      height: 9,
+                      width: double.infinity,
+                      margin: const EdgeInsets.symmetric(horizontal: 60),
+                      decoration: BoxDecoration(
+                        borderRadius: BorderRadius.circular(10),
+                        color: Colors.yellowAccent,
+                      ),
+                    ),
+                  ),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 40),
+                    child: buildPicker(
+                      weights, // List<String> items
+                      selectedWeight, // String selectedValue
+                      isDarkMode,
+                      (val) => setState(() => selectedWeight = val), // Callback
+                      fontSize: 36,
+                      selectedHeight: 280, // Named parameter
+                    ),
                   ),
                 ],
               ),
             ),
-          );
-        }),
-      ],
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _heightStep() {
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          key: const ValueKey('height'),
+          children: [
+            Text(
+              "And how tall are you?",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 15),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                UnitToggle(
+                  leftLabel: 'in',
+                  rightLabel: 'cm',
+                  onChanged: (val) => setState(() => selectedHeightUnit = val),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: selectedHeightUnit == 'cm'
+                  ? Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: Alignment(0, -0.15),
+                          child: Container(
+                            height: 9,
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 60),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.yellowAccent,
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: Alignment(0, 0.15),
+                          child: Container(
+                            height: 9,
+                            width: double.infinity,
+                            margin: const EdgeInsets.symmetric(horizontal: 60),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.yellowAccent,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 40),
+                          child: buildPicker(
+                            cmHeights,
+                            selectedHeightCm,
+                            isDarkMode,
+                            (val) {
+                              setState(() => selectedHeightCm = val);
+                            },
+                            fontSize: 20.0,
+                            selectedHeight: 280,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        // ============ FEET PICKER ============
+                        Expanded(
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Align(
+                                alignment: const Alignment(0, -0.15),
+                                child: Container(
+                                  height: 4,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.yellowAccent,
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: const Alignment(0, 0.15),
+                                child: Container(
+                                  height: 4,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.yellowAccent,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: buildPicker(
+                                  ftHeights,
+                                  selectedHeightFt,
+                                  isDarkMode,
+                                  (val) =>
+                                      setState(() => selectedHeightFt = val),
+                                  fontSize: 28.0,
+                                  selectedHeight: 240,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+
+                        const SizedBox(width: 12),
+
+                        // ============ INCH PICKER ============
+                        Expanded(
+                          child: Stack(
+                            alignment: Alignment.center,
+                            children: [
+                              Align(
+                                alignment: const Alignment(0, -0.15),
+                                child: Container(
+                                  height: 4,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.yellowAccent,
+                                  ),
+                                ),
+                              ),
+                              Align(
+                                alignment: const Alignment(0, 0.15),
+                                child: Container(
+                                  height: 4,
+                                  margin: const EdgeInsets.symmetric(
+                                    horizontal: 20,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    borderRadius: BorderRadius.circular(10),
+                                    color: Colors.yellowAccent,
+                                  ),
+                                ),
+                              ),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                ),
+                                child: buildPicker(
+                                  inHeights,
+                                  selectedHeightIn,
+                                  isDarkMode,
+                                  (val) =>
+                                      setState(() => selectedHeightIn = val),
+                                  fontSize: 28.0,
+                                  selectedHeight: 240,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
+  Widget _goalStep() {
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          key: const ValueKey('goal'),
+          children: [
+            Text(
+              "What's your main goal right now?",
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+              ),
+            ),
+            const SizedBox(height: 30),
+            ...goals.map((goal) {
+              final selected = selectedGoal == goal;
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 18.0),
+                child: GestureDetector(
+                  onTap: () => setState(() => selectedGoal = goal),
+                  child: Row(
+                    children: [
+                      Container(
+                        width: 25,
+                        height: 25,
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: isDarkMode ? Colors.white : Colors.black,
+                            width: 2,
+                          ),
+                          color: selected
+                              ? (isDarkMode ? Colors.white70 : Colors.black12)
+                              : Colors.transparent,
+                        ),
+                        child: selected
+                            ? const Icon(
+                                Icons.check,
+                                color: AppTheme.darkBackground,
+                                size: 20,
+                              )
+                            : null,
+                      ),
+                      const SizedBox(width: 10),
+                      Text(
+                        goal,
+                        style: TextStyle(
+                          color: isDarkMode ? Colors.white : Colors.black,
+                          fontSize: 20,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        );
+      },
     );
   }
 
   Widget _trainingStep() {
-    return Column(
-      key: const ValueKey('training'),
-      children: [
-        const Text(
-          "Finally, let's find your perfect rhythm 💪\nHow many days a week do you want to train?",
-          textAlign: TextAlign.center,
-          style: TextStyle(color: Colors.white70, fontSize: 16),
-        ),
-        const SizedBox(height: 30),
-
-        // 🔹 Wrap row in a SizedBox or Expanded to give height
-        SizedBox(
-          height: 350, // ensures enough space for picker + bars
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.start,
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              // 🔹 The picker area
-              Expanded(
-                flex: 1,
-                child: Stack(
-                  alignment: Alignment.center,
-                  children: [
-                    Align(
-                      alignment: const Alignment(0, -0.15),
-                      child: Container(
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 60),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.yellowAccent,
-                        ),
-                      ),
-                    ),
-                    Align(
-                      alignment: const Alignment(0, 0.15),
-                      child: Container(
-                        height: 4,
-                        margin: const EdgeInsets.symmetric(horizontal: 60),
-                        decoration: BoxDecoration(
-                          borderRadius: BorderRadius.circular(10),
-                          color: Colors.yellowAccent,
-                        ),
-                      ),
-                    ),
-                    Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20),
-                      child: buildPicker(
-                        trainingDays,
-                        selectedTrainingDays,
-                        (val) => setState(() => selectedTrainingDays = val),
-                        fontSize: 32.0,
-                        selectedHeight: 240,
-                      ),
-                    ),
-                  ],
-                ),
+    return Builder(
+      builder: (context) {
+        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        return Column(
+          key: const ValueKey('training'),
+          children: [
+            Text(
+              "Finally, let's find your perfect rhythm 💪\nHow many days a week do you want to train?",
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 16,
               ),
+            ),
+            const SizedBox(height: 30),
 
-              const SizedBox(width: 12),
+            // 🔹 Wrap row in a SizedBox or Expanded to give height
+            SizedBox(
+              height: 350, // ensures enough space for picker + bars
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.start,
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  // 🔹 The picker area
+                  Expanded(
+                    flex: 1,
+                    child: Stack(
+                      alignment: Alignment.center,
+                      children: [
+                        Align(
+                          alignment: const Alignment(0, -0.15),
+                          child: Container(
+                            height: 4,
+                            margin: const EdgeInsets.symmetric(horizontal: 60),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.yellowAccent,
+                            ),
+                          ),
+                        ),
+                        Align(
+                          alignment: const Alignment(0, 0.15),
+                          child: Container(
+                            height: 4,
+                            margin: const EdgeInsets.symmetric(horizontal: 60),
+                            decoration: BoxDecoration(
+                              borderRadius: BorderRadius.circular(10),
+                              color: Colors.yellowAccent,
+                            ),
+                          ),
+                        ),
+                        Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20),
+                          child: buildPicker(
+                            trainingDays,
+                            selectedTrainingDays,
+                            isDarkMode,
+                            (val) => setState(() => selectedTrainingDays = val),
+                            fontSize: 32.0,
+                            selectedHeight: 240,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
 
-              // 🔹 Text label next to picker
-              const Text(
-                'Days/week',
-                style: TextStyle(color: Colors.white, fontSize: 18),
+                  const SizedBox(width: 12),
+
+                  // 🔹 Text label next to picker
+                  Text(
+                    'Days/week',
+                    style: TextStyle(
+                      color: isDarkMode ? Colors.white : Colors.black,
+                      fontSize: 18,
+                    ),
+                  ),
+                ],
               ),
-            ],
-          ),
-        ),
+            ),
 
-        const SizedBox(height: 15),
-        Text(
-          _getTrainingMessage(selectedTrainingDays),
-          textAlign: TextAlign.center,
-          style: const TextStyle(
-            color: Colors.white70,
-            fontSize: 16,
-            height: 1.4,
-          ),
-        ),
-      ],
+            const SizedBox(height: 15),
+            Text(
+              _getTrainingMessage(selectedTrainingDays),
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                color: isDarkMode ? Colors.white70 : Colors.black54,
+                fontSize: 16,
+                height: 1.4,
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 

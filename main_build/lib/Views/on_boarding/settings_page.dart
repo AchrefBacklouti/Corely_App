@@ -1,10 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
-import 'settings/notifications_settings.dart';
-import 'settings/account_settings.dart';
-import 'settings/privacy_settings.dart';
-import 'settings/about_settings.dart';
 import 'package:main_build/Theme/theme_scope.dart';
+import 'package:main_build/Views/main_app/settings/about_settings.dart';
+import 'package:main_build/Views/main_app/settings/account_settings.dart';
+import 'package:main_build/Views/main_app/settings/notifications_settings.dart';
+import 'package:main_build/Views/main_app/settings/privacy_settings.dart';
 
 class SettingsPage extends StatefulWidget {
   const SettingsPage({super.key});

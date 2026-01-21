@@ -26,65 +26,70 @@ class UserSummary extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        leading: IconButton(
-          onPressed: () => Navigator.pop(context),
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white),
-        ),
-      ),
+      backgroundColor: isDarkMode
+          ? AppTheme.darkBackground
+          : AppTheme.lightBackground,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.center,
-
             children: [
+              // Back Button
+              Align(
+                alignment: Alignment.topLeft,
+                child: IconButton(
+                  onPressed: () => Navigator.pop(context),
+                  icon: Icon(
+                    Icons.arrow_back_ios,
+                    color: isDarkMode ? Colors.white : Colors.black,
+                  ),
+                ),
+              ),
               // Title
-              const Text(
-                "You’re all set up!!",
+              Text(
+                "You're all set up!!",
                 style: TextStyle(
-                  color: Colors.white,
+                  color: isDarkMode ? Colors.white : Colors.black,
                   fontSize: 28,
                   fontWeight: FontWeight.bold,
                 ),
               ),
               const SizedBox(height: 8),
-
-              const Text(
-                "Everything’s ready for your personalized fitness journey 🤩.\n\nHere’s a quick summary of what you shared 👇",
+              Text(
+                "Everything's ready for your personalized fitness journey 🤩.\n\nHere's a quick summary of what you shared 👇",
                 style: TextStyle(
-                  color: Colors.white70,
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
                   fontSize: 16,
                   height: 1.5,
                 ),
               ),
               const SizedBox(height: 32),
-
               // Summary Cards
               _infoTile(
                 icon: Icons.person_outline,
                 label:
-                    "User: $gender, $age yrs, ${weight.toStringAsFixed(1)} $weightUnit, $height"
-                    "$heightUnit",
+                    "User: $gender, $age yrs, ${weight.toStringAsFixed(1)} $weightUnit, $height$heightUnit",
+                isDarkMode: isDarkMode,
               ),
               const SizedBox(height: 12),
               _infoTile(
                 icon: Icons.fitness_center_outlined,
                 label: "Training: $goal, $trainingDays days/week",
+                isDarkMode: isDarkMode,
               ),
               const SizedBox(height: 32),
-
-              const Center(
-                child: Text(
-                  "Sign up below to start your training",
-                  style: TextStyle(color: Colors.white70, fontSize: 15),
+              Text(
+                "Sign up below to start your training",
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                  fontSize: 15,
                 ),
               ),
               const SizedBox(height: 20),
-
               // Google Button
               _socialButton(
                 label: "Continue with Google",
@@ -96,7 +101,6 @@ class UserSummary extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 12),
-
               // Email Button
               _emailButton(
                 label: "Sign up with Email",
@@ -107,50 +111,59 @@ class UserSummary extends StatelessWidget {
                 },
               ),
               const SizedBox(height: 20),
-
-              // Divider with “or”
+              // Divider with "or"
               Row(
-                children: const [
-                  Expanded(child: Divider(color: Colors.white24)),
-                  Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 12),
-                    child: Text("or", style: TextStyle(color: Colors.white70)),
+                children: [
+                  Expanded(
+                    child: Divider(
+                      color: isDarkMode ? Colors.white24 : Colors.black26,
+                    ),
                   ),
-                  Expanded(child: Divider(color: Colors.white24)),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    child: Text(
+                      "or",
+                      style: TextStyle(
+                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                      ),
+                    ),
+                  ),
+                  Expanded(
+                    child: Divider(
+                      color: isDarkMode ? Colors.white24 : Colors.black26,
+                    ),
+                  ),
                 ],
               ),
               const SizedBox(height: 20),
-
               // Log in button
-              Center(
-                child: TextButton(
-                  onPressed: () {
-                    Navigator.pushReplacement(
-                      context,
-                      MaterialPageRoute(builder: (_) => const MainShellPage()),
-                    );
-                  },
-                  child: const Text(
-                    "Log in with existing account",
-                    style: TextStyle(
-                      color: AppTheme.yellow,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
+              TextButton(
+                onPressed: () {
+                  Navigator.pushReplacement(
+                    context,
+                    MaterialPageRoute(builder: (_) => const MainShellPage()),
+                  );
+                },
+                child: const Text(
+                  "Log in with existing account",
+                  style: TextStyle(
+                    color: AppTheme.yellow,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
               const Spacer(),
-
               // Terms and conditions
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.only(bottom: 16),
-                  child: Text(
-                    "By continuing forward, you agree to Corely’s\nPrivacy Policy and Terms & Conditions",
-                    style: TextStyle(color: Colors.white38, fontSize: 12),
-                    textAlign: TextAlign.center,
+              Padding(
+                padding: const EdgeInsets.only(bottom: 16),
+                child: Text(
+                  "By continuing forward, you agree to Corely's\nPrivacy Policy and Terms & Conditions",
+                  style: TextStyle(
+                    color: isDarkMode ? Colors.white38 : Colors.black38,
+                    fontSize: 12,
                   ),
+                  textAlign: TextAlign.center,
                 ),
               ),
             ],
@@ -161,13 +174,17 @@ class UserSummary extends StatelessWidget {
   }
 
   // Helper Widgets
-  Widget _infoTile({required IconData icon, required String label}) {
+  static Widget _infoTile({
+    required IconData icon,
+    required String label,
+    required bool isDarkMode,
+  }) {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: AppTheme.darkSurface,
+        color: isDarkMode ? AppTheme.darkSurface : Colors.grey[300],
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: isDarkMode ? Colors.white12 : Colors.black12),
       ),
       child: Row(
         children: [
@@ -176,7 +193,10 @@ class UserSummary extends StatelessWidget {
           Expanded(
             child: Text(
               label,
-              style: const TextStyle(color: Colors.white, fontSize: 15),
+              style: TextStyle(
+                color: isDarkMode ? Colors.white : Colors.black,
+                fontSize: 15,
+              ),
             ),
           ),
         ],
@@ -184,7 +204,7 @@ class UserSummary extends StatelessWidget {
     );
   }
 
-  Widget _socialButton({
+  static Widget _socialButton({
     required String label,
     required IconData icon,
     required VoidCallback onPressed,
@@ -202,7 +222,7 @@ class UserSummary extends StatelessWidget {
     );
   }
 
-  Widget _emailButton({
+  static Widget _emailButton({
     required String label,
     required VoidCallback onPressed,
   }) {

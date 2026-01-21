@@ -28,6 +28,7 @@ class _UnitToggleState extends State<UnitToggle> {
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
@@ -39,15 +40,20 @@ class _UnitToggleState extends State<UnitToggle> {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          _unitButton(widget.leftLabel, isLeft: true),
-          _unitButton(widget.rightLabel, isLeft: false),
+          _unitButton(context, widget.leftLabel, isLeft: true),
+          _unitButton(context, widget.rightLabel, isLeft: false),
         ],
       ),
     );
   }
 
-  Widget _unitButton(String label, {required bool isLeft}) {
+  Widget _unitButton(
+    BuildContext context,
+    String label, {
+    required bool isLeft,
+  }) {
     final bool isSelected = selectedUnit == label;
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () {
@@ -70,7 +76,9 @@ class _UnitToggleState extends State<UnitToggle> {
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected ? AppTheme.darkBackground : Colors.white,
+              color: isSelected
+                  ? AppTheme.darkBackground
+                  : (isDarkMode ? Colors.white : Colors.black),
               fontSize: 22,
               fontWeight: FontWeight.w300,
             ),

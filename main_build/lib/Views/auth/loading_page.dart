@@ -42,19 +42,31 @@ class _LoadingPageState extends State<LoadingPage>
 
   @override
   Widget build(BuildContext context) {
+    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
     return Scaffold(
-      backgroundColor: AppTheme.darkBackground,
-      body: FadeTransition(
-        opacity: _fadeAnimation,
-        child: Center(
+      backgroundColor: isDarkMode
+          ? AppTheme.darkBackground
+          : AppTheme.lightBackground,
+      body: Center(
+        child: FadeTransition(
+          opacity: _fadeAnimation,
           child: Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              Image.asset('assets/logo.png', width: 200),
+              Image.asset(
+                isDarkMode
+                    ? 'assets/img/logo_dark.png'
+                    : 'assets/img/logo_light.png',
+                width: 200,
+              ),
               const SizedBox(height: 20),
-              const Text(
+              Text(
                 "Built for progress. Powered by you.",
-                style: TextStyle(color: Colors.white70, fontSize: 22),
+                style: TextStyle(
+                  color: isDarkMode ? Colors.white70 : Colors.black54,
+                  fontSize: 22,
+                ),
               ),
             ],
           ),
