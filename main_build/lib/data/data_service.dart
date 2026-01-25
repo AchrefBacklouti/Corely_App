@@ -1,6 +1,7 @@
 import 'dart:convert';
 import 'package:flutter/services.dart';
 import 'package:main_build/data/workout_plans.dart';
+import 'package:main_build/data/local_plan_service.dart';
 
 class DataService {
   static Map<String, dynamic>? _cachedData;
@@ -16,9 +17,8 @@ class DataService {
   }
 
   static Future<List<WorkoutPlan>> getCustomWorkoutPlans() async {
-    final data = await loadAccountData();
-    final customPlans = data['workouts']['customPlans'] as List;
-    return customPlans.map((plan) => WorkoutPlan.fromJson(plan)).toList();
+    // Load from local storage instead of file
+    return await LocalPlanService.getCustomPlans();
   }
 
   static Future<List<WorkoutPlan>> getSuggestedWorkoutPlans() async {

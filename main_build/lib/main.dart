@@ -6,8 +6,13 @@ import 'package:main_build/Views/auth/loading_page.dart';
 import 'package:main_build/Views/auth/welcome_page.dart';
 import 'package:main_build/Views/auth/login_page.dart';
 import 'package:main_build/Views/main_app/home_page.dart';
+import 'package:main_build/data/local_plan_service.dart';
+import 'package:main_build/data/exercise_cache_service.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await LocalPlanService.init();
+  await ExerciseCacheService.init();
   runApp(CorelyApp());
 }
 

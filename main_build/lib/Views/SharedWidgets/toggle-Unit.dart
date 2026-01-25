@@ -28,7 +28,6 @@ class _UnitToggleState extends State<UnitToggle> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       decoration: BoxDecoration(
         border: Border.all(
