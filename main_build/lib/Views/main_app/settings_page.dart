@@ -169,7 +169,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           Switch(
             value: isDarkMode,
-            activeColor: Colors.black,
+            activeThumbColor: Colors.black,
             activeTrackColor: AppTheme.yellow,
             onChanged: (_) => ThemeScope.of(context).toggleTheme(),
           ),
