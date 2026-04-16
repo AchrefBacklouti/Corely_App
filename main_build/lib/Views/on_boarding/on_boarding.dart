@@ -17,14 +17,23 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   // user data
   String? gender;
   String? age;
-  String selectedWeight = '80';
-  String selectedUnitWeight = 'kg';
+  String selectedWeight = '190';
+  String selectedUnitWeight = 'lbs';
   String selectedHeightUnit = 'cm';
   String selectedHeightFt = '5';
   String selectedHeightIn = '9';
   String selectedHeightCm = '175';
   String selectedGoal = 'Build more muscle';
   String selectedTrainingDays = '5';
+
+  // controllers for pickers
+  late FixedExtentScrollController ageController;
+  late FixedExtentScrollController weightController;
+  late FixedExtentScrollController heightFtController;
+  late FixedExtentScrollController heightInController;
+  late FixedExtentScrollController heightCmController;
+  late FixedExtentScrollController goalController;
+  late FixedExtentScrollController trainingDaysController;
 
   // data
   final List<String> ages = List.generate(68, (i) => (13 + i).toString());
@@ -52,27 +61,68 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   void _next() {
     if (_currentStep < 5) {
       setState(() => _currentStep++);
-    } else {
-      Navigator.push(
-        context,
-        MaterialPageRoute(
-          builder: (_) => UserSummary(
-            gender: gender ?? 'male',
-            age: int.parse(age ?? '21'),
-            weight: double.parse(selectedWeight),
-            height: int.parse(selectedHeightCm),
-            goal: selectedGoal,
-            trainingDays: int.parse(selectedTrainingDays),
-            weightUnit: selectedUnitWeight,
-            heightUnit: selectedHeightUnit,
-          ),
-        ),
-      );
+      return;
     }
+
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserSummary(
+          gender: gender ?? 'male',
+          age: int.parse(age ?? '21'),
+          weight: double.parse(selectedWeight),
+          height: int.parse(selectedHeightCm),
+          goal: selectedGoal,
+          trainingDays: int.parse(selectedTrainingDays),
+          weightUnit: selectedUnitWeight,
+          heightUnit: selectedHeightUnit,
+        ),
+      ),
+    );
   }
 
   void _back() {
-    if (_currentStep > 0) setState(() => _currentStep--);
+    if (_currentStep > 0) {
+      setState(() => _currentStep--);
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    ageController = FixedExtentScrollController(
+      initialItem: ages.indexOf(age ?? '21'),
+    );
+    weightController = FixedExtentScrollController(
+      initialItem: weightsKg.indexOf(selectedWeight),
+    );
+    heightFtController = FixedExtentScrollController(
+      initialItem: ftHeights.indexOf(selectedHeightFt),
+    );
+    heightInController = FixedExtentScrollController(
+      initialItem: inHeights.indexOf(selectedHeightIn),
+    );
+    heightCmController = FixedExtentScrollController(
+      initialItem: cmHeights.indexOf(selectedHeightCm),
+    );
+    goalController = FixedExtentScrollController(
+      initialItem: goals.indexOf(selectedGoal),
+    );
+    trainingDaysController = FixedExtentScrollController(
+      initialItem: trainingDays.indexOf(selectedTrainingDays),
+    );
+  }
+
+  @override
+  void dispose() {
+    ageController.dispose();
+    weightController.dispose();
+    heightFtController.dispose();
+    heightInController.dispose();
+    heightCmController.dispose();
+    goalController.dispose();
+    trainingDaysController.dispose();
+    super.dispose();
   }
 
   @override
@@ -273,6 +323,16 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     return Builder(
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final ageValue = age ?? '21';
+        final ageIndex = ages.indexOf(ageValue);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!ageController.hasClients) return;
+          if (ageController.selectedItem != ageIndex) {
+            ageController.jumpToItem(ageIndex);
+          }
+        });
+
         return Column(
           key: const ValueKey('age'),
           children: [
@@ -316,11 +376,12 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                     padding: const EdgeInsets.symmetric(horizontal: 40),
                     child: buildPicker(
                       ages,
-                      age ?? '21',
+                      ageValue,
                       isDarkMode,
                       (val) => setState(() => age = val),
                       fontSize: 36,
                       selectedHeight: 260,
+                      controller: ageController,
                     ),
                   ),
                 ],
@@ -339,6 +400,16 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     return Builder(
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final weightValue = selectedWeight;
+        final weightIndex = weights.indexOf(weightValue);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!weightController.hasClients) return;
+          if (weightController.selectedItem != weightIndex) {
+            weightController.jumpToItem(weightIndex);
+          }
+        });
+
         return Column(
           key: const ValueKey('weight'),
           children: [
@@ -356,27 +427,31 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                 UnitToggle(
                   leftLabel: 'lbs',
                   rightLabel: 'kg',
+                  value: selectedUnitWeight,
                   onChanged: (val) {
-                    setState(() {
-                      // If the unit actually changed
-                      if (selectedUnitWeight != val) {
-                        // Convert the current value before switching
-                        double numericValue =
-                            double.tryParse(selectedWeight) ?? 0;
-
-                        if (val == 'kg') {
-                          // Convert from lbs → kg
-                          double converted = numericValue / 2.20462;
-                          selectedWeight = converted.round().toString();
-                        } else {
-                          // Convert from kg → lbs
-                          double converted = numericValue * 2.20462;
-                          selectedWeight = converted.round().toString();
-                        }
-
-                        selectedUnitWeight = val;
+                    if (selectedUnitWeight != val) {
+                      // Convert the current value before switching
+                      double numericValue =
+                          double.tryParse(selectedWeight) ?? 0;
+                      String newSelectedWeight;
+                      if (val == 'kg') {
+                        // Convert from lbs → kg
+                        double converted = numericValue / 2.20462;
+                        newSelectedWeight = converted.round().toString();
+                      } else {
+                        // Convert from kg → lbs
+                        double converted = numericValue * 2.20462;
+                        newSelectedWeight = converted.round().toString();
                       }
-                    });
+                      final newList = val == 'kg' ? weightsKg : weightsLbs;
+                      weightController.jumpToItem(
+                        newList.indexOf(newSelectedWeight),
+                      );
+                      setState(() {
+                        selectedWeight = newSelectedWeight;
+                        selectedUnitWeight = val;
+                      });
+                    }
                   },
                 ),
               ],
@@ -418,6 +493,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                       (val) => setState(() => selectedWeight = val), // Callback
                       fontSize: 36,
                       selectedHeight: 280, // Named parameter
+                      controller: weightController,
                     ),
                   ),
                 ],
@@ -433,6 +509,28 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     return Builder(
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (selectedHeightUnit == 'cm') {
+            if (!heightCmController.hasClients) return;
+            final cmIndex = cmHeights.indexOf(selectedHeightCm);
+            if (heightCmController.selectedItem != cmIndex) {
+              heightCmController.jumpToItem(cmIndex);
+            }
+          } else {
+            if (!heightFtController.hasClients) return;
+            final ftIndex = ftHeights.indexOf(selectedHeightFt);
+            if (heightFtController.selectedItem != ftIndex) {
+              heightFtController.jumpToItem(ftIndex);
+            }
+            if (!heightInController.hasClients) return;
+            final inIndex = inHeights.indexOf(selectedHeightIn);
+            if (heightInController.selectedItem != inIndex) {
+              heightInController.jumpToItem(inIndex);
+            }
+          }
+        });
+
         return Column(
           key: const ValueKey('height'),
           children: [
@@ -450,7 +548,38 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                 UnitToggle(
                   leftLabel: 'in',
                   rightLabel: 'cm',
-                  onChanged: (val) => setState(() => selectedHeightUnit = val),
+                  value: selectedHeightUnit,
+                  onChanged: (val) {
+                    if (selectedHeightUnit != val) {
+                      if (val == 'cm') {
+                        // Convert from ft/in to cm
+                        int ft = int.parse(selectedHeightFt);
+                        int inch = int.parse(selectedHeightIn);
+                        double cm = ft * 30.48 + inch * 2.54;
+                        String newCm = cm.round().toString();
+                        heightCmController.jumpToItem(cmHeights.indexOf(newCm));
+                        setState(() {
+                          selectedHeightCm = newCm;
+                          selectedHeightUnit = val;
+                        });
+                      } else {
+                        // Convert from cm to ft/in
+                        double cm = double.parse(selectedHeightCm);
+                        int ft = (cm / 30.48).floor();
+                        double remainingCm = cm - ft * 30.48;
+                        int inch = (remainingCm / 2.54).round();
+                        String newFt = ft.toString();
+                        String newIn = inch.toString();
+                        heightFtController.jumpToItem(ftHeights.indexOf(newFt));
+                        heightInController.jumpToItem(inHeights.indexOf(newIn));
+                        setState(() {
+                          selectedHeightFt = newFt;
+                          selectedHeightIn = newIn;
+                          selectedHeightUnit = val;
+                        });
+                      }
+                    }
+                  },
                 ),
               ],
             ),
@@ -495,6 +624,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                             },
                             fontSize: 20.0,
                             selectedHeight: 280,
+                            controller: heightCmController,
                           ),
                         ),
                       ],
@@ -546,6 +676,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                                       setState(() => selectedHeightFt = val),
                                   fontSize: 28.0,
                                   selectedHeight: 240,
+                                  controller: heightFtController,
                                 ),
                               ),
                             ],
@@ -597,6 +728,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                                       setState(() => selectedHeightIn = val),
                                   fontSize: 28.0,
                                   selectedHeight: 240,
+                                  controller: heightInController,
                                 ),
                               ),
                             ],
@@ -677,6 +809,16 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     return Builder(
       builder: (context) {
         final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+        final trainingValue = selectedTrainingDays;
+        final trainingIndex = trainingDays.indexOf(trainingValue);
+
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!trainingDaysController.hasClients) return;
+          if (trainingDaysController.selectedItem != trainingIndex) {
+            trainingDaysController.jumpToItem(trainingIndex);
+          }
+        });
+
         return Column(
           key: const ValueKey('training'),
           children: [
@@ -734,6 +876,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                             (val) => setState(() => selectedTrainingDays = val),
                             fontSize: 32.0,
                             selectedHeight: 240,
+                            controller: trainingDaysController,
                           ),
                         ),
                       ],

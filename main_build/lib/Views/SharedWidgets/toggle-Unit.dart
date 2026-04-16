@@ -4,12 +4,14 @@ import 'package:main_build/Theme/app_theme.dart';
 class UnitToggle extends StatefulWidget {
   final String leftLabel;
   final String rightLabel;
+  final String? value;
   final ValueChanged<String> onChanged;
 
   const UnitToggle({
     super.key,
     required this.leftLabel,
     required this.rightLabel,
+    this.value,
     required this.onChanged,
   });
 
@@ -23,7 +25,7 @@ class _UnitToggleState extends State<UnitToggle> {
   @override
   void initState() {
     super.initState();
-    selectedUnit = widget.leftLabel; // default selection
+    selectedUnit = widget.value ?? widget.leftLabel; // default selection
   }
 
   @override
