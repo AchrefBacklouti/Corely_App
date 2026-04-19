@@ -1,5 +1,19 @@
 import 'package:flutter/material.dart';
 
+// ─── Design Tokens (same as shell) ───────────────────────────────────────────
+class _C {
+  static const bg          = Color(0xFF0A0A0C);
+  static const surface     = Color(0xFF111116);
+  static const border      = Color(0xFF1E1E24);
+  static const accent      = Color(0xFFC8FF00);
+  static const accentDim   = Color(0xFF4A5A00);
+  static const textPrimary = Color(0xFFFFFFFF);
+  static const textSub     = Color(0xFFAAAAAA);
+  static const textMuted   = Color(0xFF555555);
+  static const blue        = Color(0xFF3A8CFF);
+  static const orange      = Color(0xFFFF8C42);
+}
+
 //////////////////////////////////////////////////////
 // PAGE 1 — HOME PAGE CONTENT
 //////////////////////////////////////////////////////
@@ -8,43 +22,28 @@ class HomePageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+      padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 10),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 6),
           const _GreetingText(),
-          const SizedBox(height: 18),
-          const _StatsSection(),
-          const SizedBox(height: 12),
-          const _TodayFocus(),
-          const SizedBox(height: 18),
-          const _StartWorkoutButton(),
-          const SizedBox(height: 24),
-          Divider(
-            color: isDarkMode ? Colors.white : Colors.black,
-            thickness: 2,
-          ),
-          const SizedBox(height: 14),
-          const _StreakCard(),
-          const SizedBox(height: 24),
-          Divider(
-            color: isDarkMode ? Colors.white : Colors.black,
-            thickness: 2,
-          ),
-          const SizedBox(height: 14),
-          const _QuickAccess(),
-          const SizedBox(height: 24),
+          const SizedBox(height: 20),
+          const _StreakAndFocusRow(),
+          const SizedBox(height: 20),
+          const _SectionLabel("Daily Steps"),
+          const SizedBox(height: 10),
           const StepsCard(steps: 5000),
-          const SizedBox(height: 22),
+          const SizedBox(height: 20),
+          const _SectionLabel("Achievements"),
+          const SizedBox(height: 10),
+          const _AchievementsSection(),
+          const SizedBox(height: 20),
           const _TipOfTheDayCard(
             tipText:
-                "Remember to log your calories today for accurate progress tracking!",
+                "Log your calories today for accurate progress tracking. Consistency is the key to results.",
           ),
-          const SizedBox(height: 26),
-          const _AchievementsSection(),
           const SizedBox(height: 80),
         ],
       ),
@@ -52,153 +51,60 @@ class HomePageContent extends StatelessWidget {
   }
 }
 
-//////////////////////////////////////////////////////////
-// COMPONENTS
-//////////////////////////////////////////////////////////
-
-class _GreetingText extends StatelessWidget {
-  const _GreetingText();
+// ─── Section Label ────────────────────────────────────────────────────────────
+class _SectionLabel extends StatelessWidget {
+  const _SectionLabel(this.text);
+  final String text;
 
   @override
   Widget build(BuildContext context) {
-    return const Text(
-      "Welcome back, Achraf💪 Ready\nto crush today’s goals?",
-      style: TextStyle(
-        color: Colors.white,
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-        height: 1.3,
+    return Text(
+      text.toUpperCase(),
+      style: const TextStyle(
+        fontSize: 11,
+        fontWeight: FontWeight.w500,
+        color: _C.textMuted,
+        letterSpacing: 1.8,
       ),
     );
   }
 }
 
-class _StatsSection extends StatelessWidget {
-  const _StatsSection();
+// ─── Greeting ─────────────────────────────────────────────────────────────────
+class _GreetingText extends StatelessWidget {
+  const _GreetingText();
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
+      children: const [
         Text(
-          "Stats:",
+          "Good morning,",
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
+            color: _C.textMuted,
+            fontSize: 14,
+            fontWeight: FontWeight.w300,
+            letterSpacing: 0.4,
           ),
         ),
-        const SizedBox(height: 6),
-        SizedBox(
-          height: 30,
-          child: ListView(
-            scrollDirection: Axis.horizontal,
-            children: [
-              const Text(
-                "🔥 calories: ",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                "1980 kcal   ",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w200,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                "🏋 workouts this week: ",
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                '3/5   ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w200,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                '⏱️Recovery: ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                '82%   ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w200,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                '📈Progress: ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w400,
-                  fontSize: 20,
-                ),
-              ),
-              const Text(
-                '6%   ',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'Livvic',
-                  fontWeight: FontWeight.w200,
-                  fontSize: 20,
-                ),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _TodayFocus extends StatelessWidget {
-  const _TodayFocus();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Row(
-      children: [
+        SizedBox(height: 2),
         Text(
-          "Today’s focus : ",
+          "Achraf 💪",
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontFamily: 'Livvic',
+            color: _C.textPrimary,
+            fontSize: 28,
             fontWeight: FontWeight.w700,
+            letterSpacing: 0.5,
+            height: 1.2,
           ),
         ),
+        SizedBox(height: 4),
         Text(
-          "chest/triceps",
+          "Ready to crush today's goals?",
           style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontFamily: 'Livvic',
+            color: _C.textSub,
+            fontSize: 14,
             fontWeight: FontWeight.w300,
           ),
         ),
@@ -207,79 +113,75 @@ class _TodayFocus extends StatelessWidget {
   }
 }
 
-class _StartWorkoutButton extends StatelessWidget {
-  const _StartWorkoutButton();
+// ─── Streak + Today's Focus (side by side) ────────────────────────────────────
+class _StreakAndFocusRow extends StatelessWidget {
+  const _StreakAndFocusRow();
 
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: ElevatedButton(
-        style: ElevatedButton.styleFrom(
-          backgroundColor: Colors.yellow,
-          foregroundColor: Colors.black,
-          padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 14),
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(14),
-          ),
-        ),
-        onPressed: () {},
-        child: const Text(
-          "start workout",
-          style: TextStyle(
-            fontSize: 20,
-            fontFamily: 'RedRose',
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-      ),
-    );
-  }
-}
-
-class _StreakCard extends StatelessWidget {
-  const _StreakCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
-      decoration: BoxDecoration(
-        color: const Color(0xFF1C2B47),
-        borderRadius: BorderRadius.circular(14),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+    return IntrinsicHeight(
+      child: Row(
         children: [
-          Builder(
-            builder: (context) {
-              final isDarkMode =
-                  Theme.of(context).brightness == Brightness.dark;
-              return Column(
+          // Streak card — accent
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _C.accent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
+                children: const [
+                  Text("⚡", style: TextStyle(fontSize: 22)),
+                  SizedBox(height: 6),
                   Text(
-                    "⚡ 12 Day streak!!!",
+                    "12 Days",
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontFamily: 'Livvic',
-                      fontSize: 18,
+                      color: _C.bg,
+                      fontSize: 20,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
-                  const SizedBox(height: 8),
                   Text(
-                    "you're unstoppable, keep it up !",
+                    "Current streak",
+                    style: TextStyle(color: _C.accentDim, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+          ),
+          const SizedBox(width: 10),
+          // Today's focus card — dark
+          Expanded(
+            child: Container(
+              padding: const EdgeInsets.all(16),
+              decoration: BoxDecoration(
+                color: _C.surface,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: _C.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: const [
+                  Text("🎯", style: TextStyle(fontSize: 22)),
+                  SizedBox(height: 6),
+                  Text(
+                    "Today's Focus",
+                    style: TextStyle(color: _C.textMuted, fontSize: 11),
+                  ),
+                  SizedBox(height: 2),
+                  Text(
+                    "Chest / Triceps",
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white70 : Colors.black54,
-                      fontFamily: 'Livvic',
-                      fontSize: 18,
-                      fontWeight: FontWeight.w400,
+                      color: _C.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
                     ),
                   ),
                 ],
-              );
-            },
+              ),
+            ),
           ),
         ],
       ),
@@ -287,67 +189,7 @@ class _StreakCard extends StatelessWidget {
   }
 }
 
-class _QuickAccess extends StatelessWidget {
-  const _QuickAccess();
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Quick Access:",
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontFamily: 'Livvic',
-            fontWeight: FontWeight.w700,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
-          children: const [
-            _quickAccessItem("🍎", "Log meal"),
-            _quickAccessItem("🧘‍♂️", "Recovery"),
-            _quickAccessItem("📋", "My plan"),
-          ],
-        ),
-      ],
-    );
-  }
-}
-
-class _quickAccessItem extends StatelessWidget {
-  final String emoji;
-  final String label;
-
-  const _quickAccessItem(this.emoji, this.label);
-
-  @override
-  Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: BoxDecoration(
-            color: isDarkMode ? Colors.white12 : Colors.black12,
-            borderRadius: BorderRadius.circular(14),
-          ),
-          child: Text(emoji, style: const TextStyle(fontSize: 24)),
-        ),
-        const SizedBox(height: 6),
-        Text(
-          label,
-          style: TextStyle(color: isDarkMode ? Colors.white70 : Colors.black54),
-        ),
-      ],
-    );
-  }
-}
-
+// ─── Steps Card ───────────────────────────────────────────────────────────────
 class StepsCard extends StatefulWidget {
   final int steps;
   final int goal;
@@ -362,18 +204,15 @@ class _StepsCardState extends State<StepsCard>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _animation;
-
   double _currentProgress = 0.0;
 
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: const Duration(milliseconds: 900),
     );
-
     _setupAnimation();
   }
 
@@ -386,93 +225,12 @@ class _StepsCardState extends State<StepsCard>
   }
 
   void _setupAnimation() {
-    final targetProgress = (widget.steps / widget.goal).clamp(0.0, 1.0);
-
-    _animation = Tween<double>(
-      begin: _currentProgress,
-      end: targetProgress,
-    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
-
-    _currentProgress = targetProgress;
+    final target = (widget.steps / widget.goal).clamp(0.0, 1.0);
+    _animation = Tween<double>(begin: _currentProgress, end: target).animate(
+      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
+    );
+    _currentProgress = target;
     _controller.forward(from: 0);
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 320),
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: const Color(0xFF1C2B47),
-          borderRadius: BorderRadius.circular(20),
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            const Text(
-              "Daily Steps",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 18,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-            const SizedBox(height: 12),
-            AnimatedBuilder(
-              animation: _animation,
-              builder: (context, child) {
-                return _buildProgressRing(context, _animation.value);
-              },
-            ),
-            const SizedBox(height: 12),
-            const Text(
-              "Stay moving to reach your goal!",
-              style: TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProgressRing(BuildContext context, double progress) {
-    final percentage = (progress * 100).toStringAsFixed(0);
-    final stepsCount = (progress * widget.goal).round();
-
-    return Stack(
-      alignment: Alignment.center,
-      children: [
-        SizedBox(
-          height: 140,
-          width: 140,
-          child: CircularProgressIndicator(
-            value: progress,
-            strokeWidth: 12,
-            backgroundColor: Colors.white12,
-            valueColor: const AlwaysStoppedAnimation<Color>(Colors.yellow),
-          ),
-        ),
-        Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Text(
-              "$percentage%",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              "$stepsCount steps",
-              style: const TextStyle(color: Colors.white70, fontSize: 14),
-            ),
-          ],
-        ),
-      ],
-    );
   }
 
   @override
@@ -480,62 +238,104 @@ class _StepsCardState extends State<StepsCard>
     _controller.dispose();
     super.dispose();
   }
-}
-
-class _TipOfTheDayCard extends StatelessWidget {
-  final String tipText;
-
-  const _TipOfTheDayCard({required this.tipText});
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
     return Container(
       width: double.infinity,
-      padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 18),
+      padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: isDarkMode ? Colors.white12 : Colors.black12,
-        borderRadius: BorderRadius.circular(14),
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: _C.border),
       ),
-      child: Text(
-        tipText,
-        style: TextStyle(
-          color: isDarkMode ? Colors.white70 : Colors.black54,
-          fontFamily: 'Livvic',
-          fontSize: 16,
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              const Text(
+                "Daily Steps",
+                style: TextStyle(
+                  color: _C.textPrimary,
+                  fontSize: 16,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+              Text(
+                "${widget.steps.toString()} / ${widget.goal}",
+                style: const TextStyle(color: _C.textMuted, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          AnimatedBuilder(
+            animation: _animation,
+            builder: (context, _) => _buildRing(_animation.value),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            "Stay moving to reach your goal!",
+            style: TextStyle(color: _C.textMuted, fontSize: 13),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildRing(double progress) {
+    final pct = (progress * 100).toStringAsFixed(0);
+    final stepsDone = (progress * widget.goal).round();
+
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        SizedBox(
+          height: 130,
+          width: 130,
+          child: CircularProgressIndicator(
+            value: progress,
+            strokeWidth: 10,
+            backgroundColor: _C.border,
+            valueColor: const AlwaysStoppedAnimation<Color>(_C.accent),
+            strokeCap: StrokeCap.round,
+          ),
         ),
-      ),
+        Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Text(
+              "$pct%",
+              style: const TextStyle(
+                color: _C.textPrimary,
+                fontSize: 26,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            Text(
+              "$stepsDone steps",
+              style: const TextStyle(color: _C.textMuted, fontSize: 13),
+            ),
+          ],
+        ),
+      ],
     );
   }
 }
 
+// ─── Achievements Section ─────────────────────────────────────────────────────
 class _AchievementsSection extends StatelessWidget {
   const _AchievementsSection();
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          "Achievements",
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 18,
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        const SizedBox(height: 16),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-          children: const [
-            _AchievementCard(title: "10K Steps", progress: 0.8),
-            _AchievementCard(title: "Consistency", progress: 0.6),
-            _AchievementCard(title: "Strength", progress: 0.4),
-          ],
-        ),
-        const SizedBox(height: 16),
+    return Row(
+      children: const [
+        Expanded(child: _AchievementCard(title: "10K Steps",    progress: 0.8, color: _C.accent)),
+        SizedBox(width: 10),
+        Expanded(child: _AchievementCard(title: "Consistency",  progress: 0.6, color: _C.blue)),
+        SizedBox(width: 10),
+        Expanded(child: _AchievementCard(title: "Strength",     progress: 0.4, color: _C.orange)),
       ],
     );
   }
@@ -544,46 +344,120 @@ class _AchievementsSection extends StatelessWidget {
 class _AchievementCard extends StatelessWidget {
   final String title;
   final double progress;
+  final Color color;
 
-  const _AchievementCard({required this.title, required this.progress});
+  const _AchievementCard({
+    required this.title,
+    required this.progress,
+    required this.color,
+  });
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-    return Column(
-      children: [
-        Stack(
-          alignment: Alignment.center,
-          children: [
-            SizedBox(
-              height: 70,
-              width: 70,
-              child: CircularProgressIndicator(
-                value: progress,
-                strokeWidth: 8,
-                backgroundColor: Colors.white10,
-                valueColor: const AlwaysStoppedAnimation<Color>(Colors.yellow),
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
+      decoration: BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _C.border),
+      ),
+      child: Column(
+        children: [
+          Stack(
+            alignment: Alignment.center,
+            children: [
+              SizedBox(
+                height: 64,
+                width: 64,
+                child: CircularProgressIndicator(
+                  value: progress,
+                  strokeWidth: 7,
+                  backgroundColor: _C.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(color),
+                  strokeCap: StrokeCap.round,
+                ),
               ),
-            ),
-            Text(
-              "${(progress * 100).toStringAsFixed(0)}%",
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 14,
-                fontWeight: FontWeight.bold,
+              Text(
+                "${(progress * 100).toStringAsFixed(0)}%",
+                style: const TextStyle(
+                  color: _C.textPrimary,
+                  fontSize: 13,
+                  fontWeight: FontWeight.w700,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 8),
-        Text(
-          title,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white70 : Colors.black54,
-            fontSize: 13,
+            ],
           ),
-        ),
-      ],
+          const SizedBox(height: 10),
+          Text(
+            title,
+            textAlign: TextAlign.center,
+            style: const TextStyle(
+              color: _C.textSub,
+              fontSize: 12,
+              fontWeight: FontWeight.w400,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Tip of the Day ───────────────────────────────────────────────────────────
+class _TipOfTheDayCard extends StatelessWidget {
+  final String tipText;
+
+  const _TipOfTheDayCard({required this.tipText});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: _C.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: _C.border),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            padding: const EdgeInsets.all(8),
+            decoration: BoxDecoration(
+              color: _C.accent.withOpacity(0.12),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: const Text("💡", style: TextStyle(fontSize: 18)),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  "TIP OF THE DAY",
+                  style: TextStyle(
+                    color: _C.accent,
+                    fontSize: 10,
+                    fontWeight: FontWeight.w600,
+                    letterSpacing: 1.5,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  tipText,
+                  style: const TextStyle(
+                    color: _C.textSub,
+                    fontSize: 13,
+                    height: 1.5,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
