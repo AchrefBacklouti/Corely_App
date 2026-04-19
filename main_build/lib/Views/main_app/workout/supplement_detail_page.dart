@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Models/supplement.dart';
+import 'package:main_build/Theme/app_theme.dart';
 
 class SupplementDetailPage extends StatelessWidget {
   final Supplement supplement;
@@ -8,14 +9,21 @@ class SupplementDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: palette.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: palette.background,
         elevation: 0,
         title: Text(
           supplement.name,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: palette.textPrimary),
         ),
       ),
       body: SingleChildScrollView(
@@ -28,9 +36,9 @@ class SupplementDetailPage extends StatelessWidget {
               width: double.infinity,
               height: 200,
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1D23),
+                color: palette.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: palette.border),
               ),
               child: Stack(
                 children: [
@@ -62,8 +70,8 @@ class SupplementDetailPage extends StatelessWidget {
                           const SizedBox(width: 4),
                           Text(
                             supplement.rating.toStringAsFixed(1),
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: palette.textPrimary,
                               fontWeight: FontWeight.w700,
                             ),
                           ),
@@ -80,13 +88,13 @@ class SupplementDetailPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
               decoration: BoxDecoration(
-                color: Colors.yellow.withOpacity(0.2),
+                color: palette.accent.withValues(alpha: 0.2),
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 supplement.category,
-                style: const TextStyle(
-                  color: Colors.yellow,
+                style: TextStyle(
+                  color: palette.accent,
                   fontSize: 12,
                   fontWeight: FontWeight.w700,
                 ),
@@ -97,8 +105,8 @@ class SupplementDetailPage extends StatelessWidget {
             // Description
             Text(
               'About',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: palette.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -106,8 +114,8 @@ class SupplementDetailPage extends StatelessWidget {
             const SizedBox(height: 8),
             Text(
               supplement.description,
-              style: const TextStyle(
-                color: Colors.white70,
+              style: TextStyle(
+                color: palette.textSecondary,
                 fontSize: 14,
                 height: 1.6,
               ),
@@ -117,8 +125,8 @@ class SupplementDetailPage extends StatelessWidget {
             // Benefits
             Text(
               'Main Benefits',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: palette.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -127,14 +135,14 @@ class SupplementDetailPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1D23),
+                color: palette.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: palette.border),
               ),
               child: Text(
                 supplement.benefits,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: palette.textPrimary,
                   fontSize: 14,
                   height: 1.6,
                 ),
@@ -145,8 +153,8 @@ class SupplementDetailPage extends StatelessWidget {
             // Dosage
             Text(
               'Recommended Dosage',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: palette.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -155,19 +163,19 @@ class SupplementDetailPage extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF1A1D23),
+                color: palette.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: palette.border),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.info_outline, color: Colors.blue, size: 20),
+                  Icon(Icons.info_outline, color: palette.accent, size: 20),
                   const SizedBox(width: 12),
                   Expanded(
                     child: Text(
                       supplement.dosage,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: palette.textPrimary,
                         fontSize: 14,
                         height: 1.6,
                       ),
@@ -181,8 +189,8 @@ class SupplementDetailPage extends StatelessWidget {
             // Flavor
             Text(
               'Available Flavors',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: palette.textPrimary,
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
               ),
@@ -198,14 +206,14 @@ class SupplementDetailPage extends StatelessWidget {
                     vertical: 6,
                   ),
                   decoration: BoxDecoration(
-                    color: Colors.indigo.withOpacity(0.2),
+                    color: palette.surfaceRaised,
                     borderRadius: BorderRadius.circular(20),
-                    border: Border.all(color: Colors.indigo.withOpacity(0.5)),
+                    border: Border.all(color: palette.border),
                   ),
                   child: Text(
                     flavor,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: palette.textPrimary,
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
                     ),
@@ -234,8 +242,8 @@ class SupplementDetailPage extends StatelessWidget {
                 icon: const Icon(Icons.add),
                 label: const Text('Add to My Supplements'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow,
-                  foregroundColor: const Color(0xFF0F1115),
+                  backgroundColor: palette.accent,
+                  foregroundColor: palette.background,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                 ),
               ),

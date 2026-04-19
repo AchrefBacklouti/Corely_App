@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/Theme/app_theme.dart';
 
 class Filters extends StatefulWidget {
   final ValueChanged<String> onBodyPartChanged;
@@ -21,7 +22,13 @@ class _FiltersState extends State<Filters> {
 
   @override
   Widget build(BuildContext context) {
-    final chipsTextStyle = const TextStyle(color: Colors.white70);
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+    final chipsTextStyle = TextStyle(color: palette.textSecondary);
     return Column(
       children: [
         // Filter toggle button with dropdown arrow
@@ -32,17 +39,17 @@ class _FiltersState extends State<Filters> {
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1D23),
+              color: palette.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: palette.border),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
-                const Text(
+                Text(
                   'Filter Settings',
                   style: TextStyle(
-                    color: Colors.white70,
+                    color: palette.textSecondary,
                     fontSize: 14,
                     fontWeight: FontWeight.w500,
                   ),
@@ -51,9 +58,9 @@ class _FiltersState extends State<Filters> {
                 AnimatedRotation(
                   turns: _showFilters ? 0.5 : 0,
                   duration: const Duration(milliseconds: 300),
-                  child: const Icon(
+                  child: Icon(
                     Icons.expand_more,
-                    color: Colors.yellow,
+                    color: palette.accent,
                     size: 20,
                   ),
                 ),
@@ -67,17 +74,17 @@ class _FiltersState extends State<Filters> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: const Color(0xFF1A1D23).withOpacity(0.6),
+              color: palette.surface.withValues(alpha: 0.6),
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white12),
+              border: Border.all(color: palette.border),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   'Body Part',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: palette.textPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -117,10 +124,10 @@ class _FiltersState extends State<Filters> {
                   ],
                 ),
                 const SizedBox(height: 16),
-                const Text(
+                Text(
                   'Equipment',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: palette.textPrimary,
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
                   ),
@@ -183,21 +190,28 @@ class FilterChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return InkWell(
       onTap: onSelected,
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: selected
-              ? Colors.yellow.withOpacity(0.15)
-              : const Color(0xFF1A1D23),
+              ? palette.accent.withValues(alpha: 0.15)
+              : palette.surface,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: selected ? Colors.yellow : Colors.white24),
+          border: Border.all(color: selected ? palette.accent : palette.border),
         ),
         child: Text(
           label,
           style: textStyle.copyWith(
-            color: selected ? Colors.yellow : Colors.white70,
+            color: selected ? palette.accent : palette.textSecondary,
             fontWeight: selected ? FontWeight.w700 : FontWeight.w500,
           ),
         ),

@@ -1,4 +1,5 @@
 import 'dart:convert';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/local_plan_service.dart';
@@ -22,9 +23,22 @@ class DataService {
   }
 
   static Future<List<WorkoutPlan>> getSuggestedWorkoutPlans() async {
-    final data = await loadAccountData();
-    final suggestedPlans = data['workouts']['suggestedPlans'] as List;
-    return suggestedPlans.map((plan) => WorkoutPlan.fromJson(plan)).toList();
+    try {
+      final data = await loadAccountData();
+      final workouts = data['workouts'];
+      if (workouts is! Map<String, dynamic>) return [];
+
+      final suggestedPlans = workouts['suggestedPlans'];
+      if (suggestedPlans is! List) return [];
+
+      return suggestedPlans
+          .whereType<Map>()
+          .map((plan) => WorkoutPlan.fromJson(Map<String, dynamic>.from(plan)))
+          .toList();
+    } catch (e) {
+      debugPrint('DataService: failed to load suggested workout plans: $e');
+      return [];
+    }
   }
 
   static Future<Map<String, dynamic>> getUserProfile() async {
