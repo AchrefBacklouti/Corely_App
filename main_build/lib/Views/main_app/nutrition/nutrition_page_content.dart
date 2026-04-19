@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/Theme/app_theme.dart';
 
 class NutritionPageContent extends StatelessWidget {
   const NutritionPageContent({super.key});
@@ -7,6 +8,9 @@ class NutritionPageContent extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
@@ -95,7 +99,7 @@ class NutritionPageContent extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 12),
-          _HydrationCard(isDarkMode: isDarkMode),
+          _HydrationCard(),
           const SizedBox(height: 80),
         ],
       ),
@@ -120,25 +124,33 @@ class _MacroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Container(
       width: MediaQuery.of(context).size.width * 0.42,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C2B47),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             label,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(color: palette.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: palette.textPrimary,
               fontSize: 22,
               fontWeight: FontWeight.bold,
             ),
@@ -146,12 +158,12 @@ class _MacroCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: const TextStyle(color: Colors.white54, fontSize: 12),
+            style: TextStyle(color: palette.textMuted, fontSize: 12),
           ),
           const SizedBox(height: 10),
           LinearProgressIndicator(
             value: progress,
-            backgroundColor: Colors.white12,
+            backgroundColor: palette.border,
             color: color,
             minHeight: 6,
           ),
@@ -174,23 +186,31 @@ class _MealRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C2B47),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: Colors.white12,
+              color: palette.surfaceRaised,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
               Icons.restaurant_menu,
-              color: Colors.yellow,
+              color: AppTheme.accent,
               size: 20,
             ),
           ),
@@ -201,8 +221,8 @@ class _MealRow extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: palette.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -210,15 +230,15 @@ class _MealRow extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(color: palette.textSecondary, fontSize: 13),
                 ),
               ],
             ),
           ),
           Text(
             calories,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: palette.textPrimary,
               fontSize: 14,
               fontWeight: FontWeight.w600,
             ),
@@ -230,25 +250,31 @@ class _MealRow extends StatelessWidget {
 }
 
 class _HydrationCard extends StatelessWidget {
-  final bool isDarkMode;
-
-  const _HydrationCard({required this.isDarkMode});
+  const _HydrationCard();
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C2B47),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.white12 : Colors.black12,
+              color: palette.surfaceRaised,
               borderRadius: BorderRadius.circular(12),
             ),
             child: const Icon(
@@ -261,19 +287,19 @@ class _HydrationCard extends StatelessWidget {
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
-              children: const [
+              children: [
                 Text(
                   "Water intake",
                   style: TextStyle(
-                    color: Colors.white,
+                    color: palette.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
                 ),
-                SizedBox(height: 4),
+                const SizedBox(height: 4),
                 Text(
                   "1.6 L of 3.0 L",
-                  style: TextStyle(color: Colors.white70, fontSize: 13),
+                  style: TextStyle(color: palette.textSecondary, fontSize: 13),
                 ),
               ],
             ),

@@ -7,12 +7,13 @@ class LoginPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.all(32.0),
@@ -30,7 +31,7 @@ class LoginPage extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.bold,
-                  color: isDarkMode ? Colors.white : Colors.black,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -38,11 +39,9 @@ class LoginPage extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: "Email Address",
                   filled: true,
-                  fillColor: isDarkMode
-                      ? AppTheme.darkSurface
-                      : Colors.grey[200],
+                  fillColor: palette.inputFill,
                   hintStyle: TextStyle(
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                    color: palette.textSecondary,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -50,7 +49,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 16),
@@ -59,11 +58,9 @@ class LoginPage extends StatelessWidget {
                 decoration: InputDecoration(
                   hintText: "Password",
                   filled: true,
-                  fillColor: isDarkMode
-                      ? AppTheme.darkSurface
-                      : Colors.grey[200],
+                  fillColor: palette.inputFill,
                   hintStyle: TextStyle(
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                    color: palette.textSecondary,
                   ),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
@@ -71,7 +68,7 @@ class LoginPage extends StatelessWidget {
                   ),
                 ),
                 style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
+                  color: palette.textPrimary,
                 ),
               ),
               const SizedBox(height: 24),
@@ -109,7 +106,7 @@ class LoginPage extends StatelessWidget {
                 ),
               ),
               const Spacer(),
-              Divider(color: isDarkMode ? Colors.white24 : Colors.black26),
+              Divider(color: palette.border),
               const SizedBox(height: 16),
               SizedBox(
                 width: double.infinity,
@@ -124,8 +121,8 @@ class LoginPage extends StatelessWidget {
                   icon: const Icon(Icons.g_mobiledata),
                   label: const Text("Log in with Google"),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.white,
-                    foregroundColor: Colors.black,
+                    backgroundColor: palette.surface,
+                    foregroundColor: palette.textPrimary,
                   ),
                 ),
               ),

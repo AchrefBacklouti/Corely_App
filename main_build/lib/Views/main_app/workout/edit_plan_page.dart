@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Models/exercise.dart';
+import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/plan_share_service.dart';
@@ -26,7 +27,13 @@ class _EditPlanPageState extends State<EditPlanPage> {
   late List<TextEditingController> _dayNameControllers;
   String? _imagePath;
   static const List<String> weekdays = [
-    'Monday','Tuesday','Wednesday','Thursday','Friday','Saturday','Sunday',
+    'Monday',
+    'Tuesday',
+    'Wednesday',
+    'Thursday',
+    'Friday',
+    'Saturday',
+    'Sunday',
   ];
 
   @override
@@ -61,9 +68,11 @@ class _EditPlanPageState extends State<EditPlanPage> {
           final dayData = widget.existingPlan!.dayExercises[dayIndex];
           if (dayData is List) {
             return dayData
-                .map((e) => Exercise.fromJson(
-                      Map<String, dynamic>.from(e as Map<dynamic, dynamic>),
-                    ))
+                .map(
+                  (e) => Exercise.fromJson(
+                    Map<String, dynamic>.from(e as Map<dynamic, dynamic>),
+                  ),
+                )
                 .toList();
           }
         }
@@ -107,11 +116,17 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
   void _showImportDialog(BuildContext context) {
     final shareCodeController = TextEditingController();
+    final scaffoldMessenger = ScaffoldMessenger.of(context);
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
 
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF12141A),
+        backgroundColor: palette.surface,
         insetPadding: const EdgeInsets.all(20),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
         child: Padding(
@@ -123,20 +138,26 @@ class _EditPlanPageState extends State<EditPlanPage> {
               Row(
                 children: [
                   Container(
-                    width: 36, height: 36,
+                    width: 36,
+                    height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0x1AFFE600),
+                      color: palette.accent.withValues(alpha: 0.12),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0x4DFFE600)),
+                      border: Border.all(
+                        color: palette.accent.withValues(alpha: 0.45),
+                      ),
                     ),
-                    child: const Icon(Icons.download_rounded,
-                        color: Colors.yellow, size: 18),
+                    child: Icon(
+                      Icons.download_rounded,
+                      color: palette.accent,
+                      size: 18,
+                    ),
                   ),
                   const SizedBox(width: 12),
-                  const Text(
+                  Text(
                     'Import Plan',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: palette.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -144,20 +165,20 @@ class _EditPlanPageState extends State<EditPlanPage> {
                 ],
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Paste the share code you received:',
-                style: TextStyle(color: Color(0xFF7A7F8E), fontSize: 13),
+                style: TextStyle(color: palette.textMuted, fontSize: 13),
               ),
               const SizedBox(height: 10),
               TextField(
                 controller: shareCodeController,
-                style: const TextStyle(color: Colors.white, fontSize: 13),
+                style: TextStyle(color: palette.textPrimary, fontSize: 13),
                 maxLines: 4,
                 decoration: InputDecoration(
                   hintText: 'Paste share code here...',
-                  hintStyle: const TextStyle(color: Color(0xFF7A7F8E)),
+                  hintStyle: TextStyle(color: palette.textMuted),
                   filled: true,
-                  fillColor: const Color(0xFF0A0B0E),
+                  fillColor: palette.inputFill,
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
@@ -172,22 +193,28 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       onPressed: () => Navigator.pop(context),
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: const Color(0xFF1C1F28),
+                        backgroundColor: palette.surfaceRaised,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('Cancel',
-                          style: TextStyle(color: Color(0xFF7A7F8E), fontSize: 14)),
+                      child: Text(
+                        'Cancel',
+                        style: TextStyle(
+                          color: palette.textMuted,
+                          fontSize: 14,
+                        ),
+                      ),
                     ),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextButton(
                       onPressed: () {
+                        final dialogContext = context;
                         final code = shareCodeController.text.trim();
                         if (code.isEmpty) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             const SnackBar(
                               content: Text('Please enter a share code'),
                               backgroundColor: Colors.red,
@@ -196,9 +223,11 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           return;
                         }
                         try {
-                          final importedPlan = PlanShareService.decodeShareCode(code);
+                          final importedPlan = PlanShareService.decodeShareCode(
+                            code,
+                          );
                           if (importedPlan == null) {
-                            ScaffoldMessenger.of(context).showSnackBar(
+                            scaffoldMessenger.showSnackBar(
                               const SnackBar(
                                 content: Text('Failed to decode share code'),
                                 backgroundColor: Colors.red,
@@ -206,7 +235,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                             );
                             return;
                           }
-                          Navigator.pop(context);
+                          Navigator.pop(dialogContext);
                           setState(() {
                             _nameController.text = importedPlan.title;
                             _selectedDays = Set.from(
@@ -220,17 +249,22 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                   ? importedPlan.dayNames[i]
                                   : '';
                               _dayNameControllers.add(
-                                  TextEditingController(text: dayName));
+                                TextEditingController(text: dayName),
+                              );
                             }
                             _dayExercises = [];
-                            for (final dayExerciseList in importedPlan.dayExercises) {
+                            for (final dayExerciseList
+                                in importedPlan.dayExercises) {
                               if (dayExerciseList is List) {
                                 _dayExercises.add(
                                   dayExerciseList
-                                      .map((e) => Exercise.fromJson(
-                                            Map<String, dynamic>.from(
-                                                e as Map<dynamic, dynamic>),
-                                          ))
+                                      .map(
+                                        (e) => Exercise.fromJson(
+                                          Map<String, dynamic>.from(
+                                            e as Map<dynamic, dynamic>,
+                                          ),
+                                        ),
+                                      )
                                       .toList(),
                                 );
                               } else {
@@ -238,17 +272,20 @@ class _EditPlanPageState extends State<EditPlanPage> {
                               }
                             }
                           });
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             SnackBar(
                               content: Text(
-                                  'Plan "${importedPlan.title}" imported successfully!'),
+                                'Plan "${importedPlan.title}" imported successfully!',
+                              ),
                               backgroundColor: Colors.green,
                             ),
                           );
                         } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
+                          scaffoldMessenger.showSnackBar(
                             SnackBar(
-                              content: Text('Invalid share code: ${e.toString()}'),
+                              content: Text(
+                                'Invalid share code: ${e.toString()}',
+                              ),
                               backgroundColor: Colors.red,
                             ),
                           );
@@ -256,16 +293,19 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       },
                       style: TextButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
-                        backgroundColor: Colors.yellow,
+                        backgroundColor: palette.accent,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(10),
                         ),
                       ),
-                      child: const Text('Import',
-                          style: TextStyle(
-                              color: Color(0xFF0A0B0E),
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700)),
+                      child: Text(
+                        'Import',
+                        style: TextStyle(
+                          color: palette.background,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
                     ),
                   ),
                 ],
@@ -279,22 +319,31 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0A0B0E),
+      backgroundColor: palette.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0A0B0E),
+        backgroundColor: palette.background,
         elevation: 0,
         leading: GestureDetector(
           onTap: () => Navigator.pop(context),
           child: Container(
             margin: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: const Color(0xFF1C1F28),
+              color: palette.surface,
               borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: Colors.white10),
+              border: Border.all(color: palette.border),
             ),
-            child: const Icon(Icons.arrow_back_ios_new_rounded,
-                color: Colors.white, size: 14),
+            child: Icon(
+              Icons.arrow_back_ios_new_rounded,
+              color: palette.textPrimary,
+              size: 14,
+            ),
           ),
         ),
         title: Column(
@@ -302,8 +351,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
           children: [
             Text(
               widget.existingPlan != null ? 'EDITING' : 'NEW',
-              style: const TextStyle(
-                color: Colors.yellow,
+              style: TextStyle(
+                color: palette.accent,
                 fontSize: 10,
                 fontWeight: FontWeight.w700,
                 letterSpacing: 3,
@@ -311,8 +360,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
             ),
             Text(
               widget.existingPlan != null ? 'EDIT PLAN' : 'CREATE PLAN',
-              style: const TextStyle(
-                color: Colors.white,
+              style: TextStyle(
+                color: palette.textPrimary,
                 fontSize: 22,
                 fontWeight: FontWeight.w900,
                 letterSpacing: 1,
@@ -328,14 +377,19 @@ class _EditPlanPageState extends State<EditPlanPage> {
               width: 36,
               height: 36,
               decoration: BoxDecoration(
-                color: const Color(0x1AFFE600),
+                color: palette.accent.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0x4DFFE600)),
+                border: Border.all(
+                  color: palette.accent.withValues(alpha: 0.45),
+                ),
               ),
               child: IconButton(
                 padding: EdgeInsets.zero,
-                icon: const Icon(Icons.download_rounded,
-                    color: Colors.yellow, size: 18),
+                icon: Icon(
+                  Icons.download_rounded,
+                  color: palette.accent,
+                  size: 18,
+                ),
                 tooltip: 'Import Plan',
                 onPressed: () => _showImportDialog(context),
               ),
@@ -350,28 +404,34 @@ class _EditPlanPageState extends State<EditPlanPage> {
             const SizedBox(height: 8),
 
             // ── Plan name ──────────────────────────────────────
-            _sectionLabel('Plan name'),
+            _sectionLabel(context, 'Plan name'),
             Container(
               decoration: BoxDecoration(
-                color: const Color(0xFF1C1F28),
+                color: palette.surface,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white10),
+                border: Border.all(color: palette.border),
               ),
               child: Row(
                 children: [
                   const SizedBox(width: 14),
-                  const Icon(Icons.edit_rounded,
-                      color: Color(0xFF7A7F8E), size: 15),
+                  Icon(
+                    Icons.edit_rounded,
+                    color: palette.textMuted,
+                    size: 15,
+                  ),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
                       controller: _nameController,
-                      style: const TextStyle(color: Colors.white, fontSize: 14),
-                      decoration: const InputDecoration(
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 14,
+                      ),
+                      decoration: InputDecoration(
                         hintText: 'e.g. Push / Pull / Legs',
-                        hintStyle: TextStyle(color: Color(0xFF7A7F8E)),
+                        hintStyle: TextStyle(color: palette.textMuted),
                         border: InputBorder.none,
-                        contentPadding: EdgeInsets.symmetric(vertical: 13),
+                        contentPadding: const EdgeInsets.symmetric(vertical: 13),
                       ),
                     ),
                   ),
@@ -382,21 +442,25 @@ class _EditPlanPageState extends State<EditPlanPage> {
             const SizedBox(height: 16),
 
             // ── Cover photo ────────────────────────────────────
-            _sectionLabel('Cover photo'),
+            _sectionLabel(context, 'Cover photo'),
             Row(
               children: [
                 Container(
-                  width: 62, height: 62,
+                  width: 62,
+                  height: 62,
                   decoration: BoxDecoration(
-                    color: const Color(0xFF1C1F28),
+                    color: palette.surface,
                     borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white10),
+                    border: Border.all(color: palette.border),
                   ),
                   clipBehavior: Clip.hardEdge,
                   child: _imagePath != null
                       ? Image.file(File(_imagePath!), fit: BoxFit.cover)
-                      : const Icon(Icons.image_outlined,
-                          color: Color(0xFF7A7F8E), size: 26),
+                        : Icon(
+                          Icons.image_outlined,
+                          color: palette.textMuted,
+                          size: 26,
+                        ),
                 ),
                 const SizedBox(width: 14),
                 Column(
@@ -415,17 +479,20 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       },
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                            horizontal: 16, vertical: 8),
+                          horizontal: 16,
+                          vertical: 8,
+                        ),
                         decoration: BoxDecoration(
-                          color: Colors.yellow,
+                          color: palette.accent,
                           borderRadius: BorderRadius.circular(8),
                         ),
                         child: Text(
                           _imagePath == null ? 'Add photo' : 'Change photo',
-                          style: const TextStyle(
-                              color: Color(0xFF0A0B0E),
-                              fontSize: 12,
-                              fontWeight: FontWeight.w700),
+                          style: TextStyle(
+                            color: palette.background,
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700,
+                          ),
                         ),
                       ),
                     ),
@@ -435,19 +502,21 @@ class _EditPlanPageState extends State<EditPlanPage> {
                         onTap: () => setState(() => _imagePath = null),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                              horizontal: 14, vertical: 6),
+                            horizontal: 14,
+                            vertical: 6,
+                          ),
                           decoration: BoxDecoration(
                             color: const Color(0x1AFF4D4D),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(
-                                color: const Color(0x40FF4D4D)),
+                            border: Border.all(color: const Color(0x40FF4D4D)),
                           ),
                           child: const Text(
                             'Remove',
                             style: TextStyle(
-                                color: Color(0xFFFF4D4D),
-                                fontSize: 11,
-                                fontWeight: FontWeight.w600),
+                              color: Color(0xFFFF4D4D),
+                              fontSize: 11,
+                              fontWeight: FontWeight.w600,
+                            ),
                           ),
                         ),
                       ),
@@ -460,7 +529,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
             const SizedBox(height: 16),
 
             // ── Workout days ───────────────────────────────────
-            _sectionLabel('Workout days'),
+            _sectionLabel(context, 'Workout days'),
             Row(
               children: weekdays.map((day) {
                 final isSelected = _selectedDays.contains(day);
@@ -486,8 +555,9 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           }
                         } else {
                           _selectedDays.add(day);
-                          _dayNameControllers
-                              .add(TextEditingController(text: day));
+                          _dayNameControllers.add(
+                            TextEditingController(text: day),
+                          );
                           _dayExercises.add([]);
                         }
                       });
@@ -522,7 +592,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           ),
                           const SizedBox(height: 4),
                           Container(
-                            width: 5, height: 5,
+                            width: 5,
+                            height: 5,
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected
@@ -540,7 +611,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
             const SizedBox(height: 16),
 
-            _sectionLabel('Day exercises'),
+            _sectionLabel(context, 'Day exercises'),
             const SizedBox(height: 8),
 
             // ── Day Navigation with Arrows ─────────────────────
@@ -553,7 +624,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       ? () => setState(() => _currentDayIndex--)
                       : null,
                   child: Container(
-                    width: 40, height: 40,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: _currentDayIndex > 0
                           ? Colors.yellow
@@ -592,7 +664,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       ? () => setState(() => _currentDayIndex++)
                       : null,
                   child: Container(
-                    width: 40, height: 40,
+                    width: 40,
+                    height: 40,
                     decoration: BoxDecoration(
                       color: _currentDayIndex < _selectedDays.length - 1
                           ? Colors.yellow
@@ -620,7 +693,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       child: Text(
                         'Select workout days to add exercises',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.5),
+                          color: Colors.white.withValues(alpha: 0.5),
                           fontSize: 14,
                         ),
                       ),
@@ -638,7 +711,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                           child: Row(
                             children: [
                               Container(
-                                width: 32, height: 32,
+                                width: 32,
+                                height: 32,
                                 decoration: BoxDecoration(
                                   color: Colors.yellow,
                                   borderRadius: BorderRadius.circular(8),
@@ -681,18 +755,26 @@ class _EditPlanPageState extends State<EditPlanPage> {
                               SizedBox(
                                 width: 100,
                                 child: TextField(
-                                  controller: _dayNameControllers[_currentDayIndex],
+                                  controller:
+                                      _dayNameControllers[_currentDayIndex],
                                   style: const TextStyle(
-                                      color: Colors.white, fontSize: 12),
+                                    color: Colors.white,
+                                    fontSize: 12,
+                                  ),
                                   maxLines: 1,
                                   decoration: InputDecoration(
-                                    hintText: _selectedDays.toList()[_currentDayIndex],
+                                    hintText: _selectedDays
+                                        .toList()[_currentDayIndex],
                                     hintStyle: const TextStyle(
-                                        color: Color(0xFF7A7F8E), fontSize: 12),
+                                      color: Color(0xFF7A7F8E),
+                                      fontSize: 12,
+                                    ),
                                     filled: true,
                                     fillColor: const Color(0xFF252932),
                                     contentPadding: const EdgeInsets.symmetric(
-                                        horizontal: 10, vertical: 8),
+                                      horizontal: 10,
+                                      vertical: 8,
+                                    ),
                                     border: OutlineInputBorder(
                                       borderRadius: BorderRadius.circular(8),
                                       borderSide: BorderSide.none,
@@ -713,7 +795,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                   onTap: () => _editDay(_currentDayIndex),
                                   child: Center(
                                     child: Column(
-                                      mainAxisAlignment: MainAxisAlignment.center,
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.center,
                                       children: [
                                         Container(
                                           width: 80,
@@ -747,22 +830,31 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                   children: [
                                     Expanded(
                                       child: ListView.builder(
-                                        itemCount: _dayExercises[_currentDayIndex].length,
+                                        itemCount:
+                                            _dayExercises[_currentDayIndex]
+                                                .length,
                                         itemBuilder: (context, idx) {
-                                          final exercise = _dayExercises[_currentDayIndex][idx];
+                                          final exercise =
+                                              _dayExercises[_currentDayIndex][idx];
                                           return Container(
-                                            margin: const EdgeInsets.only(bottom: 8),
+                                            margin: const EdgeInsets.only(
+                                              bottom: 8,
+                                            ),
                                             padding: const EdgeInsets.symmetric(
-                                                horizontal: 12, vertical: 10),
+                                              horizontal: 12,
+                                              vertical: 10,
+                                            ),
                                             decoration: BoxDecoration(
                                               color: const Color(0xFF252932),
-                                              borderRadius: BorderRadius.circular(8),
+                                              borderRadius:
+                                                  BorderRadius.circular(8),
                                               border: Border.all(
                                                 color: Colors.white10,
                                               ),
                                             ),
                                             child: Column(
-                                              crossAxisAlignment: CrossAxisAlignment.start,
+                                              crossAxisAlignment:
+                                                  CrossAxisAlignment.start,
                                               children: [
                                                 Text(
                                                   exercise.name,
@@ -780,7 +872,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                                     fontSize: 11,
                                                   ),
                                                   maxLines: 1,
-                                                  overflow: TextOverflow.ellipsis,
+                                                  overflow:
+                                                      TextOverflow.ellipsis,
                                                 ),
                                               ],
                                             ),
@@ -824,17 +917,21 @@ class _EditPlanPageState extends State<EditPlanPage> {
               child: ElevatedButton(
                 onPressed: () async {
                   if (_nameController.text.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Please enter a plan name'),
-                      backgroundColor: Colors.red,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please enter a plan name'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                     return;
                   }
                   if (_selectedDays.isEmpty) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Please select at least one workout day'),
-                      backgroundColor: Colors.red,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please select at least one workout day'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                     return;
                   }
                   int totalExercises = 0;
@@ -842,14 +939,15 @@ class _EditPlanPageState extends State<EditPlanPage> {
                     totalExercises += de.length;
                   }
                   if (totalExercises == 0) {
-                    ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                      content: Text('Please add at least one exercise'),
-                      backgroundColor: Colors.red,
-                    ));
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Please add at least one exercise'),
+                        backgroundColor: Colors.red,
+                      ),
+                    );
                     return;
                   }
-                  final difficulty =
-                      (totalExercises / 5).ceil().clamp(1, 5);
+                  final difficulty = (totalExercises / 5).ceil().clamp(1, 5);
                   final exercisesList = totalExercises == 1
                       ? '1 exercise'
                       : '$totalExercises exercises';
@@ -870,23 +968,25 @@ class _EditPlanPageState extends State<EditPlanPage> {
                     dayNames: dayNames,
                     selectedDays: _selectedDays.toList(),
                   );
-                  if (widget.existingPlan != null &&
-                      widget.planIndex != null) {
+                  if (widget.existingPlan != null && widget.planIndex != null) {
                     await LocalPlanService.deletePlan(widget.planIndex!);
                     await LocalPlanService.savePlan(plan);
                   } else {
                     await LocalPlanService.savePlan(plan);
                   }
                   if (mounted) {
+                    final messenger = ScaffoldMessenger.of(context);
                     Navigator.pop(context, true);
-                    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-                      content: Text(
-                        widget.existingPlan != null
-                            ? '${_nameController.text} updated successfully!'
-                            : '${_nameController.text} saved successfully!',
+                    messenger.showSnackBar(
+                      SnackBar(
+                        content: Text(
+                          widget.existingPlan != null
+                              ? '${_nameController.text} updated successfully!'
+                              : '${_nameController.text} saved successfully!',
+                        ),
+                        backgroundColor: Colors.green,
                       ),
-                      backgroundColor: Colors.green,
-                    ));
+                    );
                   }
                 },
                 style: ElevatedButton.styleFrom(
@@ -900,9 +1000,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      widget.existingPlan != null
-                          ? 'UPDATE PLAN'
-                          : 'SAVE PLAN',
+                      widget.existingPlan != null ? 'UPDATE PLAN' : 'SAVE PLAN',
                       style: const TextStyle(
                         color: Color(0xFF0A0B0E),
                         fontSize: 16,
@@ -912,13 +1010,17 @@ class _EditPlanPageState extends State<EditPlanPage> {
                     ),
                     const SizedBox(width: 10),
                     Container(
-                      width: 22, height: 22,
+                      width: 22,
+                      height: 22,
                       decoration: BoxDecoration(
                         color: Colors.black26,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Icon(Icons.arrow_outward_rounded,
-                          color: Colors.black, size: 13),
+                      child: const Icon(
+                        Icons.arrow_outward_rounded,
+                        color: Colors.black,
+                        size: 13,
+                      ),
                     ),
                   ],
                 ),
@@ -932,13 +1034,19 @@ class _EditPlanPageState extends State<EditPlanPage> {
     );
   }
 
-  Widget _sectionLabel(String text) {
+  Widget _sectionLabel(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Padding(
       padding: const EdgeInsets.only(bottom: 8),
       child: Text(
         text.toUpperCase(),
-        style: const TextStyle(
-          color: Color(0xFF7A7F8E),
+        style: TextStyle(
+          color: palette.textMuted,
           fontSize: 10,
           fontWeight: FontWeight.w700,
           letterSpacing: 1.5,

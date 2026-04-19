@@ -1,17 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/Theme/app_theme.dart';
 
-// ─── Design Tokens (same as shell) ───────────────────────────────────────────
-class _C {
-  static const bg          = Color(0xFF0A0A0C);
-  static const surface     = Color(0xFF111116);
-  static const border      = Color(0xFF1E1E24);
-  static const accent      = Color(0xFFC8FF00);
-  static const accentDim   = Color(0xFF4A5A00);
-  static const textPrimary = Color(0xFFFFFFFF);
-  static const textSub     = Color(0xFFAAAAAA);
-  static const textMuted   = Color(0xFF555555);
-  static const blue        = Color(0xFF3A8CFF);
-  static const orange      = Color(0xFFFF8C42);
+CorelyColors _palette(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.extension<CorelyColors>() ??
+      (theme.brightness == Brightness.dark
+          ? AppTheme.darkColors
+          : AppTheme.lightColors);
 }
 
 //////////////////////////////////////////////////////
@@ -58,12 +53,13 @@ class _SectionLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return Text(
       text.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w500,
-        color: _C.textMuted,
+        color: palette.textMuted,
         letterSpacing: 1.8,
       ),
     );
@@ -76,34 +72,35 @@ class _GreetingText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
-      children: const [
+      children: [
         Text(
           "Good morning,",
           style: TextStyle(
-            color: _C.textMuted,
+            color: palette.textMuted,
             fontSize: 14,
             fontWeight: FontWeight.w300,
             letterSpacing: 0.4,
           ),
         ),
-        SizedBox(height: 2),
+        const SizedBox(height: 2),
         Text(
           "Achraf 💪",
           style: TextStyle(
-            color: _C.textPrimary,
+            color: palette.textPrimary,
             fontSize: 28,
             fontWeight: FontWeight.w700,
             letterSpacing: 0.5,
             height: 1.2,
           ),
         ),
-        SizedBox(height: 4),
+        const SizedBox(height: 4),
         Text(
           "Ready to crush today's goals?",
           style: TextStyle(
-            color: _C.textSub,
+            color: palette.textSecondary,
             fontSize: 14,
             fontWeight: FontWeight.w300,
           ),
@@ -119,6 +116,7 @@ class _StreakAndFocusRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return IntrinsicHeight(
       child: Row(
         children: [
@@ -127,25 +125,25 @@ class _StreakAndFocusRow extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _C.accent,
+                color: palette.accent,
                 borderRadius: BorderRadius.circular(16),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("⚡", style: TextStyle(fontSize: 22)),
-                  SizedBox(height: 6),
+                children: [
+                  const Text("⚡", style: TextStyle(fontSize: 22)),
+                  const SizedBox(height: 6),
                   Text(
                     "12 Days",
                     style: TextStyle(
-                      color: _C.bg,
+                      color: palette.background,
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     "Current streak",
-                    style: TextStyle(color: _C.accentDim, fontSize: 12),
+                    style: TextStyle(color: palette.textMuted, fontSize: 12),
                   ),
                 ],
               ),
@@ -157,24 +155,24 @@ class _StreakAndFocusRow extends StatelessWidget {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: _C.surface,
+                color: palette.surface,
                 borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: _C.border),
+                border: Border.all(color: palette.border),
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                children: const [
-                  Text("🎯", style: TextStyle(fontSize: 22)),
-                  SizedBox(height: 6),
+                children: [
+                  const Text("🎯", style: TextStyle(fontSize: 22)),
+                  const SizedBox(height: 6),
                   Text(
                     "Today's Focus",
-                    style: TextStyle(color: _C.textMuted, fontSize: 11),
+                    style: TextStyle(color: palette.textMuted, fontSize: 11),
                   ),
-                  SizedBox(height: 2),
+                  const SizedBox(height: 2),
                   Text(
                     "Chest / Triceps",
                     style: TextStyle(
-                      color: _C.textPrimary,
+                      color: palette.textPrimary,
                       fontSize: 15,
                       fontWeight: FontWeight.w600,
                     ),
@@ -241,49 +239,51 @@ class _StepsCardState extends State<StepsCard>
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: _C.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
+              Text(
                 "Daily Steps",
                 style: TextStyle(
-                  color: _C.textPrimary,
+                  color: palette.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w600,
                 ),
               ),
               Text(
                 "${widget.steps.toString()} / ${widget.goal}",
-                style: const TextStyle(color: _C.textMuted, fontSize: 13),
+                style: TextStyle(color: palette.textMuted, fontSize: 13),
               ),
             ],
           ),
           const SizedBox(height: 20),
           AnimatedBuilder(
             animation: _animation,
-            builder: (context, _) => _buildRing(_animation.value),
+            builder: (context, _) => _buildRing(context, _animation.value),
           ),
           const SizedBox(height: 16),
-          const Text(
+          Text(
             "Stay moving to reach your goal!",
-            style: TextStyle(color: _C.textMuted, fontSize: 13),
+            style: TextStyle(color: palette.textSecondary, fontSize: 13),
           ),
         ],
       ),
     );
   }
 
-  Widget _buildRing(double progress) {
+  Widget _buildRing(BuildContext context, double progress) {
+    final palette = _palette(context);
     final pct = (progress * 100).toStringAsFixed(0);
     final stepsDone = (progress * widget.goal).round();
 
@@ -296,8 +296,8 @@ class _StepsCardState extends State<StepsCard>
           child: CircularProgressIndicator(
             value: progress,
             strokeWidth: 10,
-            backgroundColor: _C.border,
-            valueColor: const AlwaysStoppedAnimation<Color>(_C.accent),
+            backgroundColor: palette.border,
+            valueColor: AlwaysStoppedAnimation<Color>(palette.accent),
             strokeCap: StrokeCap.round,
           ),
         ),
@@ -306,15 +306,15 @@ class _StepsCardState extends State<StepsCard>
           children: [
             Text(
               "$pct%",
-              style: const TextStyle(
-                color: _C.textPrimary,
+              style: TextStyle(
+                color: palette.textPrimary,
                 fontSize: 26,
                 fontWeight: FontWeight.w700,
               ),
             ),
             Text(
               "$stepsDone steps",
-              style: const TextStyle(color: _C.textMuted, fontSize: 13),
+              style: TextStyle(color: palette.textMuted, fontSize: 13),
             ),
           ],
         ),
@@ -329,13 +329,14 @@ class _AchievementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return Row(
-      children: const [
-        Expanded(child: _AchievementCard(title: "10K Steps",    progress: 0.8, color: _C.accent)),
+      children: [
+        const Expanded(child: _AchievementCard(title: "10K Steps", progress: 0.8, color: AppTheme.accent)),
         SizedBox(width: 10),
-        Expanded(child: _AchievementCard(title: "Consistency",  progress: 0.6, color: _C.blue)),
+        const Expanded(child: _AchievementCard(title: "Consistency", progress: 0.6, color: Colors.blueAccent)),
         SizedBox(width: 10),
-        Expanded(child: _AchievementCard(title: "Strength",     progress: 0.4, color: _C.orange)),
+        const Expanded(child: _AchievementCard(title: "Strength", progress: 0.4, color: Colors.orangeAccent)),
       ],
     );
   }
@@ -354,12 +355,13 @@ class _AchievementCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
       decoration: BoxDecoration(
-        color: _C.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         children: [
@@ -372,15 +374,15 @@ class _AchievementCard extends StatelessWidget {
                 child: CircularProgressIndicator(
                   value: progress,
                   strokeWidth: 7,
-                  backgroundColor: _C.border,
+                  backgroundColor: palette.border,
                   valueColor: AlwaysStoppedAnimation<Color>(color),
                   strokeCap: StrokeCap.round,
                 ),
               ),
               Text(
                 "${(progress * 100).toStringAsFixed(0)}%",
-                style: const TextStyle(
-                  color: _C.textPrimary,
+                style: TextStyle(
+                  color: palette.textPrimary,
                   fontSize: 13,
                   fontWeight: FontWeight.w700,
                 ),
@@ -391,8 +393,8 @@ class _AchievementCard extends StatelessWidget {
           Text(
             title,
             textAlign: TextAlign.center,
-            style: const TextStyle(
-              color: _C.textSub,
+            style: TextStyle(
+              color: palette.textSecondary,
               fontSize: 12,
               fontWeight: FontWeight.w400,
             ),
@@ -411,13 +413,14 @@ class _TipOfTheDayCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _palette(context);
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: _C.surface,
+        color: palette.surface,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: _C.border),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -425,7 +428,7 @@ class _TipOfTheDayCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: _C.accent.withOpacity(0.12),
+              color: palette.accent.withValues(alpha: 0.12),
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text("💡", style: TextStyle(fontSize: 18)),
@@ -435,10 +438,10 @@ class _TipOfTheDayCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Text(
+                Text(
                   "TIP OF THE DAY",
                   style: TextStyle(
-                    color: _C.accent,
+                    color: palette.accent,
                     fontSize: 10,
                     fontWeight: FontWeight.w600,
                     letterSpacing: 1.5,
@@ -447,8 +450,8 @@ class _TipOfTheDayCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   tipText,
-                  style: const TextStyle(
-                    color: _C.textSub,
+                  style: TextStyle(
+                    color: palette.textSecondary,
                     fontSize: 13,
                     height: 1.5,
                   ),

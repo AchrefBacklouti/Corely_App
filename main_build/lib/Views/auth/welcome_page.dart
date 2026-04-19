@@ -16,12 +16,13 @@ class StartPage extends StatefulWidget {
 class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: palette.background,
       body: Stack(
         children: [
           // Background image
@@ -32,8 +33,8 @@ class _StartPageState extends State<StartPage> {
           // Overlay color
           Container(
             color: isDarkMode
-                ? AppTheme.darkBackground.withOpacity(0.85)
-                : Colors.white.withOpacity(0.7),
+                ? AppTheme.darkBackground.withValues(alpha: 0.85)
+                : Colors.white.withValues(alpha: 0.72),
           ),
 
           // Theme toggle button
@@ -78,7 +79,7 @@ class _StartPageState extends State<StartPage> {
                     'Your all-in-one fitness journey.',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white70 : Colors.black54,
+                      color: palette.textSecondary,
                       fontSize: 27,
                       fontWeight: FontWeight.w400,
                     ),
@@ -90,7 +91,7 @@ class _StartPageState extends State<StartPage> {
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFFFFF00),
+                        backgroundColor: AppTheme.yellow,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(40),
@@ -140,7 +141,7 @@ class _StartPageState extends State<StartPage> {
                     child: Text(
                       'Log In',
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
+                        color: palette.textPrimary,
                         fontSize: 27,
                         fontWeight: FontWeight.w500,
                       ),

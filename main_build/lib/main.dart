@@ -8,11 +8,13 @@ import 'package:main_build/Views/auth/login_page.dart';
 import 'package:main_build/Views/main_app/home_page.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
+import 'package:main_build/data/workout_progress_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await LocalPlanService.init();
   await ExerciseCacheService.init();
+  await WorkoutProgressService.init();
   runApp(CorelyApp());
 }
 

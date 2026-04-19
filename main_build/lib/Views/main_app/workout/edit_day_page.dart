@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Models/exercise.dart';
+import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/Views/main_app/workout/widgets/filter_widgets.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
 
@@ -62,10 +63,16 @@ class _EditDayPageState extends State<EditDayPage> {
   }
 
   void _showExerciseDetails(BuildContext context, Exercise exercise) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     showDialog(
       context: context,
       builder: (context) => Dialog(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: palette.surface,
         insetPadding: const EdgeInsets.all(16),
         child: SingleChildScrollView(
           child: Padding(
@@ -85,12 +92,12 @@ class _EditDayPageState extends State<EditDayPage> {
                         height: 180,
                         alignment: Alignment.center,
                         decoration: BoxDecoration(
-                          color: Colors.white10,
+                          color: palette.surfaceRaised,
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(
+                        child: Icon(
                           Icons.fitness_center,
-                          color: Colors.yellow,
+                          color: palette.accent,
                           size: 36,
                         ),
                       ),
@@ -99,8 +106,8 @@ class _EditDayPageState extends State<EditDayPage> {
                 const SizedBox(height: 16),
                 Text(
                   exercise.name,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: palette.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.w700,
                   ),
@@ -110,27 +117,28 @@ class _EditDayPageState extends State<EditDayPage> {
                   spacing: 8,
                   runSpacing: 8,
                   children: [
-                    _detailPill('Body Part: ${exercise.bodyPart}'),
-                    _detailPill('Target: ${exercise.target}'),
-                    _detailPill('Equipment: ${exercise.equipment}'),
+                    _detailPill(context, 'Body Part: ${exercise.bodyPart}'),
+                    _detailPill(context, 'Target: ${exercise.target}'),
+                    _detailPill(context, 'Equipment: ${exercise.equipment}'),
                     if ((exercise.force ?? '').isNotEmpty)
-                      _detailPill('Force: ${exercise.force}'),
+                      _detailPill(context, 'Force: ${exercise.force}'),
                     if ((exercise.level ?? '').isNotEmpty)
-                      _detailPill('Level: ${exercise.level}'),
+                      _detailPill(context, 'Level: ${exercise.level}'),
                     if ((exercise.mechanic ?? '').isNotEmpty)
-                      _detailPill('Mechanic: ${exercise.mechanic}'),
+                      _detailPill(context, 'Mechanic: ${exercise.mechanic}'),
                     if (exercise.secondaryMuscles.isNotEmpty)
                       _detailPill(
+                        context,
                         'Secondary: ${exercise.secondaryMuscles.join(', ')}',
                       ),
                   ],
                 ),
                 const SizedBox(height: 16),
                 if (exercise.instructions.isNotEmpty) ...[
-                  const Text(
+                  Text(
                     "Instructions",
                     style: TextStyle(
-                      color: Colors.white,
+                      color: palette.textPrimary,
                       fontSize: 14,
                       fontWeight: FontWeight.w700,
                     ),
@@ -145,15 +153,15 @@ class _EditDayPageState extends State<EditDayPage> {
                             child: Row(
                               crossAxisAlignment: CrossAxisAlignment.start,
                               children: [
-                                const Text(
+                                Text(
                                   '\u2022 ',
-                                  style: TextStyle(color: Colors.white70),
+                                  style: TextStyle(color: palette.textSecondary),
                                 ),
                                 Expanded(
                                   child: Text(
                                     step,
-                                    style: const TextStyle(
-                                      color: Colors.white70,
+                                    style: TextStyle(
+                                      color: palette.textSecondary,
                                       fontSize: 12,
                                     ),
                                   ),
@@ -170,9 +178,9 @@ class _EditDayPageState extends State<EditDayPage> {
                   alignment: Alignment.centerRight,
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
-                    child: const Text(
+                    child: Text(
                       'Close',
-                      style: TextStyle(color: Colors.yellow),
+                      style: TextStyle(color: palette.accent),
                     ),
                   ),
                 ),
@@ -184,31 +192,43 @@ class _EditDayPageState extends State<EditDayPage> {
     );
   }
 
-  Widget _detailPill(String text) {
+  Widget _detailPill(BuildContext context, String text) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.white10,
+        color: palette.surfaceRaised,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.white24),
+        border: Border.all(color: palette.border),
       ),
       child: Text(
         text,
-        style: const TextStyle(color: Colors.white70, fontSize: 12),
+        style: TextStyle(color: palette.textSecondary, fontSize: 12),
       ),
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: palette.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: palette.background,
         elevation: 0,
         title: Text(
           'Day ${widget.dayIndex}',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: palette.textPrimary),
         ),
       ),
       body: Column(
@@ -221,13 +241,13 @@ class _EditDayPageState extends State<EditDayPage> {
                 TextField(
                   onChanged: (value) =>
                       setState(() => _search = value.toLowerCase()),
-                  style: const TextStyle(color: Colors.white),
+                  style: TextStyle(color: palette.textPrimary),
                   decoration: InputDecoration(
                     hintText: "Search exercises",
-                    hintStyle: const TextStyle(color: Colors.white54),
-                    prefixIcon: const Icon(Icons.search, color: Colors.yellow),
+                    hintStyle: TextStyle(color: palette.textMuted),
+                    prefixIcon: Icon(Icons.search, color: palette.accent),
                     filled: true,
-                    fillColor: const Color(0xFF1A1D23),
+                    fillColor: palette.inputFill,
                     border: OutlineInputBorder(
                       borderRadius: BorderRadius.circular(14),
                       borderSide: BorderSide.none,
@@ -249,15 +269,15 @@ class _EditDayPageState extends State<EditDayPage> {
               future: _exercisesFuture,
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const Center(
+                  return Center(
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        CircularProgressIndicator(color: Colors.yellow),
+                        CircularProgressIndicator(color: palette.accent),
                         SizedBox(height: 16),
                         Text(
                           'Loading exercises...',
-                          style: TextStyle(color: Colors.white70),
+                          style: TextStyle(color: palette.textSecondary),
                         ),
                       ],
                     ),
@@ -274,10 +294,10 @@ class _EditDayPageState extends State<EditDayPage> {
                           size: 48,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           "Unable to load exercises",
                           style: TextStyle(
-                            color: Colors.white,
+                            color: palette.textPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
@@ -286,8 +306,8 @@ class _EditDayPageState extends State<EditDayPage> {
                         Text(
                           snapshot.error.toString(),
                           textAlign: TextAlign.center,
-                          style: const TextStyle(
-                            color: Colors.white54,
+                          style: TextStyle(
+                            color: palette.textMuted,
                             fontSize: 12,
                           ),
                         ),
@@ -301,11 +321,11 @@ class _EditDayPageState extends State<EditDayPage> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.yellow,
+                            backgroundColor: palette.accent,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Retry',
-                            style: TextStyle(color: Color(0xFF0F1115)),
+                            style: TextStyle(color: palette.background),
                           ),
                         ),
                       ],
@@ -319,24 +339,24 @@ class _EditDayPageState extends State<EditDayPage> {
                     child: Column(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(
+                        Icon(
                           Icons.fitness_center,
-                          color: Colors.white24,
+                          color: palette.textMuted,
                           size: 64,
                         ),
                         const SizedBox(height: 16),
-                        const Text(
+                        Text(
                           "No exercises available",
                           style: TextStyle(
-                            color: Colors.white,
+                            color: palette.textPrimary,
                             fontSize: 16,
                             fontWeight: FontWeight.w600,
                           ),
                         ),
                         const SizedBox(height: 8),
-                        const Text(
+                        Text(
                           "Check your internet connection",
-                          style: TextStyle(color: Colors.white54),
+                          style: TextStyle(color: palette.textMuted),
                         ),
                         const SizedBox(height: 16),
                         ElevatedButton(
@@ -348,11 +368,11 @@ class _EditDayPageState extends State<EditDayPage> {
                             });
                           },
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: Colors.yellow,
+                            backgroundColor: palette.accent,
                           ),
-                          child: const Text(
+                          child: Text(
                             'Retry',
-                            style: TextStyle(color: Color(0xFF0F1115)),
+                            style: TextStyle(color: palette.background),
                           ),
                         ),
                       ],
@@ -377,10 +397,10 @@ class _EditDayPageState extends State<EditDayPage> {
                 }).toList();
 
                 if (filtered.isEmpty) {
-                  return const Center(
+                  return Center(
                     child: Text(
                       "No exercises found",
-                      style: TextStyle(color: Colors.white70),
+                      style: TextStyle(color: palette.textSecondary),
                     ),
                   );
                 }
@@ -396,10 +416,10 @@ class _EditDayPageState extends State<EditDayPage> {
                       padding: const EdgeInsets.only(bottom: 10),
                       child: Container(
                         decoration: BoxDecoration(
-                          color: const Color(0xFF1A1D23),
+                          color: palette.surface,
                           borderRadius: BorderRadius.circular(12),
                           border: Border.all(
-                            color: isSelected ? Colors.yellow : Colors.white12,
+                            color: isSelected ? palette.accent : palette.border,
                             width: isSelected ? 2 : 1,
                           ),
                         ),
@@ -411,8 +431,8 @@ class _EditDayPageState extends State<EditDayPage> {
                               onChanged: (_) {
                                 _toggleSelection(exercise.id);
                               },
-                              activeColor: Colors.yellow,
-                              checkColor: const Color(0xFF0F1115),
+                              activeColor: palette.accent,
+                              checkColor: palette.background,
                             ),
                             // Exercise image/icon
                             GestureDetector(
@@ -423,7 +443,7 @@ class _EditDayPageState extends State<EditDayPage> {
                                 height: 60,
                                 margin: const EdgeInsets.only(right: 12),
                                 decoration: BoxDecoration(
-                                  color: Colors.white10,
+                                  color: palette.surfaceRaised,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: exercise.gifUrl != null
@@ -433,19 +453,19 @@ class _EditDayPageState extends State<EditDayPage> {
                                           exercise.gifUrl!,
                                           fit: BoxFit.cover,
                                           errorBuilder: (_, __, ___) =>
-                                              const Center(
+                                              Center(
                                                 child: Icon(
                                                   Icons.fitness_center,
-                                                  color: Colors.yellow,
+                                                  color: palette.accent,
                                                   size: 28,
                                                 ),
                                               ),
                                         ),
                                       )
-                                    : const Center(
+                                    : Center(
                                         child: Icon(
                                           Icons.fitness_center,
-                                          color: Colors.yellow,
+                                          color: palette.accent,
                                           size: 28,
                                         ),
                                       ),
@@ -460,8 +480,8 @@ class _EditDayPageState extends State<EditDayPage> {
                                     exercise.name,
                                     maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(
-                                      color: Colors.white,
+                                    style: TextStyle(
+                                      color: palette.textPrimary,
                                       fontSize: 14,
                                       fontWeight: FontWeight.w600,
                                     ),
@@ -473,21 +493,21 @@ class _EditDayPageState extends State<EditDayPage> {
                                         exercise.target,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
+                                        style: TextStyle(
+                                          color: palette.textSecondary,
                                           fontSize: 12,
                                         ),
                                       ),
-                                      const Text(
+                                      Text(
                                         ' • ',
-                                        style: TextStyle(color: Colors.white54),
+                                        style: TextStyle(color: palette.textMuted),
                                       ),
                                       Text(
                                         exercise.equipment,
                                         maxLines: 1,
                                         overflow: TextOverflow.ellipsis,
-                                        style: const TextStyle(
-                                          color: Colors.white70,
+                                        style: TextStyle(
+                                          color: palette.textSecondary,
                                           fontSize: 12,
                                         ),
                                       ),
@@ -518,16 +538,16 @@ class _EditDayPageState extends State<EditDayPage> {
                   Navigator.pop(context);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.white12,
+                  backgroundColor: palette.surfaceRaised,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
                   ),
                 ),
-                child: const Text(
+                child: Text(
                   'Cancel',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: palette.textPrimary,
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
                   ),
@@ -548,7 +568,7 @@ class _EditDayPageState extends State<EditDayPage> {
                   Navigator.pop(context, selectedExercises);
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow,
+                  backgroundColor: palette.accent,
                   padding: const EdgeInsets.symmetric(vertical: 12),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(10),
@@ -556,8 +576,8 @@ class _EditDayPageState extends State<EditDayPage> {
                 ),
                 child: Text(
                   'Add ${_selectedIds.length}',
-                  style: const TextStyle(
-                    color: Color(0xFF0F1115),
+                  style: TextStyle(
+                    color: palette.background,
                     fontSize: 14,
                     fontWeight: FontWeight.w700,
                   ),

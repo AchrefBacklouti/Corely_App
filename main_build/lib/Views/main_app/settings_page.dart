@@ -16,12 +16,13 @@ class SettingsPage extends StatefulWidget {
 class _SettingsPageState extends State<SettingsPage> {
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -36,14 +37,14 @@ class _SettingsPageState extends State<SettingsPage> {
                   IconButton(
                     icon: Icon(
                       Icons.arrow_back,
-                      color: isDarkMode ? Colors.white : Colors.black,
+                      color: palette.textPrimary,
                     ),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text(
                     "Settings",
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
+                      color: palette.textPrimary,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -123,18 +124,25 @@ class _SettingsPageState extends State<SettingsPage> {
   }
 
   Widget _buildThemeTile(BuildContext context, bool isDarkMode) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Container(
       padding: const EdgeInsets.all(16.0),
       decoration: BoxDecoration(
-        color: isDarkMode ? AppTheme.darkSurface : Colors.grey[200],
+        color: palette.surface,
         borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: AppTheme.yellow.withOpacity(0.2),
+              color: AppTheme.yellow.withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(
@@ -151,7 +159,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(
                   'Appearance',
                   style: TextStyle(
-                    color: isDarkMode ? Colors.white : Colors.black,
+                    color: palette.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                   ),
@@ -160,7 +168,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 Text(
                   isDarkMode ? 'Dark mode' : 'Light mode',
                   style: TextStyle(
-                    color: isDarkMode ? Colors.white70 : Colors.black54,
+                    color: palette.textSecondary,
                     fontSize: 12,
                   ),
                 ),
@@ -169,7 +177,7 @@ class _SettingsPageState extends State<SettingsPage> {
           ),
           Switch(
             value: isDarkMode,
-            activeThumbColor: Colors.black,
+            activeThumbColor: palette.background,
             activeTrackColor: AppTheme.yellow,
             onChanged: (_) => ThemeScope.of(context).toggleTheme(),
           ),
@@ -186,6 +194,12 @@ class _SettingsPageState extends State<SettingsPage> {
     VoidCallback onTap,
     bool isDarkMode,
   ) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: GestureDetector(
@@ -193,15 +207,16 @@ class _SettingsPageState extends State<SettingsPage> {
         child: Container(
           padding: const EdgeInsets.all(16.0),
           decoration: BoxDecoration(
-            color: isDarkMode ? AppTheme.darkSurface : Colors.grey[200],
+            color: palette.surface,
             borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: palette.border),
           ),
           child: Row(
             children: [
               Container(
                 padding: const EdgeInsets.all(10),
                 decoration: BoxDecoration(
-                  color: AppTheme.yellow.withOpacity(0.2),
+                  color: AppTheme.yellow.withValues(alpha: 0.18),
                   borderRadius: BorderRadius.circular(8),
                 ),
                 child: Icon(icon, color: AppTheme.yellow, size: 24),
@@ -214,7 +229,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Text(
                       title,
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white : Colors.black,
+                        color: palette.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
                       ),
@@ -223,7 +238,7 @@ class _SettingsPageState extends State<SettingsPage> {
                     Text(
                       subtitle,
                       style: TextStyle(
-                        color: isDarkMode ? Colors.white70 : Colors.black54,
+                        color: palette.textSecondary,
                         fontSize: 12,
                       ),
                     ),
@@ -232,7 +247,7 @@ class _SettingsPageState extends State<SettingsPage> {
               ),
               Icon(
                 Icons.arrow_forward,
-                color: isDarkMode ? Colors.white54 : Colors.black54,
+                color: palette.textMuted,
               ),
             ],
           ),

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/Theme/app_theme.dart';
 
 class DayDetailPage extends StatelessWidget {
   final int dayNumber;
@@ -12,14 +13,20 @@ class DayDetailPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Scaffold(
-      backgroundColor: const Color(0xFF0F1115),
+      backgroundColor: palette.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF0F1115),
+        backgroundColor: palette.background,
         elevation: 0,
         title: Text(
           '$planTitle - Day $dayNumber',
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: palette.textPrimary),
         ),
       ),
       body: Center(
@@ -32,28 +39,28 @@ class DayDetailPage extends StatelessWidget {
                 width: 100,
                 height: 100,
                 decoration: BoxDecoration(
-                  color: Colors.yellow.withOpacity(0.15),
+                  color: palette.accent.withValues(alpha: 0.15),
                   shape: BoxShape.circle,
-                  border: Border.all(color: Colors.yellow, width: 3),
+                  border: Border.all(color: palette.accent, width: 3),
                 ),
-                child: const Center(
-                  child: Icon(Icons.play_arrow, color: Colors.yellow, size: 50),
+                child: Center(
+                  child: Icon(Icons.play_arrow, color: palette.accent, size: 50),
                 ),
               ),
               const SizedBox(height: 32),
               Text(
                 'Day $dayNumber Workout',
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: palette.textPrimary,
                   fontSize: 24,
                   fontWeight: FontWeight.w700,
                 ),
               ),
               const SizedBox(height: 16),
-              const Text(
+              Text(
                 'Workout details and exercises will appear here',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.white70, fontSize: 16),
+                style: TextStyle(color: palette.textSecondary, fontSize: 16),
               ),
               const SizedBox(height: 32),
               SizedBox(
@@ -69,16 +76,16 @@ class DayDetailPage extends StatelessWidget {
                     );
                   },
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow,
+                    backgroundColor: palette.accent,
                     padding: const EdgeInsets.symmetric(vertical: 16),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(12),
                     ),
                   ),
-                  child: const Text(
+                  child: Text(
                     'Start Workout',
                     style: TextStyle(
-                      color: Color(0xFF0F1115),
+                      color: palette.background,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),

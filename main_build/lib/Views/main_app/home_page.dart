@@ -36,11 +36,13 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
-      backgroundColor:
-          isDarkMode ? AppTheme.darkBackground : AppTheme.lightBackground,
+      backgroundColor: palette.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -74,7 +76,10 @@ class _TopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 8, 10),
@@ -100,11 +105,15 @@ class _TopBar extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [_C.accent, Color(0xFF86C900)],
+                    colors: [AppTheme.accent, Color(0xFF86C900)],
                   ),
                 ),
                 alignment: Alignment.center,
-                child: const Icon(Icons.person, size: 18, color: _C.bg),
+                child: const Icon(
+                  Icons.person,
+                  size: 18,
+                  color: AppTheme.darkBackground,
+                ),
               ),
 
               const SizedBox(width: 10),
@@ -114,17 +123,17 @@ class _TopBar extends StatelessWidget {
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: isDarkMode ? _C.surface : Colors.black12,
+                  color: palette.surface,
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isDarkMode ? _C.border : Colors.black12,
+                    color: palette.border,
                   ),
                 ),
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   icon: Icon(
                     Icons.settings_outlined,
-                    color: isDarkMode ? _C.navInactive : Colors.black54,
+                    color: palette.textMuted,
                     size: 18,
                   ),
                   onPressed: () => Navigator.push(
@@ -155,16 +164,21 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+
     return Container(
       height: 74,
-      decoration: const BoxDecoration(
-        color: Color(0xFF191B1F),
+      decoration: BoxDecoration(
+        color: palette.navigationBar,
         borderRadius: BorderRadius.only(
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
         border: Border(
-          top: BorderSide(color: _C.border, width: 1),
+          top: BorderSide(color: palette.border, width: 1),
         ),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24),
@@ -196,7 +210,10 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return GestureDetector(
       onTap: onTap,
@@ -205,7 +222,7 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? _C.bg : Colors.transparent,
+          color: isActive ? palette.background : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
@@ -214,9 +231,7 @@ class _NavItem extends StatelessWidget {
             Icon(
               icon,
               size: isActive ? 26 : 22,
-              color: isActive
-                  ? _C.accent
-                  : (isDarkMode ? _C.navInactive : Colors.black45),
+              color: isActive ? palette.accent : palette.textMuted,
             ),
             const SizedBox(height: 4),
             // Accent dot indicator under active icon
@@ -226,7 +241,7 @@ class _NavItem extends StatelessWidget {
               height: 4,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isActive ? _C.accent : Colors.transparent,
+                color: isActive ? palette.accent : Colors.transparent,
               ),
             ),
           ],

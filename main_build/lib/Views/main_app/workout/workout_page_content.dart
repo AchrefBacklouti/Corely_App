@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/Views/main_app/workout/edit_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
 import 'package:main_build/data/workout_plans.dart';
@@ -16,11 +17,12 @@ class WorkoutPageContent extends StatefulWidget {
 }
 
 class _WorkoutPageContentState extends State<WorkoutPageContent> {
-  bool _showCustom = true;
-  bool _squareLayout = false;
+  bool _showCustom = false;
+  bool _squareLayout = true;
   List<WorkoutPlan> _customPlans = [];
   List<WorkoutPlan> _suggestedPlans = [];
   bool _isLoading = true;
+  String? _loadError;
 
   @override
   void initState() {
@@ -29,140 +31,265 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   }
 
   Future<void> _loadData() async {
-    final custom = await DataService.getCustomWorkoutPlans();
-    final suggested = await DataService.getSuggestedWorkoutPlans();
     setState(() {
-      _customPlans = custom;
-      _suggestedPlans = suggested;
-      _isLoading = false;
+      _isLoading = true;
+      _loadError = null;
     });
+
+    try {
+      final results = await Future.wait([
+        DataService.getCustomWorkoutPlans(),
+        DataService.getSuggestedWorkoutPlans(),
+      ]);
+
+      if (!mounted) return;
+      setState(() {
+        _customPlans = results[0];
+        _suggestedPlans = results[1];
+        _isLoading = false;
+      });
+    } catch (_) {
+      if (!mounted) return;
+      setState(() {
+        _isLoading = false;
+        _loadError = 'Unable to load training plans right now.';
+      });
+    }
   }
 
-  void _showPlanMenu(BuildContext context, WorkoutPlan plan, int index) {
-    showModalBottomSheet(
-      context: context,
-      backgroundColor: const Color(0xFF1A1D23),
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (context) => Padding(
-        padding: const EdgeInsets.all(20),
+  void _showPlanMenu(BuildContext pageContext, WorkoutPlan plan, int index) {
+    final theme = Theme.of(pageContext);
+    final palette = theme.extension<CorelyColors>() ??
+      (theme.brightness == Brightness.dark
+        ? AppTheme.darkColors
+        : AppTheme.lightColors);
+
+    showGeneralDialog<void>(
+      context: pageContext,
+      useRootNavigator: true,
+      barrierDismissible: true,
+      barrierLabel: MaterialLocalizations.of(
+        pageContext,
+      ).modalBarrierDismissLabel,
+      barrierColor: Colors.black.withValues(alpha: 0.75),
+      transitionDuration: const Duration(milliseconds: 220),
+      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+        return SafeArea(
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 340),
+              child: Material(
+                color: Colors.transparent,
+                child: Container(
+                  padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
+                  decoration: BoxDecoration(
+                    color: palette.surface,
+                    borderRadius: BorderRadius.circular(28),
+                    border: Border.all(color: palette.border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withValues(alpha: 0.54),
+                        blurRadius: 30,
+                        offset: Offset(0, 18),
+                      ),
+                    ],
+                  ),
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 54,
+                        height: 5,
+                        decoration: BoxDecoration(
+                          color: palette.border,
+                          borderRadius: BorderRadius.circular(999),
+                        ),
+                      ),
+                      const SizedBox(height: 18),
+                      Text(
+                        plan.title,
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          color: palette.textPrimary,
+                          fontSize: 20,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'Choose an action',
+                        style: TextStyle(color: palette.textMuted, fontSize: 13),
+                      ),
+                      const SizedBox(height: 22),
+                      Wrap(
+                        spacing: 16,
+                        runSpacing: 16,
+                        alignment: WrapAlignment.center,
+                        children: [
+                          _CircleMenuAction(
+                            icon: Icons.play_arrow_rounded,
+                            label: 'Play',
+                            color: Colors.greenAccent,
+                            onTap: () {
+                              Navigator.pop(dialogContext);
+                              Navigator.push(
+                                pageContext,
+                                MaterialPageRoute(
+                                  builder: (_) => PlayPlanPage(plan: plan),
+                                ),
+                              );
+                            },
+                          ),
+                          _CircleMenuAction(
+                            icon: Icons.edit_rounded,
+                            label: 'Edit',
+                            color: Colors.yellow,
+                            onTap: () async {
+                              Navigator.pop(dialogContext);
+                              final result = await Navigator.push(
+                                pageContext,
+                                MaterialPageRoute(
+                                  builder: (_) => EditPlanPage(
+                                    existingPlan: plan,
+                                    planIndex: index,
+                                  ),
+                                ),
+                              );
+                              if (result == true && mounted) {
+                                await _loadData();
+                              }
+                            },
+                          ),
+                          _CircleMenuAction(
+                            icon: Icons.share_rounded,
+                            label: 'Share',
+                            color: Colors.blueAccent,
+                            onTap: () {
+                              Navigator.pop(dialogContext);
+                              _showShareDialog(pageContext, plan);
+                            },
+                          ),
+                          _CircleMenuAction(
+                            icon: Icons.delete_rounded,
+                            label: 'Delete',
+                            color: Colors.redAccent,
+                            onTap: () async {
+                              Navigator.pop(dialogContext);
+                              final confirm = await showDialog<bool>(
+                                context: pageContext,
+                                builder: (confirmContext) => AlertDialog(
+                                  backgroundColor: palette.surface,
+                                  title: Text(
+                                    'Delete Plan?',
+                                    style: TextStyle(color: palette.textPrimary),
+                                  ),
+                                  content: Text(
+                                    'Are you sure you want to delete "${plan.title}"?',
+                                    style: TextStyle(
+                                      color: palette.textSecondary,
+                                    ),
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(confirmContext, false),
+                                      child: const Text('Cancel'),
+                                    ),
+                                    TextButton(
+                                      onPressed: () =>
+                                          Navigator.pop(confirmContext, true),
+                                      style: TextButton.styleFrom(
+                                        foregroundColor: Colors.red,
+                                      ),
+                                      child: const Text('Delete'),
+                                    ),
+                                  ],
+                                ),
+                              );
+                              if (confirm == true && mounted) {
+                                await LocalPlanService.deletePlan(index);
+                                await _loadData();
+                                if (mounted) {
+                                  ScaffoldMessenger.of(
+                                    pageContext,
+                                  ).showSnackBar(
+                                    SnackBar(
+                                      content: Text('${plan.title} deleted'),
+                                      backgroundColor: Colors.green,
+                                    ),
+                                  );
+                                }
+                              }
+                            },
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+        );
+      },
+      transitionBuilder: (context, animation, secondaryAnimation, child) {
+        final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
+        final scale = Tween<double>(begin: 0.92, end: 1.0).animate(
+          CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+        );
+
+        return FadeTransition(
+          opacity: fade,
+          child: ScaleTransition(scale: scale, child: child),
+        );
+      },
+    );
+  }
+
+  Widget _CircleMenuAction({
+    required IconData icon,
+    required String label,
+    required Color color,
+    required VoidCallback onTap,
+  }) {
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
+    return SizedBox(
+      width: 108,
+      child: InkResponse(
+        onTap: onTap,
+        radius: 44,
+        splashColor: color.withValues(alpha: 0.2),
+        highlightColor: color.withValues(alpha: 0.08),
         child: Column(
           mainAxisSize: MainAxisSize.min,
           children: [
             Container(
-              width: 40,
-              height: 4,
+              width: 72,
+              height: 72,
               decoration: BoxDecoration(
-                color: Colors.white24,
-                borderRadius: BorderRadius.circular(2),
+                shape: BoxShape.circle,
+                color: color.withValues(alpha: 0.14),
+                border: Border.all(
+                  color: color.withValues(alpha: 0.45),
+                  width: 1.2,
+                ),
               ),
-            ),
-            const SizedBox(height: 20),
-            Text(
-              plan.title,
-              style: const TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            const SizedBox(height: 20),
-            ListTile(
-              leading: const Icon(Icons.play_arrow, color: Colors.yellow),
-              title: const Text(
-                'Play',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(builder: (_) => PlayPlanPage(plan: plan)),
-                );
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.edit, color: Colors.yellow),
-              title: const Text(
-                'Edit',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                final result = await Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (_) =>
-                        EditPlanPage(existingPlan: plan, planIndex: index),
-                  ),
-                );
-                if (result == true && mounted) {
-                  _loadData();
-                }
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.share, color: Colors.blue),
-              title: const Text(
-                'Share',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              onTap: () {
-                Navigator.pop(context);
-                _showShareDialog(context, plan);
-              },
-            ),
-            ListTile(
-              leading: const Icon(Icons.delete, color: Colors.red),
-              title: const Text(
-                'Delete',
-                style: TextStyle(color: Colors.white, fontSize: 16),
-              ),
-              onTap: () async {
-                Navigator.pop(context);
-                final confirm = await showDialog<bool>(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                    backgroundColor: const Color(0xFF1A1D23),
-                    title: const Text(
-                      'Delete Plan?',
-                      style: TextStyle(color: Colors.white),
-                    ),
-                    content: Text(
-                      'Are you sure you want to delete "${plan.title}"?',
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, false),
-                        child: const Text('Cancel'),
-                      ),
-                      TextButton(
-                        onPressed: () => Navigator.pop(context, true),
-                        style: TextButton.styleFrom(
-                          foregroundColor: Colors.red,
-                        ),
-                        child: const Text('Delete'),
-                      ),
-                    ],
-                  ),
-                );
-                if (confirm == true && mounted) {
-                  await LocalPlanService.deletePlan(index);
-                  _loadData();
-                  if (mounted) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        content: Text('${plan.title} deleted'),
-                        backgroundColor: Colors.green,
-                      ),
-                    );
-                  }
-                }
-              },
+              child: Icon(icon, color: color, size: 30),
             ),
             const SizedBox(height: 10),
+            Text(
+              label,
+              style: TextStyle(
+                color: palette.textPrimary,
+                fontSize: 13,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
           ],
         ),
       ),
@@ -171,10 +298,15 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
 
   void _showShareDialog(BuildContext context, WorkoutPlan plan) {
     final shareCode = PlanShareService.generateShareCode(plan);
+    final theme = Theme.of(context);
+    final palette = theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
 
     showModalBottomSheet(
       context: context,
-      backgroundColor: const Color(0xFF1A1D23),
+      backgroundColor: palette.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
@@ -187,15 +319,15 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
               width: 40,
               height: 4,
               decoration: BoxDecoration(
-                color: Colors.white24,
+                color: palette.border,
                 borderRadius: BorderRadius.circular(2),
               ),
             ),
             const SizedBox(height: 20),
-            const Text(
+            Text(
               'Share Plan',
               style: TextStyle(
-                color: Colors.white,
+                color: palette.textPrimary,
                 fontSize: 20,
                 fontWeight: FontWeight.w700,
               ),
@@ -205,9 +337,9 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
             Container(
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: const Color(0xFF0F1115),
+                color: palette.inputFill,
                 borderRadius: BorderRadius.circular(12),
-                border: Border.all(color: Colors.white12),
+                border: Border.all(color: palette.border),
               ),
               child: Row(
                 children: [
@@ -216,8 +348,8 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                       scrollDirection: Axis.horizontal,
                       child: Text(
                         shareCode,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: palette.textPrimary,
                           fontSize: 12,
                           fontFamily: 'monospace',
                           fontWeight: FontWeight.w600,
@@ -237,7 +369,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                         ),
                       );
                     },
-                    icon: const Icon(Icons.copy, color: Colors.yellow),
+                    icon: Icon(Icons.copy, color: palette.accent),
                     tooltip: 'Copy Code',
                     padding: EdgeInsets.zero,
                     constraints: const BoxConstraints(
@@ -265,8 +397,8 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                     icon: const Icon(Icons.share),
                     label: const Text('Share'),
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.blue,
-                      foregroundColor: Colors.white,
+                      backgroundColor: palette.accent,
+                      foregroundColor: palette.background,
                     ),
                   ),
                 ),
@@ -281,9 +413,41 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Center(
+        child: CircularProgressIndicator(color: palette.accent),
+      );
+    }
+
+    if (_loadError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _loadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: palette.textSecondary, fontSize: 15),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(
+                onPressed: _loadData,
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.yellow,
+                  foregroundColor: palette.background,
+                ),
+                child: const Text('Retry'),
+              ),
+            ],
+          ),
+        ),
+      );
     }
 
     return Column(
@@ -307,7 +471,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
               IconButton(
                 icon: Icon(
                   _squareLayout ? Icons.view_agenda_outlined : Icons.grid_view,
-                  color: Colors.yellow,
+                  color: palette.accent,
                 ),
                 tooltip: _squareLayout ? "Rectangular cards" : "Square cards",
                 onPressed: () => setState(() => _squareLayout = !_squareLayout),
@@ -361,20 +525,25 @@ class _TabButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? Colors.white12 : Colors.transparent,
+          color: isActive ? palette.surfaceRaised : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? Colors.yellow : Colors.white24),
+          border: Border.all(color: isActive ? palette.accent : palette.border),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: Colors.white,
+            color: palette.textPrimary,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -400,13 +569,18 @@ class _CustomPlansSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<CorelyColors>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           "Custom plans",
           style: TextStyle(
-            color: Colors.white,
+            color: palette.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -431,7 +605,7 @@ class _CustomPlansSection extends StatelessWidget {
                         imageAsset: plans[i].imageAsset,
                         imagePath: plans[i].imagePath,
                         squareLayout: true,
-                        color: theme.colorScheme.primary.withOpacity(0.08),
+                        color: palette.accent.withValues(alpha: 0.08),
                         onTap: () => onPlanTap(plans[i], i),
                         tileWidth: cardWidth,
                       ),
@@ -449,7 +623,7 @@ class _CustomPlansSection extends StatelessWidget {
               imageAsset: plans[i].imageAsset,
               imagePath: plans[i].imagePath,
               squareLayout: false,
-              color: theme.colorScheme.primary.withOpacity(0.08),
+              color: palette.accent.withValues(alpha: 0.08),
               onTap: () => onPlanTap(plans[i], i),
             ),
             const SizedBox(height: 12),
@@ -471,14 +645,19 @@ class _SuggestedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<CorelyColors>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           "Suggestions",
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(color: Colors.white),
+          style: Theme.of(context).textTheme.titleLarge?.copyWith(
+            color: palette.textPrimary,
+          ),
         ),
         const SizedBox(height: 12),
         if (squareLayout)
@@ -496,7 +675,7 @@ class _SuggestedSection extends StatelessWidget {
                       child: _SuggestedCard(
                         title: plan.title,
                         description: "${plan.duration} · ${plan.exercises}",
-                        color: Colors.white.withOpacity(0.04),
+                        color: palette.surfaceRaised,
                         imageAsset: plan.imageAsset,
                         squareLayout: true,
                         tileWidth: cardWidth,
@@ -526,7 +705,7 @@ class _SuggestedSection extends StatelessWidget {
             _SuggestedCard(
               title: plan.title,
               description: "${plan.duration} · ${plan.exercises}",
-              color: Colors.white.withOpacity(0.04),
+              color: palette.surfaceRaised,
               imageAsset: plan.imageAsset,
               squareLayout: false,
               difficulty: plan.difficulty,
@@ -561,7 +740,10 @@ class _AddPlanCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette = theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -569,18 +751,18 @@ class _AddPlanCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white24),
-          color: isDarkMode ? Colors.white10 : Colors.black12,
+          border: Border.all(color: palette.border),
+          color: palette.surface,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
-          children: const [
-            Icon(Icons.add, color: Colors.yellow),
-            SizedBox(width: 8),
+          children: [
+            Icon(Icons.add, color: palette.accent),
+            const SizedBox(width: 8),
             Text(
               "Add another plan",
               style: TextStyle(
-                color: Colors.white,
+                color: palette.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -617,7 +799,10 @@ class _WorkoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final palette = Theme.of(context).extension<CorelyColors>() ??
+      (Theme.of(context).brightness == Brightness.dark
+        ? AppTheme.darkColors
+        : AppTheme.lightColors);
 
     if (squareLayout) {
       return InkWell(
@@ -627,7 +812,7 @@ class _WorkoutCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: Colors.white12),
+            border: Border.all(color: palette.border),
           ),
           child: AspectRatio(
             aspectRatio: 1,
@@ -654,8 +839,8 @@ class _WorkoutCard extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.55),
-                        Colors.black.withOpacity(0.15),
+                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.15),
                       ],
                     ),
                   ),
@@ -669,8 +854,8 @@ class _WorkoutCard extends StatelessWidget {
                     children: [
                       Text(
                         title,
-                        style: const TextStyle(
-                          color: Colors.white,
+                        style: TextStyle(
+                          color: palette.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
@@ -678,8 +863,8 @@ class _WorkoutCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         "$duration · $exercises",
-                        style: const TextStyle(
-                          color: Colors.white70,
+                        style: TextStyle(
+                          color: palette.textSecondary,
                           fontSize: 13,
                           fontWeight: FontWeight.w500,
                         ),
@@ -702,7 +887,7 @@ class _WorkoutCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: palette.border),
         ),
         child: Row(
           children: [
@@ -710,7 +895,7 @@ class _WorkoutCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: isDarkMode ? Colors.white12 : Colors.black12,
+                color: palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(12),
               ),
               clipBehavior: Clip.hardEdge,
@@ -720,7 +905,7 @@ class _WorkoutCard extends StatelessWidget {
                         ? Image.asset(imageAsset!, fit: BoxFit.cover)
                         : const Icon(
                             Icons.fitness_center,
-                            color: Colors.yellow,
+                            color: AppTheme.accent,
                           )),
             ),
             const SizedBox(width: 16),
@@ -730,8 +915,8 @@ class _WorkoutCard extends StatelessWidget {
                 children: [
                   Text(
                     title,
-                    style: const TextStyle(
-                      color: Colors.white,
+                    style: TextStyle(
+                      color: palette.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
@@ -739,14 +924,17 @@ class _WorkoutCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   Text(
                     "$duration · $exercises",
-                    style: const TextStyle(color: Colors.white70, fontSize: 14),
+                    style: TextStyle(
+                      color: palette.textSecondary,
+                      fontSize: 14,
+                    ),
                   ),
                 ],
               ),
             ),
-            const Icon(
+            Icon(
               Icons.arrow_forward_ios,
-              color: Colors.white70,
+              color: palette.textSecondary,
               size: 18,
             ),
           ],
@@ -781,13 +969,18 @@ class _SuggestedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<CorelyColors>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     if (squareLayout) {
       return Container(
         width: tileWidth ?? double.infinity,
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: Colors.white12),
+          border: Border.all(color: palette.border),
         ),
         child: AspectRatio(
           aspectRatio: 1,
@@ -807,8 +1000,8 @@ class _SuggestedCard extends StatelessWidget {
                     begin: Alignment.bottomCenter,
                     end: Alignment.topCenter,
                     colors: [
-                      Colors.black.withOpacity(0.55),
-                      Colors.black.withOpacity(0.15),
+                      Colors.black.withValues(alpha: 0.55),
+                      Colors.black.withValues(alpha: 0.15),
                     ],
                   ),
                 ),
@@ -824,8 +1017,8 @@ class _SuggestedCard extends StatelessWidget {
                     const SizedBox(height: 6),
                     Text(
                       title,
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: palette.textPrimary,
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
                       ),
@@ -833,8 +1026,8 @@ class _SuggestedCard extends StatelessWidget {
                     const SizedBox(height: 4),
                     Text(
                       description,
-                      style: const TextStyle(
-                        color: Colors.white70,
+                      style: TextStyle(
+                        color: palette.textSecondary,
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
                       ),
@@ -847,8 +1040,8 @@ class _SuggestedCard extends StatelessWidget {
                 right: 10,
                 child: TextButton(
                   style: TextButton.styleFrom(
-                    backgroundColor: Colors.black45,
-                    foregroundColor: Colors.yellow,
+                    backgroundColor: Colors.black.withValues(alpha: 0.45),
+                    foregroundColor: palette.accent,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 10,
                       vertical: 6,
@@ -878,7 +1071,7 @@ class _SuggestedCard extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.local_fire_department, color: Colors.orange),
+          Icon(Icons.local_fire_department, color: palette.accent),
           const SizedBox(width: 14),
           Expanded(
             child: Column(
@@ -886,8 +1079,8 @@ class _SuggestedCard extends StatelessWidget {
               children: [
                 Text(
                   title,
-                  style: const TextStyle(
-                    color: Colors.white,
+                  style: TextStyle(
+                    color: palette.textPrimary,
                     fontSize: 16,
                     fontWeight: FontWeight.w700,
                   ),
@@ -895,7 +1088,7 @@ class _SuggestedCard extends StatelessWidget {
                 const SizedBox(height: 4),
                 Text(
                   description,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
+                  style: TextStyle(color: palette.textSecondary, fontSize: 14),
                 ),
                 const SizedBox(height: 6),
                 _DifficultyIcons(level: difficulty),
@@ -904,10 +1097,10 @@ class _SuggestedCard extends StatelessWidget {
           ),
           TextButton(
             onPressed: onAddPlan,
-            child: const Text(
+            child: Text(
               "Add",
               style: TextStyle(
-                color: Colors.yellow,
+                color: palette.accent,
                 fontWeight: FontWeight.w700,
               ),
             ),
@@ -925,6 +1118,11 @@ class _DifficultyIcons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = Theme.of(context).extension<CorelyColors>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     final clamped = level.clamp(1, 4);
     return Row(
       children: List.generate(4, (index) {
@@ -932,7 +1130,7 @@ class _DifficultyIcons extends StatelessWidget {
         return Icon(
           Icons.flash_on,
           size: 16,
-          color: isActive ? Colors.yellow : Colors.white30,
+          color: isActive ? palette.accent : palette.textMuted,
         );
       }),
     );
