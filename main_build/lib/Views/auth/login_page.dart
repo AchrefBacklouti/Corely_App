@@ -9,7 +9,8 @@ class LoginPage extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
@@ -40,17 +41,13 @@ class LoginPage extends StatelessWidget {
                   hintText: "Email Address",
                   filled: true,
                   fillColor: palette.inputFill,
-                  hintStyle: TextStyle(
-                    color: palette.textSecondary,
-                  ),
+                  hintStyle: TextStyle(color: palette.textSecondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                 ),
-                style: TextStyle(
-                  color: palette.textPrimary,
-                ),
+                style: TextStyle(color: palette.textPrimary),
               ),
               const SizedBox(height: 16),
               TextField(
@@ -59,17 +56,13 @@ class LoginPage extends StatelessWidget {
                   hintText: "Password",
                   filled: true,
                   fillColor: palette.inputFill,
-                  hintStyle: TextStyle(
-                    color: palette.textSecondary,
-                  ),
+                  hintStyle: TextStyle(color: palette.textSecondary),
                   border: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(12),
                     borderSide: BorderSide.none,
                   ),
                 ),
-                style: TextStyle(
-                  color: palette.textPrimary,
-                ),
+                style: TextStyle(color: palette.textPrimary),
               ),
               const SizedBox(height: 24),
               SizedBox(

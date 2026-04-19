@@ -59,10 +59,11 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
 
   void _showPlanMenu(BuildContext pageContext, WorkoutPlan plan, int index) {
     final theme = Theme.of(pageContext);
-    final palette = theme.extension<CorelyColors>() ??
-      (theme.brightness == Brightness.dark
-        ? AppTheme.darkColors
-        : AppTheme.lightColors);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
 
     showGeneralDialog<void>(
       context: pageContext,
@@ -118,7 +119,10 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                       const SizedBox(height: 6),
                       Text(
                         'Choose an action',
-                        style: TextStyle(color: palette.textMuted, fontSize: 13),
+                        style: TextStyle(
+                          color: palette.textMuted,
+                          fontSize: 13,
+                        ),
                       ),
                       const SizedBox(height: 22),
                       Wrap(
@@ -181,7 +185,9 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                                   backgroundColor: palette.surface,
                                   title: Text(
                                     'Delete Plan?',
-                                    style: TextStyle(color: palette.textPrimary),
+                                    style: TextStyle(
+                                      color: palette.textPrimary,
+                                    ),
                                   ),
                                   content: Text(
                                     'Are you sure you want to delete "${plan.title}"?',
@@ -253,7 +259,8 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
     required VoidCallback onTap,
   }) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -299,7 +306,8 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   void _showShareDialog(BuildContext context, WorkoutPlan plan) {
     final shareCode = PlanShareService.generateShareCode(plan);
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -414,13 +422,12 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     if (_isLoading) {
-      return Center(
-        child: CircularProgressIndicator(color: palette.accent),
-      );
+      return Center(child: CircularProgressIndicator(color: palette.accent));
     }
 
     if (_loadError != null) {
@@ -527,7 +534,8 @@ class _TabButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return GestureDetector(
@@ -569,7 +577,8 @@ class _CustomPlansSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<CorelyColors>() ??
+    final palette =
+        Theme.of(context).extension<CorelyColors>() ??
         (Theme.of(context).brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -645,7 +654,8 @@ class _SuggestedSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<CorelyColors>() ??
+    final palette =
+        Theme.of(context).extension<CorelyColors>() ??
         (Theme.of(context).brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -655,9 +665,9 @@ class _SuggestedSection extends StatelessWidget {
       children: [
         Text(
           "Suggestions",
-          style: Theme.of(context).textTheme.titleLarge?.copyWith(
-            color: palette.textPrimary,
-          ),
+          style: Theme.of(
+            context,
+          ).textTheme.titleLarge?.copyWith(color: palette.textPrimary),
         ),
         const SizedBox(height: 12),
         if (squareLayout)
@@ -742,7 +752,8 @@ class _AddPlanCard extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
     return InkWell(
       onTap: onTap,
@@ -799,10 +810,11 @@ class _WorkoutCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<CorelyColors>() ??
-      (Theme.of(context).brightness == Brightness.dark
-        ? AppTheme.darkColors
-        : AppTheme.lightColors);
+    final palette =
+        Theme.of(context).extension<CorelyColors>() ??
+        (Theme.of(context).brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
 
     if (squareLayout) {
       return InkWell(
@@ -969,7 +981,8 @@ class _SuggestedCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<CorelyColors>() ??
+    final palette =
+        Theme.of(context).extension<CorelyColors>() ??
         (Theme.of(context).brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -1118,7 +1131,8 @@ class _DifficultyIcons extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = Theme.of(context).extension<CorelyColors>() ??
+    final palette =
+        Theme.of(context).extension<CorelyColors>() ??
         (Theme.of(context).brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);

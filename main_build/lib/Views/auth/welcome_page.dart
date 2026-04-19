@@ -18,7 +18,8 @@ class _StartPageState extends State<StartPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(

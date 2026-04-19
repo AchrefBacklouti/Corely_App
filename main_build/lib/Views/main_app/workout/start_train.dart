@@ -641,7 +641,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
     final total = widget.exercises.length;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
     final imageAsset = _exercise['imageAsset']?.toString();
     final imagePath = _exercise['imagePath']?.toString();
@@ -898,10 +899,7 @@ class _StartTrainPageState extends State<StartTrainPage> {
               Center(
                 child: TextButton.icon(
                   onPressed: _addRepLine,
-                  icon: Icon(
-                    Icons.add_circle_outline,
-                    color: palette.accent,
-                  ),
+                  icon: Icon(Icons.add_circle_outline, color: palette.accent),
                   label: Text(
                     '+ Add Rep',
                     style: TextStyle(color: palette.accent),
@@ -1040,7 +1038,7 @@ class _BottomActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final enabled = onPressed != null;
     final background = highlighted
-      ? Colors.yellow.withValues(alpha: enabled ? 1 : 0.5)
+        ? Colors.yellow.withValues(alpha: enabled ? 1 : 0.5)
         : Colors.transparent;
     final foreground = highlighted ? Colors.black : Colors.white;
 

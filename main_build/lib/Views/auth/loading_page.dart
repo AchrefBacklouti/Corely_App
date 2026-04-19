@@ -44,7 +44,8 @@ class _LoadingPageState extends State<LoadingPage>
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
@@ -64,10 +65,7 @@ class _LoadingPageState extends State<LoadingPage>
               const SizedBox(height: 20),
               Text(
                 "Built for progress. Powered by you.",
-                style: TextStyle(
-                  color: palette.textSecondary,
-                  fontSize: 22,
-                ),
+                style: TextStyle(color: palette.textSecondary, fontSize: 22),
               ),
             ],
           ),

@@ -271,7 +271,8 @@ class _PlayPlanPageState extends State<PlayPlanPage> {
     final daysCount = _resolvedDays.length;
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
@@ -519,7 +520,8 @@ class _WorkoutEditDialogState extends State<_WorkoutEditDialog> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -609,7 +611,8 @@ class _DayArrowButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -631,10 +634,7 @@ class _DayArrowButton extends StatelessWidget {
                 : palette.border,
           ),
         ),
-        child: Icon(
-          icon,
-          color: enabled ? palette.accent : palette.textMuted,
-        ),
+        child: Icon(icon, color: enabled ? palette.accent : palette.textMuted),
       ),
     );
   }
@@ -688,11 +688,7 @@ class _ExerciseThumb extends StatelessWidget {
     return Container(
       color: palette.surface,
       alignment: Alignment.center,
-      child: Icon(
-        Icons.fitness_center,
-        color: palette.textMuted,
-        size: 18,
-      ),
+      child: Icon(Icons.fitness_center, color: palette.textMuted, size: 18),
     );
   }
 }

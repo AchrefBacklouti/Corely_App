@@ -18,7 +18,8 @@ class _SettingsPageState extends State<SettingsPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
@@ -35,10 +36,7 @@ class _SettingsPageState extends State<SettingsPage> {
               child: Row(
                 children: [
                   IconButton(
-                    icon: Icon(
-                      Icons.arrow_back,
-                      color: palette.textPrimary,
-                    ),
+                    icon: Icon(Icons.arrow_back, color: palette.textPrimary),
                     onPressed: () => Navigator.pop(context),
                   ),
                   Text(
@@ -125,7 +123,8 @@ class _SettingsPageState extends State<SettingsPage> {
 
   Widget _buildThemeTile(BuildContext context, bool isDarkMode) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -167,10 +166,7 @@ class _SettingsPageState extends State<SettingsPage> {
                 const SizedBox(height: 4),
                 Text(
                   isDarkMode ? 'Dark mode' : 'Light mode',
-                  style: TextStyle(
-                    color: palette.textSecondary,
-                    fontSize: 12,
-                  ),
+                  style: TextStyle(color: palette.textSecondary, fontSize: 12),
                 ),
               ],
             ),
@@ -195,7 +191,8 @@ class _SettingsPageState extends State<SettingsPage> {
     bool isDarkMode,
   ) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -245,10 +242,7 @@ class _SettingsPageState extends State<SettingsPage> {
                   ],
                 ),
               ),
-              Icon(
-                Icons.arrow_forward,
-                color: palette.textMuted,
-              ),
+              Icon(Icons.arrow_forward, color: palette.textMuted),
             ],
           ),
         ),

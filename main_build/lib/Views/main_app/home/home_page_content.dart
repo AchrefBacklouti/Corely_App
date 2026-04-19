@@ -224,9 +224,10 @@ class _StepsCardState extends State<StepsCard>
 
   void _setupAnimation() {
     final target = (widget.steps / widget.goal).clamp(0.0, 1.0);
-    _animation = Tween<double>(begin: _currentProgress, end: target).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeOut),
-    );
+    _animation = Tween<double>(
+      begin: _currentProgress,
+      end: target,
+    ).animate(CurvedAnimation(parent: _controller, curve: Curves.easeOut));
     _currentProgress = target;
     _controller.forward(from: 0);
   }
@@ -332,11 +333,29 @@ class _AchievementsSection extends StatelessWidget {
     final palette = _palette(context);
     return Row(
       children: [
-        const Expanded(child: _AchievementCard(title: "10K Steps", progress: 0.8, color: AppTheme.accent)),
+        const Expanded(
+          child: _AchievementCard(
+            title: "10K Steps",
+            progress: 0.8,
+            color: AppTheme.accent,
+          ),
+        ),
         SizedBox(width: 10),
-        const Expanded(child: _AchievementCard(title: "Consistency", progress: 0.6, color: Colors.blueAccent)),
+        const Expanded(
+          child: _AchievementCard(
+            title: "Consistency",
+            progress: 0.6,
+            color: Colors.blueAccent,
+          ),
+        ),
         SizedBox(width: 10),
-        const Expanded(child: _AchievementCard(title: "Strength", progress: 0.4, color: Colors.orangeAccent)),
+        const Expanded(
+          child: _AchievementCard(
+            title: "Strength",
+            progress: 0.4,
+            color: Colors.orangeAccent,
+          ),
+        ),
       ],
     );
   }

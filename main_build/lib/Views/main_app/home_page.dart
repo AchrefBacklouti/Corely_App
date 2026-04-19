@@ -8,10 +8,10 @@ import 'package:main_build/Views/main_app/workout/workout_page_content.dart';
 
 // ─── Design Tokens ────────────────────────────────────────────────────────────
 class _C {
-  static const bg          = Color(0xFF0A0A0C);
-  static const surface     = Color(0xFF111116);
-  static const border      = Color(0xFF1E1E24);
-  static const accent      = Color(0xFFC8FF00);
+  static const bg = Color(0xFF0A0A0C);
+  static const surface = Color(0xFF111116);
+  static const border = Color(0xFF1E1E24);
+  static const accent = Color(0xFFC8FF00);
   static const navInactive = Color(0xFF555555);
   static const textPrimary = Color(0xFFFFFFFF);
 }
@@ -38,7 +38,8 @@ class _MainShellPageState extends State<MainShellPage> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Scaffold(
@@ -78,7 +79,8 @@ class _TopBar extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Padding(
@@ -125,9 +127,7 @@ class _TopBar extends StatelessWidget {
                 decoration: BoxDecoration(
                   color: palette.surface,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: palette.border,
-                  ),
+                  border: Border.all(color: palette.border),
                 ),
                 child: IconButton(
                   padding: EdgeInsets.zero,
@@ -166,7 +166,8 @@ class _BottomNav extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Container(
@@ -177,9 +178,7 @@ class _BottomNav extends StatelessWidget {
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
-        border: Border(
-          top: BorderSide(color: palette.border, width: 1),
-        ),
+        border: Border(top: BorderSide(color: palette.border, width: 1)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -212,7 +211,8 @@ class _NavItem extends StatelessWidget {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return GestureDetector(
@@ -372,11 +372,7 @@ class FitProgressBar extends StatelessWidget {
 
 /// Full-width primary CTA button
 class FitButton extends StatelessWidget {
-  const FitButton({
-    super.key,
-    required this.label,
-    required this.onPressed,
-  });
+  const FitButton({super.key, required this.label, required this.onPressed});
 
   final String label;
   final VoidCallback onPressed;

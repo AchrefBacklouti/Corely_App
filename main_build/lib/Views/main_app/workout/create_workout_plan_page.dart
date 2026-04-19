@@ -39,7 +39,8 @@ class _CreateWorkoutPlanPageState extends State<CreateWorkoutPlanPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -250,7 +251,8 @@ class _CreateWorkoutPlanPageState extends State<CreateWorkoutPlanPage> {
 
   void _showExerciseDetails(BuildContext context, Exercise exercise) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -374,7 +376,9 @@ class _CreateWorkoutPlanPageState extends State<CreateWorkoutPlanPage> {
                                 children: [
                                   Text(
                                     '\u2022 ',
-                                    style: TextStyle(color: palette.textSecondary),
+                                    style: TextStyle(
+                                      color: palette.textSecondary,
+                                    ),
                                   ),
                                   Expanded(
                                     child: Text(
@@ -427,7 +431,8 @@ class _CreateWorkoutPlanPageState extends State<CreateWorkoutPlanPage> {
 
   Widget _detailPill(BuildContext context, String text) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);

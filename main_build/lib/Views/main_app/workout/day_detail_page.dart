@@ -14,7 +14,8 @@ class DayDetailPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -44,7 +45,11 @@ class DayDetailPage extends StatelessWidget {
                   border: Border.all(color: palette.accent, width: 3),
                 ),
                 child: Center(
-                  child: Icon(Icons.play_arrow, color: palette.accent, size: 50),
+                  child: Icon(
+                    Icons.play_arrow,
+                    color: palette.accent,
+                    size: 50,
+                  ),
                 ),
               ),
               const SizedBox(height: 32),

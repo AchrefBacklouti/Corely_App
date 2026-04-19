@@ -64,7 +64,8 @@ class _EditDayPageState extends State<EditDayPage> {
 
   void _showExerciseDetails(BuildContext context, Exercise exercise) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -155,7 +156,9 @@ class _EditDayPageState extends State<EditDayPage> {
                               children: [
                                 Text(
                                   '\u2022 ',
-                                  style: TextStyle(color: palette.textSecondary),
+                                  style: TextStyle(
+                                    color: palette.textSecondary,
+                                  ),
                                 ),
                                 Expanded(
                                   child: Text(
@@ -194,7 +197,8 @@ class _EditDayPageState extends State<EditDayPage> {
 
   Widget _detailPill(BuildContext context, String text) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -216,7 +220,8 @@ class _EditDayPageState extends State<EditDayPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -452,14 +457,13 @@ class _EditDayPageState extends State<EditDayPage> {
                                         child: Image.network(
                                           exercise.gifUrl!,
                                           fit: BoxFit.cover,
-                                          errorBuilder: (_, __, ___) =>
-                                              Center(
-                                                child: Icon(
-                                                  Icons.fitness_center,
-                                                  color: palette.accent,
-                                                  size: 28,
-                                                ),
-                                              ),
+                                          errorBuilder: (_, __, ___) => Center(
+                                            child: Icon(
+                                              Icons.fitness_center,
+                                              color: palette.accent,
+                                              size: 28,
+                                            ),
+                                          ),
                                         ),
                                       )
                                     : Center(
@@ -500,7 +504,9 @@ class _EditDayPageState extends State<EditDayPage> {
                                       ),
                                       Text(
                                         ' • ',
-                                        style: TextStyle(color: palette.textMuted),
+                                        style: TextStyle(
+                                          color: palette.textMuted,
+                                        ),
                                       ),
                                       Text(
                                         exercise.equipment,

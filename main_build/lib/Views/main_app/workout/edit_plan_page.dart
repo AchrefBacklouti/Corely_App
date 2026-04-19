@@ -118,7 +118,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
     final shareCodeController = TextEditingController();
     final scaffoldMessenger = ScaffoldMessenger.of(context);
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -320,7 +321,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
@@ -414,11 +416,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
               child: Row(
                 children: [
                   const SizedBox(width: 14),
-                  Icon(
-                    Icons.edit_rounded,
-                    color: palette.textMuted,
-                    size: 15,
-                  ),
+                  Icon(Icons.edit_rounded, color: palette.textMuted, size: 15),
                   const SizedBox(width: 10),
                   Expanded(
                     child: TextField(
@@ -431,7 +429,9 @@ class _EditPlanPageState extends State<EditPlanPage> {
                         hintText: 'e.g. Push / Pull / Legs',
                         hintStyle: TextStyle(color: palette.textMuted),
                         border: InputBorder.none,
-                        contentPadding: const EdgeInsets.symmetric(vertical: 13),
+                        contentPadding: const EdgeInsets.symmetric(
+                          vertical: 13,
+                        ),
                       ),
                     ),
                   ),
@@ -456,7 +456,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                   clipBehavior: Clip.hardEdge,
                   child: _imagePath != null
                       ? Image.file(File(_imagePath!), fit: BoxFit.cover)
-                        : Icon(
+                      : Icon(
                           Icons.image_outlined,
                           color: palette.textMuted,
                           size: 26,
@@ -1036,7 +1036,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
 
   Widget _sectionLabel(BuildContext context, String text) {
     final theme = Theme.of(context);
-    final palette = theme.extension<CorelyColors>() ??
+    final palette =
+        theme.extension<CorelyColors>() ??
         (theme.brightness == Brightness.dark
             ? AppTheme.darkColors
             : AppTheme.lightColors);
