@@ -1,7 +1,154 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/Views/SharedWidgets/toggle-Unit.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 
-class StatsPageContent extends StatelessWidget {
+class StatsPageContent extends StatefulWidget {
   const StatsPageContent({super.key});
+
+  @override
+  State<StatsPageContent> createState() => _StatsPageContentState();
+}
+
+class _StatsPageContentState extends State<StatsPageContent> {
+  String selectedUnit = "Recovery";
+  TextStyle _legendTextStyles(Color textColor) {
+    return TextStyle(
+      color: textColor, // Matches label color to the gradient ends for clarity
+      fontSize: 11,
+      fontWeight: FontWeight.w600,
+      letterSpacing: 0.5,
+    );
+  }
+
+  Widget _buildDevelopmentLegend() {
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+      child: Column(
+        children: [
+          // 1. The Gradient Bar
+          // 2. The Labels
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Underdeveloped',
+                style: _legendTextStyles(const Color(0xFF81D4FA)),
+              ),
+              Text('Overdeveloped', style: _legendTextStyles(Colors.red)),
+            ],
+          ),
+          Container(
+            height: 12,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6),
+              gradient: const LinearGradient(
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                colors: [
+                  Color(0xFF81D4FA), // Light Blue
+                  Color.fromARGB(255, 104, 248, 104), // Light Green (Middle)
+                  Colors.red, // Red
+                ],
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildGradientRecoveryLegend() {
+    // Constants for standard colors and alignment
+    const red = Colors.red;
+    const yellow = Colors.yellow;
+    const green = Colors.green;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 20.0),
+      child: Column(
+        children: [
+          // 1. The Gradient Bar
+          Container(
+            height: 12, // The "weight" of the bar
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(6), // Completely rounded ends
+              gradient: const LinearGradient(
+                // Gradient starts at the far left and ends at the far right
+                begin: Alignment.centerLeft,
+                end: Alignment.centerRight,
+                // The definitive colors we want in the bar
+                colors: [red, yellow, green],
+                // Specific locations (0.0 to 1.0) for the colors to lock in.
+                // We lock yellow exactly in the middle (0.5).
+                stops: [0.0, 0.5, 1.0],
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 10), // Space between the bar and labels
+          // 2. The Labels (spaced to match the gradient points)
+          Row(
+            // mainAxisAlignment is redundant if everything is aligned manually,
+            // but good for context. We want 'Space Between' the edges.
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              // Left Label: Aligns with 0.0 (Red)
+              Text('Sore', style: _legendTextStyle()),
+
+              // Middle Label: Needs to be centered at 0.5 (Yellow)
+              // We use 'Expanded' and 'Center' to hold the middle ground.
+              Expanded(
+                child: Center(
+                  child: Text('Needs Recovery', style: _legendTextStyle()),
+                ),
+              ),
+
+              // Right Label: Aligns with 1.0 (Green)
+              Text('Fully Healed', style: _legendTextStyle()),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Helper for consistent label styling
+  TextStyle _legendTextStyle() {
+    return const TextStyle(
+      color: Colors.white,
+      fontSize: 12,
+      fontWeight: FontWeight.w400, // Slightly lighter weight for contrast
+    );
+  }
+
+  Widget _buildAnatomyImage() {
+    return Row(
+      children: [
+        // Front Anatomy
+        Expanded(child: _buildSingleAnatomySvg('assets/img/anatomy/face.svg')),
+        const SizedBox(width: 16), // Space between images
+        // Back Anatomy
+        Expanded(child: _buildSingleAnatomySvg('assets/img/anatomy/back.svg')),
+      ],
+    );
+  }
+
+  Widget _buildSingleAnatomySvg(String assetPath) {
+    return SvgPicture.asset(
+      assetPath,
+      // Removed package: 'main_build' as it's likely causing your "Asset not found"
+      colorFilter: const ColorFilter.mode(Colors.white, BlendMode.srcIn),
+      placeholderBuilder: (context) => const Center(
+        child: Padding(
+          padding: EdgeInsets.all(24),
+          child: CircularProgressIndicator(),
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -37,6 +184,92 @@ class StatsPageContent extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 24),
+          Text(
+            "Fitness Overview",
+            style: TextStyle(
+              color: isDarkMode ? Colors.white : Colors.black,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 10),
+          // human diagramm placeholder
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              UnitToggle(
+                leftLabel: "Recovery",
+                rightLabel: "Balance",
+                value: selectedUnit,
+                onChanged: (value) => setState(() => selectedUnit = value),
+                useMaxWidth: true,
+              ),
+            ],
+          ),
+          if (selectedUnit == "Recovery") ...[
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                // Removed 'const' from here
+                const SizedBox(height: 10),
+                const Text(
+                  "Recovery Overview:",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const Text(
+                  "See which muscles are ready to train again today.",
+                  style: TextStyle(color: Colors.white70, fontSize: 17),
+                ),
+                const SizedBox(height: 12),
+                const Text(
+                  "Percentage: 82%",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 16,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 12),
+                _buildGradientRecoveryLegend(),
+                _buildAnatomyImage(),
+              ],
+            ),
+          ] else ...[
+            SizedBox(height: 10),
+            Text(
+              "Balance Overview:",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 20,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            Text(
+              "This would help you compare the development of different muscle groups to improve your training plan.",
+              style: TextStyle(color: Colors.white70, fontSize: 17),
+            ),
+            _buildDevelopmentLegend(),
+            _buildAnatomyImage(),
+            SizedBox(height: 12),
+            Text(
+              "Balance Score: 78",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 16,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            SizedBox(height: 12),
+            Text(
+              "Good balance • Keep it up!",
+              style: TextStyle(color: Colors.white70, fontSize: 14),
+            ),
+          ],
+          const SizedBox(height: 16),
           Text(
             "Trends",
             style: TextStyle(

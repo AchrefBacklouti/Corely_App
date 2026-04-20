@@ -6,6 +6,8 @@ class UnitToggle extends StatefulWidget {
   final String rightLabel;
   final String? value;
   final ValueChanged<String> onChanged;
+  final double? width;
+  final bool useMaxWidth;
 
   const UnitToggle({
     super.key,
@@ -13,6 +15,8 @@ class UnitToggle extends StatefulWidget {
     required this.rightLabel,
     this.value,
     required this.onChanged,
+    this.width,
+    this.useMaxWidth = false,
   });
 
   @override
@@ -30,7 +34,12 @@ class _UnitToggleState extends State<UnitToggle> {
 
   @override
   Widget build(BuildContext context) {
+    final expanded = widget.width != null || widget.useMaxWidth;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = widget.useMaxWidth ? screenWidth - 20 : widget.width;
+
     return Container(
+      width: effectiveWidth,
       decoration: BoxDecoration(
         border: Border.all(
           color: const Color.fromARGB(255, 255, 255, 255),
@@ -39,10 +48,20 @@ class _UnitToggleState extends State<UnitToggle> {
         borderRadius: BorderRadius.circular(16),
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          _unitButton(context, widget.leftLabel, isLeft: true),
-          _unitButton(context, widget.rightLabel, isLeft: false),
+          if (expanded)
+            Expanded(
+              child: _unitButton(context, widget.leftLabel, isLeft: true),
+            )
+          else
+            _unitButton(context, widget.leftLabel, isLeft: true),
+          if (expanded)
+            Expanded(
+              child: _unitButton(context, widget.rightLabel, isLeft: false),
+            )
+          else
+            _unitButton(context, widget.rightLabel, isLeft: false),
         ],
       ),
     );
@@ -62,7 +81,7 @@ class _UnitToggleState extends State<UnitToggle> {
         widget.onChanged(label);
       },
       child: Container(
-        width: 50,
+        width: widget.width == null && !widget.useMaxWidth ? 50 : null,
         padding: const EdgeInsets.symmetric(vertical: 5),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFD9D9D9) : Colors.transparent,
