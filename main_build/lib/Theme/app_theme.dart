@@ -80,7 +80,7 @@ class AppTheme {
   // Main colors
   static const Color accent = Color(0xFFC8FF00);
   static const Color yellow = accent;
-  static const Color darkBackground = Color(0xFF0A0A0C);
+  static const Color darkBackground = Color.fromARGB(255, 0, 0, 22);
   static const Color darkSurface = Color(0xFF111116);
   static const Color darkSurfaceRaised = Color(0xFF191B1F);
   static const Color darkBorder = Color(0xFF1E1E24);

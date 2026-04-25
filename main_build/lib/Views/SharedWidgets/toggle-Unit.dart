@@ -81,8 +81,8 @@ class _UnitToggleState extends State<UnitToggle> {
         widget.onChanged(label);
       },
       child: Container(
-        width: widget.width == null && !widget.useMaxWidth ? 50 : null,
-        padding: const EdgeInsets.symmetric(vertical: 5),
+        width: widget.width == null && !widget.useMaxWidth ? null : null,
+        padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 16),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFFD9D9D9) : Colors.transparent,
           borderRadius: BorderRadius.only(
@@ -99,8 +99,8 @@ class _UnitToggleState extends State<UnitToggle> {
               color: isSelected
                   ? AppTheme.darkBackground
                   : (isDarkMode ? Colors.white : Colors.black),
-              fontSize: 22,
-              fontWeight: FontWeight.w300,
+              fontSize: 14,
+              fontWeight: FontWeight.w500,
             ),
           ),
         ),
