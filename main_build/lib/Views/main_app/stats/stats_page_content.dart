@@ -154,6 +154,9 @@ class _StatsPageContentState extends State<StatsPageContent> {
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
     final isDarkMode = theme.brightness == Brightness.dark;
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
@@ -282,22 +285,25 @@ class _StatsPageContentState extends State<StatsPageContent> {
           _TrendCard(
             title: "Strength",
             trend: "+8% last month",
-            color: Colors.greenAccent.withOpacity(0.15),
+            color: Colors.greenAccent.withValues(alpha: 0.12),
             icon: Icons.trending_up,
+            palette: palette,
           ),
           const SizedBox(height: 12),
           _TrendCard(
             title: "VO₂ Max",
             trend: "Steady",
-            color: Colors.blueAccent.withOpacity(0.15),
+            color: Colors.blueAccent.withValues(alpha: 0.12),
             icon: Icons.show_chart,
+            palette: palette,
           ),
           const SizedBox(height: 12),
           _TrendCard(
             title: "Bodyweight",
             trend: "-1.2 kg over 4 weeks",
-            color: Colors.orangeAccent.withOpacity(0.15),
+            color: Colors.orangeAccent.withValues(alpha: 0.12),
             icon: Icons.monitor_weight,
+            palette: palette,
           ),
           const SizedBox(height: 28),
           const _ProgressList(),
@@ -321,27 +327,32 @@ class _StatCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final theme = Theme.of(context);
+    final isDarkMode = theme.brightness == Brightness.dark;
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
 
     return Container(
       width: MediaQuery.of(context).size.width * 0.42,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1C2B47),
+        color: palette.surface,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            style: TextStyle(color: palette.textSecondary, fontSize: 13),
           ),
           const SizedBox(height: 8),
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: palette.textPrimary,
               fontSize: 24,
               fontWeight: FontWeight.bold,
             ),
@@ -349,10 +360,7 @@ class _StatCard extends StatelessWidget {
           const SizedBox(height: 6),
           Text(
             subtitle,
-            style: TextStyle(
-              color: isDarkMode ? Colors.white54 : Colors.black45,
-              fontSize: 12,
-            ),
+            style: TextStyle(color: palette.textMuted, fontSize: 12),
           ),
         ],
       ),
@@ -365,34 +373,35 @@ class _TrendCard extends StatelessWidget {
   final String trend;
   final Color color;
   final IconData icon;
+  final CorelyColors palette;
 
   const _TrendCard({
     required this.title,
     required this.trend,
     required this.color,
     required this.icon,
+    required this.palette,
   });
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: color,
         borderRadius: BorderRadius.circular(14),
+        border: Border.all(color: palette.border),
       ),
       child: Row(
         children: [
           Container(
             padding: const EdgeInsets.all(10),
             decoration: BoxDecoration(
-              color: isDarkMode ? Colors.white12 : Colors.black12,
+              color: palette.surfaceRaised,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(icon, color: Colors.white, size: 22),
+            child: Icon(icon, color: palette.textPrimary, size: 22),
           ),
           const SizedBox(width: 14),
           Column(
@@ -400,8 +409,8 @@ class _TrendCard extends StatelessWidget {
             children: [
               Text(
                 title,
-                style: const TextStyle(
-                  color: Colors.white,
+                style: TextStyle(
+                  color: palette.textPrimary,
                   fontSize: 16,
                   fontWeight: FontWeight.w700,
                 ),
@@ -409,7 +418,7 @@ class _TrendCard extends StatelessWidget {
               const SizedBox(height: 4),
               Text(
                 trend,
-                style: const TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: palette.textSecondary, fontSize: 14),
               ),
             ],
           ),
@@ -424,6 +433,13 @@ class _ProgressList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: const [
@@ -452,13 +468,20 @@ class _ProgressRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: palette.textPrimary,
             fontSize: 15,
             fontWeight: FontWeight.w600,
           ),
@@ -481,7 +504,7 @@ class _ProgressRow extends StatelessWidget {
             const SizedBox(width: 6),
             Text(
               trend,
-              style: const TextStyle(color: Colors.white70, fontSize: 13),
+              style: TextStyle(color: palette.textSecondary, fontSize: 13),
             ),
           ],
         ),
