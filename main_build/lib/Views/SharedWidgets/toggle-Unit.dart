@@ -97,7 +97,7 @@ class _UnitToggleState extends State<UnitToggle> {
             label,
             style: TextStyle(
               color: isSelected
-                  ? AppTheme.darkBackground
+                  ? AppTheme.darkbackground
                   : (isDarkMode ? Colors.white : Colors.black),
               fontSize: 14,
               fontWeight: FontWeight.w500,

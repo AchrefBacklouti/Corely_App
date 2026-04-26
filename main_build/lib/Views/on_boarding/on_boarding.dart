@@ -49,10 +49,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     (i) => (i + 120).toString(),
   );
   final List<String> goals = [
-    "Build more muscle",
-    "Lose fat",
-    "Recomposition",
-    "Build strength",
+    'Build more muscle',
+    'Lose fat',
+    'Recomposition',
+    'Build strength',
   ];
   final List<String> trainingDays = ['2', '3', '4', '5', '6', '7'];
 
@@ -63,7 +63,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
       setState(() => _currentStep++);
       return;
     }
-
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -82,9 +81,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   }
 
   void _back() {
-    if (_currentStep > 0) {
-      setState(() => _currentStep--);
-    }
+    if (_currentStep > 0) setState(() => _currentStep--);
   }
 
   @override
@@ -127,40 +124,32 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    // Use the theme extension for all colours — auto-switches dark/light.
+    final c = context.colors;
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: c.background,
       appBar: AppBar(
         backgroundColor: Colors.transparent,
         elevation: 0,
         automaticallyImplyLeading: false,
         title: Row(
           children: [
-            // Show back button only after first step
             if (_currentStep > 0)
               IconButton(
-                icon: Icon(
-                  Icons.arrow_back,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  size: 28,
-                ),
+                icon: Icon(Icons.arrow_back, color: c.textPrimary, size: 28),
                 onPressed: _back,
               )
             else
-              const SizedBox(
-                width: 56,
-              ), // Same width as IconButton for consistent layout
+              const SizedBox(width: 56),
             const SizedBox(width: 8),
             Expanded(
               child: ClipRRect(
                 borderRadius: BorderRadius.circular(10),
                 child: LinearProgressIndicator(
                   value: progress,
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  backgroundColor: isDarkMode ? Colors.black : Colors.grey[300],
+                  color: AppTheme.accent,
+                  backgroundColor: c.border,
                   minHeight: 20,
                 ),
               ),
@@ -176,12 +165,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
             Center(
               child: Text(
                 'Tell us more about you',
-                style: TextStyle(
-                  fontSize: 26,
-                  fontWeight: FontWeight.w600,
-                  fontFamily: 'Livvic',
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
+                style: Theme.of(context).textTheme.titleLarge,
               ),
             ),
             const SizedBox(height: 20),
@@ -194,7 +178,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
               ),
             ),
             const SizedBox(height: 20),
-            _buildBottomButton(),
+            _buildBottomButton(context),
             const SizedBox(height: 40),
           ],
         ),
@@ -202,750 +186,527 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     );
   }
 
-  // ======================================================
-  //                   STEP BUILDER
-  // ======================================================
+  // ── Step router ───────────────────────────────
   Widget _buildStep(BuildContext context) {
-    switch (_currentStep) {
-      case 0:
-        return _genderStep();
-      case 1:
-        return _ageStep();
-      case 2:
-        return _weightStep();
-      case 3:
-        return _heightStep();
-      case 4:
-        return _goalStep();
-      case 5:
-        return _trainingStep();
-      default:
-        return const SizedBox();
-    }
+    return switch (_currentStep) {
+      0 => _genderStep(),
+      1 => _ageStep(),
+      2 => _weightStep(),
+      3 => _heightStep(),
+      4 => _goalStep(),
+      5 => _trainingStep(),
+      _ => const SizedBox(),
+    };
   }
 
-  // ======================================================
-  //                   STEPS
-  // ======================================================
-
+  // ── Gender ────────────────────────────────────
   Widget _genderStep() {
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        return Column(
-          key: const ValueKey('gender'),
+    final c = context.colors;
+    return Column(
+      key: const ValueKey('gender'),
+      children: [
+        const SizedBox(height: 10),
+        Text(
+          "Let's start simple — what's your gender?",
+          style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+            color: c.textSecondary,
+            fontSize: 20,
+            fontFamily: 'LindenHill',
+          ),
+        ),
+        const SizedBox(height: 10),
+        Column(
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const SizedBox(height: 10),
-            Text(
-              "Let's start simple — what's your gender?",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 20,
-                fontFamily: 'LindenHill',
-                fontStyle: FontStyle.normal,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                _genderButton('female', Icons.female),
-                const SizedBox(height: 15),
-                _genderButton('male', Icons.male),
-              ],
-            ),
+            _genderButton('female', Icons.female),
+            const SizedBox(height: 15),
+            _genderButton('male', Icons.male),
           ],
-        );
-      },
+        ),
+      ],
     );
   }
 
   Widget _genderButton(String label, IconData icon) {
+    final c = context.colors;
     final isSelected = gender == label;
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        return GestureDetector(
-          onTap: () => setState(() => gender = label),
-          child: AnimatedContainer(
-            duration: const Duration(milliseconds: 250),
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              color: isSelected ? AppTheme.yellow : AppTheme.darkSurface,
-              shape: BoxShape.circle,
+
+    return GestureDetector(
+      onTap: () => setState(() => gender = label),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        width: 180,
+        height: 180,
+        decoration: BoxDecoration(
+          // Selected → accent; unselected → surface card colour
+          color: isSelected ? AppTheme.accent : c.surfaceRaised,
+          shape: BoxShape.circle,
+          border: Border.all(
+            color: isSelected ? AppTheme.accent : c.border,
+            width: 2,
+          ),
+        ),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.start,
+          children: [
+            Icon(
+              icon,
+              size: 120,
+              color: isSelected ? Colors.black : c.textPrimary,
+              shadows: const [
+                Shadow(
+                  offset: Offset(2, 2),
+                  blurRadius: 4,
+                  color: Colors.black45,
+                ),
+              ],
             ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.start,
-              children: [
-                Icon(
-                  icon,
-                  size: 120,
-                  color: isSelected
-                      ? Colors.black
-                      : (isDarkMode ? Colors.white : Colors.black),
-                  shadows: const [
-                    Shadow(
-                      offset: Offset(2, 2),
-                      blurRadius: 4,
-                      color: Colors.black45,
+            Text(
+              label,
+              style: TextStyle(
+                color: isSelected ? Colors.black : c.textSecondary,
+                fontFamily: 'Livvic',
+                fontSize: 28,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Age ───────────────────────────────────────
+  Widget _ageStep() {
+    final c = context.colors;
+    final ageValue = age ?? '21';
+    final ageIndex = ages.indexOf(ageValue);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!ageController.hasClients) return;
+      if (ageController.selectedItem != ageIndex)
+        ageController.jumpToItem(ageIndex);
+    });
+
+    return Column(
+      key: const ValueKey('age'),
+      children: [
+        Text(
+          "Cool — how old are you?",
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 30),
+        Expanded(
+          child: _pickerStack(
+            buildPicker(
+              ages,
+              ageValue,
+              Theme.of(context).brightness == Brightness.dark,
+              (val) => setState(() => age = val),
+              fontSize: 36,
+              selectedHeight: 260,
+              controller: ageController,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Weight ────────────────────────────────────
+  Widget _weightStep() {
+    final c = context.colors;
+    final weights = selectedUnitWeight == 'kg' ? weightsKg : weightsLbs;
+    final weightIndex = weights.indexOf(selectedWeight);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!weightController.hasClients) return;
+      if (weightController.selectedItem != weightIndex) {
+        weightController.jumpToItem(weightIndex);
+      }
+    });
+
+    return Column(
+      key: const ValueKey('weight'),
+      children: [
+        Text(
+          "Almost done 💪 — what's your current weight?",
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            UnitToggle(
+              leftLabel: 'lbs',
+              rightLabel: 'kg',
+              value: selectedUnitWeight,
+              onChanged: (val) {
+                if (selectedUnitWeight == val) return;
+                final numeric = double.tryParse(selectedWeight) ?? 0;
+                final converted = val == 'kg'
+                    ? (numeric / 2.20462).round().toString()
+                    : (numeric * 2.20462).round().toString();
+                final newList = val == 'kg' ? weightsKg : weightsLbs;
+                weightController.jumpToItem(newList.indexOf(converted));
+                setState(() {
+                  selectedWeight = converted;
+                  selectedUnitWeight = val;
+                });
+              },
+            ),
+          ],
+        ),
+        Expanded(
+          child: _pickerStack(
+            buildPicker(
+              weights,
+              selectedWeight,
+              Theme.of(context).brightness == Brightness.dark,
+              (val) => setState(() => selectedWeight = val),
+              fontSize: 36,
+              selectedHeight: 280,
+              controller: weightController,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Height ────────────────────────────────────
+  Widget _heightStep() {
+    final c = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (selectedHeightUnit == 'cm') {
+        if (!heightCmController.hasClients) return;
+        final i = cmHeights.indexOf(selectedHeightCm);
+        if (heightCmController.selectedItem != i)
+          heightCmController.jumpToItem(i);
+      } else {
+        if (heightFtController.hasClients) {
+          final i = ftHeights.indexOf(selectedHeightFt);
+          if (heightFtController.selectedItem != i)
+            heightFtController.jumpToItem(i);
+        }
+        if (heightInController.hasClients) {
+          final i = inHeights.indexOf(selectedHeightIn);
+          if (heightInController.selectedItem != i)
+            heightInController.jumpToItem(i);
+        }
+      }
+    });
+
+    return Column(
+      key: const ValueKey('height'),
+      children: [
+        Text(
+          "And how tall are you?",
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 15),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.end,
+          children: [
+            UnitToggle(
+              leftLabel: 'in',
+              rightLabel: 'cm',
+              value: selectedHeightUnit,
+              onChanged: (val) {
+                if (selectedHeightUnit == val) return;
+                if (val == 'cm') {
+                  final cm =
+                      (int.parse(selectedHeightFt) * 30.48 +
+                              int.parse(selectedHeightIn) * 2.54)
+                          .round()
+                          .toString();
+                  heightCmController.jumpToItem(cmHeights.indexOf(cm));
+                  setState(() {
+                    selectedHeightCm = cm;
+                    selectedHeightUnit = val;
+                  });
+                } else {
+                  final cmVal = double.parse(selectedHeightCm);
+                  final ft = (cmVal / 30.48).floor().toString();
+                  final inch = ((cmVal - int.parse(ft) * 30.48) / 2.54)
+                      .round()
+                      .toString();
+                  heightFtController.jumpToItem(ftHeights.indexOf(ft));
+                  heightInController.jumpToItem(inHeights.indexOf(inch));
+                  setState(() {
+                    selectedHeightFt = ft;
+                    selectedHeightIn = inch;
+                    selectedHeightUnit = val;
+                  });
+                }
+              },
+            ),
+          ],
+        ),
+        const SizedBox(height: 10),
+        Expanded(
+          child: selectedHeightUnit == 'cm'
+              ? _pickerStack(
+                  buildPicker(
+                    cmHeights,
+                    selectedHeightCm,
+                    isDark,
+                    (val) => setState(() => selectedHeightCm = val),
+                    fontSize: 20,
+                    selectedHeight: 280,
+                    controller: heightCmController,
+                  ),
+                )
+              : Row(
+                  children: [
+                    Expanded(
+                      child: _pickerStack(
+                        buildPicker(
+                          ftHeights,
+                          selectedHeightFt,
+                          isDark,
+                          (val) => setState(() => selectedHeightFt = val),
+                          fontSize: 28,
+                          selectedHeight: 240,
+                          controller: heightFtController,
+                        ),
+                        horizontalMargin: 20,
+                        barHeight: 4,
+                      ),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: _pickerStack(
+                        buildPicker(
+                          inHeights,
+                          selectedHeightIn,
+                          isDark,
+                          (val) => setState(() => selectedHeightIn = val),
+                          fontSize: 28,
+                          selectedHeight: 240,
+                          controller: heightInController,
+                        ),
+                        horizontalMargin: 20,
+                        barHeight: 4,
+                      ),
                     ),
                   ],
                 ),
+        ),
+      ],
+    );
+  }
 
-                Text(
-                  label,
-                  style: TextStyle(
-                    color: isSelected
-                        ? Colors.black
-                        : (isDarkMode ? Colors.white70 : Colors.black54),
-                    fontFamily: 'Livvic',
-                    fontSize: 28,
-                    fontWeight: FontWeight.w600,
-                    shadows: [
-                      Shadow(
-                        offset: Offset(2, 2),
-                        blurRadius: 6,
-                        color: Colors.black45,
-                      ),
-                    ],
+  // ── Goal ──────────────────────────────────────
+  Widget _goalStep() {
+    final c = context.colors;
+    return Column(
+      key: const ValueKey('goal'),
+      children: [
+        Text(
+          "What's your main goal right now?",
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 30),
+        ...goals.map((goal) {
+          final selected = selectedGoal == goal;
+          return Padding(
+            padding: const EdgeInsets.only(bottom: 18),
+            child: GestureDetector(
+              onTap: () => setState(() => selectedGoal = goal),
+              child: Row(
+                children: [
+                  AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    width: 25,
+                    height: 25,
+                    decoration: BoxDecoration(
+                      border: Border.all(color: c.textPrimary, width: 2),
+                      color: selected ? AppTheme.accent : Colors.transparent,
+                    ),
+                    child: selected
+                        ? const Icon(Icons.check, color: Colors.black, size: 18)
+                        : null,
                   ),
+                  const SizedBox(width: 10),
+                  Text(
+                    goal,
+                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
+                      color: selected ? AppTheme.accent : c.textPrimary,
+                      fontSize: 20,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          );
+        }),
+      ],
+    );
+  }
+
+  // ── Training days ─────────────────────────────
+  Widget _trainingStep() {
+    final c = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final trainingIndex = trainingDays.indexOf(selectedTrainingDays);
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!trainingDaysController.hasClients) return;
+      if (trainingDaysController.selectedItem != trainingIndex) {
+        trainingDaysController.jumpToItem(trainingIndex);
+      }
+    });
+
+    return Column(
+      key: const ValueKey('training'),
+      children: [
+        Text(
+          "Finally, let's find your perfect rhythm 💪\nHow many days a week do you want to train?",
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 30),
+        SizedBox(
+          height: 350,
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: _pickerStack(
+                  buildPicker(
+                    trainingDays,
+                    selectedTrainingDays,
+                    isDark,
+                    (val) => setState(() => selectedTrainingDays = val),
+                    fontSize: 32,
+                    selectedHeight: 240,
+                    controller: trainingDaysController,
+                  ),
+                  horizontalMargin: 60,
+                  barHeight: 4,
                 ),
-              ],
+              ),
+              const SizedBox(width: 12),
+              Text(
+                'Days/week',
+                style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                  color: c.textPrimary,
+                  fontSize: 18,
+                ),
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 15),
+        Text(
+          _getTrainingMessage(selectedTrainingDays),
+          textAlign: TextAlign.center,
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+            height: 1.4,
+          ),
+        ),
+      ],
+    );
+  }
+
+  // ── Shared picker scaffold ─────────────────────
+  // Wraps any picker in the two yellow selection bars so we don't
+  // repeat that Stack boilerplate six times.
+  Widget _pickerStack(
+    Widget picker, {
+    double horizontalMargin = 60,
+    double barHeight = 9,
+    double horizontalPadding = 40,
+  }) {
+    return Stack(
+      alignment: Alignment.center,
+      children: [
+        // Top bar
+        Align(
+          alignment: const Alignment(0, -0.15),
+          child: Container(
+            height: barHeight,
+            width: double.infinity,
+            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: AppTheme
+                  .accent, // uses the theme accent, not hardcoded yellow
             ),
           ),
-        );
-      },
+        ),
+        // Bottom bar
+        Align(
+          alignment: const Alignment(0, 0.15),
+          child: Container(
+            height: barHeight,
+            width: double.infinity,
+            margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(10),
+              color: AppTheme.accent,
+            ),
+          ),
+        ),
+        Padding(
+          padding: EdgeInsets.symmetric(horizontal: horizontalPadding),
+          child: picker,
+        ),
+      ],
     );
   }
 
-  Widget _ageStep() {
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        final ageValue = age ?? '21';
-        final ageIndex = ages.indexOf(ageValue);
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!ageController.hasClients) return;
-          if (ageController.selectedItem != ageIndex) {
-            ageController.jumpToItem(ageIndex);
-          }
-        });
-
-        return Column(
-          key: const ValueKey('age'),
-          children: [
-            Text(
-              "Cool — how old are you?",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 30),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment(0, -0.15),
-                    child: Container(
-                      height: 9,
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 60),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.yellowAccent,
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment(0, 0.15),
-                    child: Container(
-                      height: 9,
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 60),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.yellowAccent,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: buildPicker(
-                      ages,
-                      ageValue,
-                      isDarkMode,
-                      (val) => setState(() => age = val),
-                      fontSize: 36,
-                      selectedHeight: 260,
-                      controller: ageController,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _weightStep() {
-    final List<String> weights = selectedUnitWeight == 'kg'
-        ? weightsKg
-        : weightsLbs;
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        final weightValue = selectedWeight;
-        final weightIndex = weights.indexOf(weightValue);
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!weightController.hasClients) return;
-          if (weightController.selectedItem != weightIndex) {
-            weightController.jumpToItem(weightIndex);
-          }
-        });
-
-        return Column(
-          key: const ValueKey('weight'),
-          children: [
-            Text(
-              "Almost done 💪 — what's your current weight?",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                UnitToggle(
-                  leftLabel: 'lbs',
-                  rightLabel: 'kg',
-                  value: selectedUnitWeight,
-                  onChanged: (val) {
-                    if (selectedUnitWeight != val) {
-                      // Convert the current value before switching
-                      double numericValue =
-                          double.tryParse(selectedWeight) ?? 0;
-                      String newSelectedWeight;
-                      if (val == 'kg') {
-                        // Convert from lbs → kg
-                        double converted = numericValue / 2.20462;
-                        newSelectedWeight = converted.round().toString();
-                      } else {
-                        // Convert from kg → lbs
-                        double converted = numericValue * 2.20462;
-                        newSelectedWeight = converted.round().toString();
-                      }
-                      final newList = val == 'kg' ? weightsKg : weightsLbs;
-                      weightController.jumpToItem(
-                        newList.indexOf(newSelectedWeight),
-                      );
-                      setState(() {
-                        selectedWeight = newSelectedWeight;
-                        selectedUnitWeight = val;
-                      });
-                    }
-                  },
-                ),
-              ],
-            ),
-            Expanded(
-              child: Stack(
-                alignment: Alignment.center,
-                children: [
-                  Align(
-                    alignment: Alignment(0, -0.15),
-                    child: Container(
-                      height: 9,
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 60),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.yellowAccent,
-                      ),
-                    ),
-                  ),
-                  Align(
-                    alignment: Alignment(0, 0.15),
-                    child: Container(
-                      height: 9,
-                      width: double.infinity,
-                      margin: const EdgeInsets.symmetric(horizontal: 60),
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(10),
-                        color: Colors.yellowAccent,
-                      ),
-                    ),
-                  ),
-                  Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 40),
-                    child: buildPicker(
-                      weights, // List<String> items
-                      selectedWeight, // String selectedValue
-                      isDarkMode,
-                      (val) => setState(() => selectedWeight = val), // Callback
-                      fontSize: 36,
-                      selectedHeight: 280, // Named parameter
-                      controller: weightController,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _heightStep() {
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (selectedHeightUnit == 'cm') {
-            if (!heightCmController.hasClients) return;
-            final cmIndex = cmHeights.indexOf(selectedHeightCm);
-            if (heightCmController.selectedItem != cmIndex) {
-              heightCmController.jumpToItem(cmIndex);
-            }
-          } else {
-            if (!heightFtController.hasClients) return;
-            final ftIndex = ftHeights.indexOf(selectedHeightFt);
-            if (heightFtController.selectedItem != ftIndex) {
-              heightFtController.jumpToItem(ftIndex);
-            }
-            if (!heightInController.hasClients) return;
-            final inIndex = inHeights.indexOf(selectedHeightIn);
-            if (heightInController.selectedItem != inIndex) {
-              heightInController.jumpToItem(inIndex);
-            }
-          }
-        });
-
-        return Column(
-          key: const ValueKey('height'),
-          children: [
-            Text(
-              "And how tall are you?",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.end,
-              children: [
-                UnitToggle(
-                  leftLabel: 'in',
-                  rightLabel: 'cm',
-                  value: selectedHeightUnit,
-                  onChanged: (val) {
-                    if (selectedHeightUnit != val) {
-                      if (val == 'cm') {
-                        // Convert from ft/in to cm
-                        int ft = int.parse(selectedHeightFt);
-                        int inch = int.parse(selectedHeightIn);
-                        double cm = ft * 30.48 + inch * 2.54;
-                        String newCm = cm.round().toString();
-                        heightCmController.jumpToItem(cmHeights.indexOf(newCm));
-                        setState(() {
-                          selectedHeightCm = newCm;
-                          selectedHeightUnit = val;
-                        });
-                      } else {
-                        // Convert from cm to ft/in
-                        double cm = double.parse(selectedHeightCm);
-                        int ft = (cm / 30.48).floor();
-                        double remainingCm = cm - ft * 30.48;
-                        int inch = (remainingCm / 2.54).round();
-                        String newFt = ft.toString();
-                        String newIn = inch.toString();
-                        heightFtController.jumpToItem(ftHeights.indexOf(newFt));
-                        heightInController.jumpToItem(inHeights.indexOf(newIn));
-                        setState(() {
-                          selectedHeightFt = newFt;
-                          selectedHeightIn = newIn;
-                          selectedHeightUnit = val;
-                        });
-                      }
-                    }
-                  },
-                ),
-              ],
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: selectedHeightUnit == 'cm'
-                  ? Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: Alignment(0, -0.15),
-                          child: Container(
-                            height: 9,
-                            width: double.infinity,
-                            margin: const EdgeInsets.symmetric(horizontal: 60),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.yellowAccent,
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: Alignment(0, 0.15),
-                          child: Container(
-                            height: 9,
-                            width: double.infinity,
-                            margin: const EdgeInsets.symmetric(horizontal: 60),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.yellowAccent,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 40),
-                          child: buildPicker(
-                            cmHeights,
-                            selectedHeightCm,
-                            isDarkMode,
-                            (val) {
-                              setState(() => selectedHeightCm = val);
-                            },
-                            fontSize: 20.0,
-                            selectedHeight: 280,
-                            controller: heightCmController,
-                          ),
-                        ),
-                      ],
-                    )
-                  : Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: [
-                        // ============ FEET PICKER ============
-                        Expanded(
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Align(
-                                alignment: const Alignment(0, -0.15),
-                                child: Container(
-                                  height: 4,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.yellowAccent,
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: const Alignment(0, 0.15),
-                                child: Container(
-                                  height: 4,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.yellowAccent,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                ),
-                                child: buildPicker(
-                                  ftHeights,
-                                  selectedHeightFt,
-                                  isDarkMode,
-                                  (val) =>
-                                      setState(() => selectedHeightFt = val),
-                                  fontSize: 28.0,
-                                  selectedHeight: 240,
-                                  controller: heightFtController,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        const SizedBox(width: 12),
-
-                        // ============ INCH PICKER ============
-                        Expanded(
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Align(
-                                alignment: const Alignment(0, -0.15),
-                                child: Container(
-                                  height: 4,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.yellowAccent,
-                                  ),
-                                ),
-                              ),
-                              Align(
-                                alignment: const Alignment(0, 0.15),
-                                child: Container(
-                                  height: 4,
-                                  margin: const EdgeInsets.symmetric(
-                                    horizontal: 20,
-                                  ),
-                                  decoration: BoxDecoration(
-                                    borderRadius: BorderRadius.circular(10),
-                                    color: Colors.yellowAccent,
-                                  ),
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 10,
-                                ),
-                                child: buildPicker(
-                                  inHeights,
-                                  selectedHeightIn,
-                                  isDarkMode,
-                                  (val) =>
-                                      setState(() => selectedHeightIn = val),
-                                  fontSize: 28.0,
-                                  selectedHeight: 240,
-                                  controller: heightInController,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _goalStep() {
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        return Column(
-          key: const ValueKey('goal'),
-          children: [
-            Text(
-              "What's your main goal right now?",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 30),
-            ...goals.map((goal) {
-              final selected = selectedGoal == goal;
-              return Padding(
-                padding: const EdgeInsets.only(bottom: 18.0),
-                child: GestureDetector(
-                  onTap: () => setState(() => selectedGoal = goal),
-                  child: Row(
-                    children: [
-                      Container(
-                        width: 25,
-                        height: 25,
-                        decoration: BoxDecoration(
-                          border: Border.all(
-                            color: isDarkMode ? Colors.white : Colors.black,
-                            width: 2,
-                          ),
-                          color: selected
-                              ? (isDarkMode ? Colors.white70 : Colors.black12)
-                              : Colors.transparent,
-                        ),
-                        child: selected
-                            ? const Icon(
-                                Icons.check,
-                                color: AppTheme.darkBackground,
-                                size: 20,
-                              )
-                            : null,
-                      ),
-                      const SizedBox(width: 10),
-                      Text(
-                        goal,
-                        style: TextStyle(
-                          color: isDarkMode ? Colors.white : Colors.black,
-                          fontSize: 20,
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              );
-            }),
-          ],
-        );
-      },
-    );
-  }
-
-  Widget _trainingStep() {
-    return Builder(
-      builder: (context) {
-        final isDarkMode = Theme.of(context).brightness == Brightness.dark;
-        final trainingValue = selectedTrainingDays;
-        final trainingIndex = trainingDays.indexOf(trainingValue);
-
-        WidgetsBinding.instance.addPostFrameCallback((_) {
-          if (!trainingDaysController.hasClients) return;
-          if (trainingDaysController.selectedItem != trainingIndex) {
-            trainingDaysController.jumpToItem(trainingIndex);
-          }
-        });
-
-        return Column(
-          key: const ValueKey('training'),
-          children: [
-            Text(
-              "Finally, let's find your perfect rhythm 💪\nHow many days a week do you want to train?",
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 30),
-
-            // 🔹 Wrap row in a SizedBox or Expanded to give height
-            SizedBox(
-              height: 350, // ensures enough space for picker + bars
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.start,
-                crossAxisAlignment: CrossAxisAlignment.center,
-                children: [
-                  // 🔹 The picker area
-                  Expanded(
-                    flex: 1,
-                    child: Stack(
-                      alignment: Alignment.center,
-                      children: [
-                        Align(
-                          alignment: const Alignment(0, -0.15),
-                          child: Container(
-                            height: 4,
-                            margin: const EdgeInsets.symmetric(horizontal: 60),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.yellowAccent,
-                            ),
-                          ),
-                        ),
-                        Align(
-                          alignment: const Alignment(0, 0.15),
-                          child: Container(
-                            height: 4,
-                            margin: const EdgeInsets.symmetric(horizontal: 60),
-                            decoration: BoxDecoration(
-                              borderRadius: BorderRadius.circular(10),
-                              color: Colors.yellowAccent,
-                            ),
-                          ),
-                        ),
-                        Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20),
-                          child: buildPicker(
-                            trainingDays,
-                            selectedTrainingDays,
-                            isDarkMode,
-                            (val) => setState(() => selectedTrainingDays = val),
-                            fontSize: 32.0,
-                            selectedHeight: 240,
-                            controller: trainingDaysController,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-                  const SizedBox(width: 12),
-
-                  // 🔹 Text label next to picker
-                  Text(
-                    'Days/week',
-                    style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-
-            const SizedBox(height: 15),
-            Text(
-              _getTrainingMessage(selectedTrainingDays),
-              textAlign: TextAlign.center,
-              style: TextStyle(
-                color: isDarkMode ? Colors.white70 : Colors.black54,
-                fontSize: 16,
-                height: 1.4,
-              ),
-            ),
-          ],
-        );
-      },
-    );
-  }
-
-  // Shared "Select" button
-  Widget _buildBottomButton() {
+  // ── Continue / Finish button ───────────────────
+  Widget _buildBottomButton(BuildContext context) {
     return ElevatedButton(
       onPressed: _next,
+      // Inherits ElevatedButtonThemeData from AppTheme._build;
+      // override only the shape/padding that differs from the default.
       style: ElevatedButton.styleFrom(
-        backgroundColor: AppTheme.yellow,
+        backgroundColor: AppTheme.accent,
         foregroundColor: Colors.black,
         padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 60),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
       ),
       child: Text(
-        _currentStep == 5 ? "Finish" : "Select",
+        _currentStep == 5 ? 'Finish' : 'Select',
         style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       ),
     );
   }
 
   String _getTrainingMessage(String days) {
-    switch (days) {
-      case '2':
-        return "Perfect start! Two focused sessions are enough to build momentum 💪";
-      case '3':
-        return "Three days a week? That’s a smart, sustainable routine 🔥";
-      case '4':
-        return "Nice! Four sessions give a great balance of intensity and recovery ⚖️";
-      case '5':
-        return "Five days — now we’re getting serious! Let’s push your limits 💥";
-      case '6':
-        return "Six days? You’re in beast mode 😤 — recovery will be key here.";
-      case '7':
-        return "Every day?! That’s elite dedication 🏆 — Corely will help you stay balanced.";
-      default:
-        return "Choose what fits your life — Corely adapts to you.";
-    }
+    return switch (days) {
+      '2' =>
+        "Perfect start! Two focused sessions are enough to build momentum 💪",
+      '3' => "Three days a week? That's a smart, sustainable routine 🔥",
+      '4' =>
+        "Nice! Four sessions give a great balance of intensity and recovery ⚖️",
+      '5' => "Five days — now we're getting serious! Let's push your limits 💥",
+      '6' => "Six days? You're in beast mode 😤 — recovery will be key here.",
+      '7' =>
+        "Every day?! That's elite dedication 🏆 — Corely will help you stay balanced.",
+      _ => "Choose what fits your life — Corely adapts to you.",
+    };
   }
 }

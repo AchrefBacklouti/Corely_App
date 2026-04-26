@@ -38,13 +38,17 @@ class _CorelyAppState extends State<CorelyApp> {
           child: MaterialApp(
             title: 'Corely',
             debugShowCheckedModeBanner: false,
-            theme: AppTheme.lightTheme,
-            darkTheme: AppTheme.darkTheme,
+            theme: ThemeData.light().copyWith(
+              extensions: [CorelyColors.light()],
+            ),
+            darkTheme: ThemeData.dark().copyWith(
+              extensions: [CorelyColors.dark()],
+            ),
             themeMode: _themeProvider.themeMode,
             initialRoute: '/',
             routes: {
               '/': (context) => const LoadingPage(),
-              '/welcome': (context) => StartPage(themeProvider: _themeProvider),
+              '/welcome': (context) => StartPage(),
               '/login': (context) => const LoginPage(),
               '/home': (context) => const MainShellPage(),
             },

@@ -27,12 +27,10 @@ class _WorkoutPageState extends State<WorkoutPage>
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final c = context.colors;
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: c.background,
       body: SafeArea(
         child: Padding(
           padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
@@ -48,7 +46,7 @@ class _WorkoutPageState extends State<WorkoutPage>
                   Text(
                     "Corely💪",
                     style: TextStyle(
-                      color: isDarkMode ? Colors.white : Colors.black,
+                      color: c.textPrimary,
                       fontSize: 28,
                       fontWeight: FontWeight.bold,
                     ),
@@ -57,20 +55,11 @@ class _WorkoutPageState extends State<WorkoutPage>
                     children: [
                       CircleAvatar(
                         radius: 18,
-                        backgroundColor: isDarkMode
-                            ? Colors.white
-                            : Colors.black,
-                        child: Icon(
-                          Icons.person,
-                          color: isDarkMode ? Colors.black : Colors.white,
-                        ),
+                        backgroundColor: c.surface,
+                        child: Icon(Icons.person, color: c.textSecondary),
                       ),
                       const SizedBox(width: 12),
-                      Icon(
-                        Icons.settings,
-                        color: isDarkMode ? Colors.white : Colors.black,
-                        size: 26,
-                      ),
+                      Icon(Icons.settings, color: c.textPrimary, size: 26),
                     ],
                   ),
                 ],

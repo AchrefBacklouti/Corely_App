@@ -336,7 +336,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage>
           ),
           const SizedBox(width: 10),
           Text(
-            'Frame 45',
+            'back',
             style: TextStyle(
               color: Colors.white.withOpacity(0.3),
               fontSize: 11,

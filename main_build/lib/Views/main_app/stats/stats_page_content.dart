@@ -2,8 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:main_build/Views/SharedWidgets/toggle-Unit.dart';
-import 'athlete_page.dart'; // <-- add this import
-import 'trend_detail_page.dart'; // <-- add this import
+import 'athlete_page.dart';
+import 'trend_detail_page.dart';
+// Import your theme so we can use context.colors
+import 'package:main_build/theme/app_theme.dart'; // adjust path as needed
 
 // ─────────────────────────────────────────────
 // Data model
@@ -35,8 +37,6 @@ const List<MuscleData> _frontMuscles = [
   MuscleData(id: 'brachialis_right', recoveryScore: 0, developmentStatus: 50),
   MuscleData(id: 'bi_longhead_right', recoveryScore: 0, developmentStatus: 50),
   MuscleData(id: 'bi_shorthead_right', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'forearm_left', recoveryScore: 0, developmentStatus: 70),
-  MuscleData(id: 'forearm_right', recoveryScore: 0, developmentStatus: 20),
   MuscleData(id: 'abs_low', recoveryScore: 100, developmentStatus: 30),
   MuscleData(id: 'abs_up', recoveryScore: 100, developmentStatus: 50),
   MuscleData(id: 'obliques_left', recoveryScore: 0, developmentStatus: 80),
@@ -114,6 +114,7 @@ const List<MuscleData> _backMuscles = [
   MuscleData(id: 'side_delts_right', recoveryScore: 50, developmentStatus: 90),
   MuscleData(id: 'side_delts_left', recoveryScore: 50, developmentStatus: 90),
   MuscleData(id: 'extensorsi_right', recoveryScore: 50, developmentStatus: 50),
+  MuscleData(id: 'extensorsi_left', recoveryScore: 50, developmentStatus: 50),
   MuscleData(id: 'extensor_right', recoveryScore: 50, developmentStatus: 50),
   MuscleData(id: 'top_right', recoveryScore: 50, developmentStatus: 60),
   MuscleData(id: 'extensors_right', recoveryScore: 50, developmentStatus: 60),
@@ -211,13 +212,24 @@ String _muscleIdPattern(String muscleId) {
 
 // ─────────────────────────────────────────────
 // SVG colour injection
+// Now accepts an optional outlineColor for the figure silhouette/outline
 // ─────────────────────────────────────────────
 Future<String> _buildColoredSvg(
   String assetPath,
   List<MuscleData> muscles,
-  bool isRecovery,
-) async {
+  bool isRecovery, {
+  Color outlineColor = Colors.white,
+}) async {
   String svg = await rootBundle.loadString(assetPath);
+
+  // Replace the base figure outline/stroke color (typically black or white in SVG)
+  // This targets the outermost silhouette paths that use stroke for the body outline.
+  // We replace the SVG-level stroke/fill used for the figure outline.
+  final outlineHex = _colorToHex(outlineColor);
+  // Replace base figure outline: any path with stroke="#000000" or stroke="black"
+  svg = svg.replaceAll('stroke="#000000"', 'stroke="$outlineHex"');
+  svg = svg.replaceAll('stroke="black"', 'stroke="$outlineHex"');
+  svg = svg.replaceAll('stroke="#000"', 'stroke="$outlineHex"');
 
   final Map<String, Color> muscleColors = {};
   for (final m in muscles) {
@@ -293,48 +305,132 @@ Future<String> _buildColoredSvg(
 enum AnatomyViewMode { both, frontOnly, backOnly }
 
 // ─────────────────────────────────────────────
-// SVG cache — load once per session, switch instantly
+// SVG cache — keyed by isRecovery + isDark
 // ─────────────────────────────────────────────
 class _SvgCache {
-  static String? frontRecovery;
-  static String? backRecovery;
-  static String? frontBalance;
-  static String? backBalance;
+  // dark variants (white outline)
+  static String? frontRecoveryDark;
+  static String? backRecoveryDark;
+  static String? frontBalanceDark;
+  static String? backBalanceDark;
 
-  static bool get recoveryReady =>
-      frontRecovery != null && backRecovery != null;
-  static bool get balanceReady => frontBalance != null && backBalance != null;
+  // light variants (black outline)
+  static String? frontRecoveryLight;
+  static String? backRecoveryLight;
+  static String? frontBalanceLight;
+  static String? backBalanceLight;
 
-  /// Pre-builds all four SVG strings in one async call.
-  static Future<void> prewarm() async {
-    final results = await Future.wait([
-      if (frontRecovery == null)
-        _buildColoredSvg('assets/img/anatomy/face.svg', _frontMuscles, true)
-      else
-        Future.value(frontRecovery!),
-      if (backRecovery == null)
-        _buildColoredSvg('assets/img/anatomy/back.svg', _backMuscles, true)
-      else
-        Future.value(backRecovery!),
-      if (frontBalance == null)
-        _buildColoredSvg('assets/img/anatomy/face.svg', _frontMuscles, false)
-      else
-        Future.value(frontBalance!),
-      if (backBalance == null)
-        _buildColoredSvg('assets/img/anatomy/back.svg', _backMuscles, false)
-      else
-        Future.value(backBalance!),
-    ]);
-    frontRecovery = results[0];
-    backRecovery = results[1];
-    frontBalance = results[2];
-    backBalance = results[3];
+  static bool isReady(bool isDark) {
+    return isDark
+        ? (frontRecoveryDark != null &&
+              backRecoveryDark != null &&
+              frontBalanceDark != null &&
+              backBalanceDark != null)
+        : (frontRecoveryLight != null &&
+              backRecoveryLight != null &&
+              frontBalanceLight != null &&
+              backBalanceLight != null);
   }
 
-  static String? front(bool isRecovery) =>
-      isRecovery ? frontRecovery : frontBalance;
-  static String? back(bool isRecovery) =>
-      isRecovery ? backRecovery : backBalance;
+  static Future<void> prewarm({required bool isDark}) async {
+    final outline = isDark ? Colors.white : Colors.black;
+
+    if (isDark) {
+      final results = await Future.wait([
+        frontRecoveryDark == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/face.svg',
+                _frontMuscles,
+                true,
+                outlineColor: outline,
+              )
+            : Future.value(frontRecoveryDark!),
+        backRecoveryDark == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/back.svg',
+                _backMuscles,
+                true,
+                outlineColor: outline,
+              )
+            : Future.value(backRecoveryDark!),
+        frontBalanceDark == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/face.svg',
+                _frontMuscles,
+                false,
+                outlineColor: outline,
+              )
+            : Future.value(frontBalanceDark!),
+        backBalanceDark == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/back.svg',
+                _backMuscles,
+                false,
+                outlineColor: outline,
+              )
+            : Future.value(backBalanceDark!),
+      ]);
+      frontRecoveryDark = results[0];
+      backRecoveryDark = results[1];
+      frontBalanceDark = results[2];
+      backBalanceDark = results[3];
+    } else {
+      final results = await Future.wait([
+        frontRecoveryLight == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/face.svg',
+                _frontMuscles,
+                true,
+                outlineColor: outline,
+              )
+            : Future.value(frontRecoveryLight!),
+        backRecoveryLight == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/back.svg',
+                _backMuscles,
+                true,
+                outlineColor: outline,
+              )
+            : Future.value(backRecoveryLight!),
+        frontBalanceLight == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/face.svg',
+                _frontMuscles,
+                false,
+                outlineColor: outline,
+              )
+            : Future.value(frontBalanceLight!),
+        backBalanceLight == null
+            ? _buildColoredSvg(
+                'assets/img/anatomy/back.svg',
+                _backMuscles,
+                false,
+                outlineColor: outline,
+              )
+            : Future.value(backBalanceLight!),
+      ]);
+      frontRecoveryLight = results[0];
+      backRecoveryLight = results[1];
+      frontBalanceLight = results[2];
+      backBalanceLight = results[3];
+    }
+  }
+
+  static String? front(bool isRecovery, bool isDark) {
+    if (isDark) {
+      return isRecovery ? frontRecoveryDark : frontBalanceDark;
+    } else {
+      return isRecovery ? frontRecoveryLight : frontBalanceLight;
+    }
+  }
+
+  static String? back(bool isRecovery, bool isDark) {
+    if (isDark) {
+      return isRecovery ? backRecoveryDark : backBalanceDark;
+    } else {
+      return isRecovery ? backRecoveryLight : backBalanceLight;
+    }
+  }
 }
 
 // ─────────────────────────────────────────────
@@ -357,43 +453,56 @@ class AnatomyView extends StatefulWidget {
 }
 
 class _AnatomyViewState extends State<AnatomyView> {
-  // Tracks whether the prewarm future has resolved.
-  bool _ready = false;
+  // Tracks which isDark value we last started a prewarm for,
+  // preventing duplicate futures on repeated didChangeDependencies calls.
+  bool? _warmingFor;
 
   @override
-  void initState() {
-    super.initState();
-    // If already cached (e.g. second build), mark ready immediately.
-    if (_SvgCache.recoveryReady && _SvgCache.balanceReady) {
-      _ready = true;
-    } else {
-      _SvgCache.prewarm().then((_) {
-        if (mounted) setState(() => _ready = true);
-      });
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    _ensureWarmed();
+  }
+
+  void _ensureWarmed() {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    // Already warmed or warming for this brightness — skip.
+    if (_warmingFor == isDark && _SvgCache.isReady(isDark)) return;
+    if (_SvgCache.isReady(isDark)) {
+      _warmingFor = isDark;
+      return;
     }
+    _warmingFor = isDark;
+    _SvgCache.prewarm(isDark: isDark).then((_) {
+      // Trigger a rebuild so build() picks up the newly cached SVGs.
+      if (mounted) setState(() {});
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    if (!_ready) {
-      return const SizedBox(
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    // Read nullable — null means prewarm is still in flight.
+    // Never force-unwrap (!); show loader instead.
+    final frontSvg = _SvgCache.front(widget.isRecovery, isDark);
+    final backSvg = _SvgCache.back(widget.isRecovery, isDark);
+
+    if (frontSvg == null || backSvg == null) {
+      return SizedBox(
         height: 260,
-        child: Center(child: CircularProgressIndicator(color: Colors.white38)),
+        child: Center(
+          child: CircularProgressIndicator(color: context.colors.accent),
+        ),
       );
     }
 
-    final frontSvg = _SvgCache.front(widget.isRecovery)!;
-    final backSvg = _SvgCache.back(widget.isRecovery)!;
-
     return Column(
       children: [
-        // ── View mode selector ───────────────
         _ViewModeSelector(
           current: widget.viewMode,
           onChanged: widget.onViewModeChanged,
         ),
         const SizedBox(height: 14),
-        // ── Figure(s) ────────────────────────
         AnimatedSwitcher(
           duration: const Duration(milliseconds: 280),
           switchInCurve: Curves.easeOutCubic,
@@ -453,7 +562,7 @@ class _AnatomyViewState extends State<AnatomyView> {
 }
 
 // ─────────────────────────────────────────────
-// View-mode icon toggle row
+// View-mode icon toggle row — now themed
 // ─────────────────────────────────────────────
 class _ViewModeSelector extends StatelessWidget {
   final AnatomyViewMode current;
@@ -506,35 +615,29 @@ class _ModeBtn extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
-          color: active ? const Color(0xFF2e2a42) : const Color(0xFF1a1726),
+          // Active: accentSoft tint; inactive: surfaceRaised
+          color: active ? c.accentSoft : c.surfaceRaised,
           borderRadius: BorderRadius.circular(8),
           border: Border.all(
-            color: active
-                ? const Color(0xFF7b5ea7).withOpacity(0.7)
-                : const Color(0xFF2a2733),
+            color: active ? c.accent.withOpacity(0.5) : c.border,
           ),
         ),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Icon(
-              icon,
-              size: 14,
-              color: active ? const Color(0xFFc9a6f5) : const Color(0xFF6a6080),
-            ),
+            Icon(icon, size: 14, color: active ? c.accent : c.textMuted),
             const SizedBox(width: 5),
             Text(
               label,
               style: TextStyle(
-                color: active
-                    ? const Color(0xFFc9a6f5)
-                    : const Color(0xFF6a6080),
+                color: active ? c.accent : c.textMuted,
                 fontSize: 11,
                 fontWeight: active ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -560,7 +663,6 @@ class _StatsPageContentState extends State<StatsPageContent> {
   String _selectedUnit = 'Recovery';
   AnatomyViewMode _anatomyViewMode = AnatomyViewMode.both;
 
-  // ── Navigate to trend detail graph ──────────────
   void _openTrendDetail({
     required String title,
     required String unit,
@@ -590,7 +692,6 @@ class _StatsPageContentState extends State<StatsPageContent> {
     );
   }
 
-  // ── Navigate to athlete profile on avatar tap ──
   void _openAthleteProfile() {
     Navigator.of(context).push(
       PageRouteBuilder(
@@ -602,28 +703,34 @@ class _StatsPageContentState extends State<StatsPageContent> {
           maxXp: 5900,
         ),
         transitionsBuilder: (_, animation, __, child) {
-          final slide =
-              Tween<Offset>(
-                begin: const Offset(1.0, 0.0),
-                end: Offset.zero,
-              ).animate(
-                CurvedAnimation(parent: animation, curve: Curves.easeOutCubic),
-              );
-          return SlideTransition(position: slide, child: child);
+          final curved = CurvedAnimation(
+            parent: animation,
+            curve: Curves.easeOutCubic,
+          );
+          return SlideTransition(
+            position: Tween<Offset>(
+              begin: const Offset(1.0, 0.0),
+              end: Offset.zero,
+            ).animate(curved),
+            child: child,
+          );
         },
         transitionDuration: const Duration(milliseconds: 380),
       ),
     );
   }
 
-  // ── Hunter status card with tappable avatar ──
-  Widget _buildHunterCard() {
+  // ── Hunter status card — fully themed ──────────
+  Widget _buildHunterCard(BuildContext context) {
+    final c = context.colors;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 22),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: const Color(0xFF1f1b2e),
-        border: Border.all(color: const Color(0xFF2e2a3e)),
+        // surfaceRaised gives it clear lift above the page background
+        // in both light and dark
+        color: c.surfaceRaised,
+        border: Border.all(color: c.border),
         borderRadius: BorderRadius.circular(12),
       ),
       child: Stack(
@@ -631,45 +738,49 @@ class _StatsPageContentState extends State<StatsPageContent> {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const _SectionTag('Hunter Status'),
+              _SectionTag(textColor: c.textMuted),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'Ash',
                 style: TextStyle(
-                  color: Color(0xFFe8e0f5),
+                  color: c.textPrimary,
                   fontSize: 26,
                   fontWeight: FontWeight.w800,
                   height: 1.1,
                 ),
               ),
-              const Text(
+              Text(
                 'Rookie Athlete',
-                style: TextStyle(color: Color(0xFF7a6e90), fontSize: 12),
+                style: TextStyle(color: c.textSecondary, fontSize: 12),
               ),
               const SizedBox(height: 8),
-              _RankBadge('S-RANK'),
+              _RankBadge(
+                label: 'S-RANK',
+                accentColor: c.accent,
+                accentSoft: c.accentSoft,
+              ),
               const SizedBox(height: 8),
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: const [
+                children: [
                   Text(
                     'LV. 107',
-                    style: TextStyle(color: Color(0xFF7a6e90), fontSize: 12),
+                    style: TextStyle(color: c.textSecondary, fontSize: 12),
                   ),
                   Text(
                     '4455 / 5,900 XP',
-                    style: TextStyle(color: Color(0xFF9a8eb0), fontSize: 11),
+                    style: TextStyle(color: c.textMuted, fontSize: 11),
                   ),
                 ],
               ),
               const SizedBox(height: 4),
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
-                child: const LinearProgressIndicator(
+                child: LinearProgressIndicator(
                   value: 0.74,
                   minHeight: 5,
-                  backgroundColor: Color(0xFF2a2538),
-                  valueColor: AlwaysStoppedAnimation<Color>(Color(0xFF9070c0)),
+                  backgroundColor: c.border,
+                  valueColor: AlwaysStoppedAnimation<Color>(c.accent),
                 ),
               ),
             ],
@@ -685,18 +796,14 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 height: 52,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  border: Border.all(color: const Color(0xFF7b5ea7), width: 2),
-                  gradient: const LinearGradient(
-                    colors: [Color(0xFF3d2f5a), Color(0xFF1f1b2e)],
-                    begin: Alignment.topLeft,
-                    end: Alignment.bottomRight,
-                  ),
+                  border: Border.all(color: c.accent, width: 2),
+                  color: c.accentSoft,
                 ),
-                child: const Center(
+                child: Center(
                   child: Text(
                     'A',
                     style: TextStyle(
-                      color: Color(0xFFc9a6f5),
+                      color: c.accent,
                       fontSize: 20,
                       fontWeight: FontWeight.bold,
                     ),
@@ -710,88 +817,124 @@ class _StatsPageContentState extends State<StatsPageContent> {
     );
   }
 
-  Widget _recoveryLegend() => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    child: Column(
-      children: [
-        Container(
-          height: 10,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF68F868), Color(0xFFFFFF00), Colors.red],
-              stops: [0.0, 0.5, 1.0],
+  Widget _recoveryLegend(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        children: [
+          Container(
+            height: 10,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF68F868), Color(0xFFFFFF00), Colors.red],
+                stops: [0.0, 0.5, 1.0],
+              ),
             ),
           ),
-        ),
-        const SizedBox(height: 6),
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Recovered',
-              style: TextStyle(color: Colors.white54, fontSize: 11),
-            ),
-            Text(
-              'Halfway',
-              style: TextStyle(color: Colors.white54, fontSize: 11),
-            ),
-            Text('Sore', style: TextStyle(color: Colors.white54, fontSize: 11)),
-          ],
-        ),
-      ],
-    ),
-  );
+          const SizedBox(height: 6),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                'Recovered',
+                style: TextStyle(color: c.textSecondary, fontSize: 11),
+              ),
+              Text(
+                'Halfway',
+                style: TextStyle(color: c.textSecondary, fontSize: 11),
+              ),
+              Text(
+                'Sore',
+                style: TextStyle(color: c.textSecondary, fontSize: 11),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget _balanceLegend() => Padding(
-    padding: const EdgeInsets.symmetric(vertical: 12),
-    child: Column(
-      children: [
-        const Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            Text(
-              'Underdeveloped',
-              style: TextStyle(
-                color: Color(0xFF81D4FA),
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+  Widget _balanceLegend(BuildContext context) {
+    final c = context.colors;
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 12),
+      child: Column(
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(right: 5),
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF81D4FA),
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  Text(
+                    'Underdeveloped',
+                    style: TextStyle(
+                      color: c.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            Text(
-              'Overdeveloped',
-              style: TextStyle(
-                color: Colors.red,
-                fontSize: 11,
-                fontWeight: FontWeight.w600,
+              Row(
+                children: [
+                  Text(
+                    'Overdeveloped',
+                    style: TextStyle(
+                      color: c.textSecondary,
+                      fontSize: 11,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                  Container(
+                    width: 8,
+                    height: 8,
+                    margin: const EdgeInsets.only(left: 5),
+                    decoration: const BoxDecoration(
+                      color: Colors.red,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                ],
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Container(
-          height: 10,
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(5),
-            gradient: const LinearGradient(
-              colors: [Color(0xFF81D4FA), Color(0xFF68F868), Colors.red],
-              stops: [0.0, 0.5, 1.0],
+            ],
+          ),
+          const SizedBox(height: 6),
+          Container(
+            height: 10,
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(5),
+              gradient: const LinearGradient(
+                colors: [Color(0xFF81D4FA), Color(0xFF68F868), Colors.red],
+                stops: [0.0, 0.5, 1.0],
+              ),
             ),
           ),
-        ),
-      ],
-    ),
-  );
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 22),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          // Hunter status card sits at top, full-width with side padding
-          _buildHunterCard(),
+          _buildHunterCard(context),
           const SizedBox(height: 16),
 
           Padding(
@@ -801,10 +944,10 @@ class _StatsPageContentState extends State<StatsPageContent> {
               children: [
                 const SizedBox(height: 24),
 
-                const Text(
+                Text(
                   'Fitness Overview',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: c.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
@@ -821,35 +964,35 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 const SizedBox(height: 16),
 
                 if (_selectedUnit == 'Recovery') ...[
-                  const Text(
+                  Text(
                     'Recovery Overview:',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: c.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'See which muscles are ready to train again today.',
-                    style: TextStyle(color: Colors.white60, fontSize: 14),
+                    style: TextStyle(color: c.textSecondary, fontSize: 14),
                   ),
-                  _recoveryLegend(),
+                  _recoveryLegend(context),
                 ] else ...[
-                  const Text(
+                  Text(
                     'Balance Overview:',
                     style: TextStyle(
-                      color: Colors.white,
+                      color: c.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
                   const SizedBox(height: 4),
-                  const Text(
+                  Text(
                     'Compare muscle group development to optimise your training plan.',
-                    style: TextStyle(color: Colors.white60, fontSize: 14),
+                    style: TextStyle(color: c.textSecondary, fontSize: 14),
                   ),
-                  _balanceLegend(),
+                  _balanceLegend(context),
                 ],
 
                 AnatomyView(
@@ -861,13 +1004,15 @@ class _StatsPageContentState extends State<StatsPageContent> {
 
                 if (_selectedUnit == 'Balance') ...[
                   const SizedBox(height: 16),
+                  // Balance score card — themed surface
                   Container(
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: const Color(0xFF1C2B47),
+                      color: c.surfaceRaised,
+                      border: Border.all(color: c.border),
                       borderRadius: BorderRadius.circular(14),
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
@@ -876,22 +1021,22 @@ class _StatsPageContentState extends State<StatsPageContent> {
                             Text(
                               'Balance Score',
                               style: TextStyle(
-                                color: Colors.white70,
+                                color: c.textSecondary,
                                 fontSize: 13,
                               ),
                             ),
-                            SizedBox(height: 4),
+                            const SizedBox(height: 4),
                             Text(
                               '78',
                               style: TextStyle(
-                                color: Colors.white,
+                                color: c.textPrimary,
                                 fontSize: 28,
                                 fontWeight: FontWeight.bold,
                               ),
                             ),
                           ],
                         ),
-                        Column(
+                        const Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
                             Text(
@@ -906,7 +1051,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
                             Text(
                               'Keep it up!',
                               style: TextStyle(
-                                color: Colors.white54,
+                                color: Colors.green,
                                 fontSize: 12,
                               ),
                             ),
@@ -918,47 +1063,48 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 ],
 
                 const SizedBox(height: 24),
-                const Text(
+                Text(
                   'Trends',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: c.textPrimary,
                     fontSize: 18,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 const SizedBox(height: 12),
+
+                // Trend cards use surfaceRaised + border so they
+                // always pop off the page background in both modes
                 _TrendCard(
                   title: 'Strength',
                   trend: '+8% last month',
-                  color: Colors.greenAccent.withOpacity(0.15),
                   icon: Icons.trending_up,
                   unit: 'kg',
-                  accentColor: Colors.greenAccent,
+                  accentColor: const Color(0xFF4CAF50),
                   onTap: () => _openTrendDetail(
                     title: 'Strength',
                     unit: 'kg',
-                    accentColor: Colors.greenAccent,
+                    accentColor: const Color(0xFF4CAF50),
                     icon: Icons.trending_up,
                   ),
                 ),
-
                 const SizedBox(height: 12),
                 _TrendCard(
                   title: 'Bodyweight',
                   trend: '-1.2 kg over 4 weeks',
-                  color: Colors.orangeAccent.withOpacity(0.15),
                   icon: Icons.monitor_weight,
                   unit: 'kg',
-                  accentColor: Colors.orangeAccent,
+                  accentColor: const Color(0xFFFF9800),
                   onTap: () => _openTrendDetail(
                     title: 'Bodyweight',
                     unit: 'kg',
-                    accentColor: Colors.orangeAccent,
+                    accentColor: const Color(0xFFFF9800),
                     icon: Icons.monitor_weight,
                   ),
                 ),
+
                 const SizedBox(height: 28),
-                const _ProgressList(),
+                _ProgressList(),
                 const SizedBox(height: 80),
               ],
             ),
@@ -970,17 +1116,18 @@ class _StatsPageContentState extends State<StatsPageContent> {
 }
 
 // ─────────────────────────────────────────────
-// Small shared widgets
+// Small shared widgets — themed
 // ─────────────────────────────────────────────
+
 class _SectionTag extends StatelessWidget {
-  final String text;
-  const _SectionTag(this.text);
+  final Color? textColor;
+  const _SectionTag({this.textColor});
 
   @override
   Widget build(BuildContext context) => Text(
-    '[ ${text.toUpperCase()} ]',
-    style: const TextStyle(
-      color: Color(0xFF4a4460),
+    '[ HUNTER STATUS ]',
+    style: TextStyle(
+      color: textColor ?? context.colors.textMuted,
       fontSize: 9,
       letterSpacing: 2,
       fontFamily: 'monospace',
@@ -990,19 +1137,27 @@ class _SectionTag extends StatelessWidget {
 
 class _RankBadge extends StatelessWidget {
   final String label;
-  const _RankBadge(this.label);
+  final Color accentColor;
+  final Color accentSoft;
+
+  const _RankBadge({
+    required this.label,
+    required this.accentColor,
+    required this.accentSoft,
+  });
 
   @override
   Widget build(BuildContext context) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
     decoration: BoxDecoration(
-      color: const Color(0xFF7b5ea7),
+      color: accentSoft,
       borderRadius: BorderRadius.circular(4),
+      border: Border.all(color: accentColor.withOpacity(0.4)),
     ),
     child: Text(
       label,
-      style: const TextStyle(
-        color: Color(0xFFe8d8ff),
+      style: TextStyle(
+        color: accentColor,
         fontSize: 10,
         fontWeight: FontWeight.w700,
         letterSpacing: 1,
@@ -1011,94 +1166,126 @@ class _RankBadge extends StatelessWidget {
   );
 }
 
+/// TrendCard now reads from CorelyColors — no hardcoded hex.
 class _TrendCard extends StatelessWidget {
   final String title, trend, unit;
-  final Color color, accentColor;
+  final Color accentColor;
   final IconData icon;
   final VoidCallback? onTap;
 
   const _TrendCard({
     required this.title,
     required this.trend,
-    required this.color,
     required this.icon,
     this.unit = '',
-    this.accentColor = Colors.white,
+    this.accentColor = Colors.blue,
     this.onTap,
   });
 
   @override
-  Widget build(BuildContext context) => GestureDetector(
-    onTap: onTap,
-    child: Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(14),
-        border: onTap != null
-            ? Border.all(color: accentColor.withOpacity(0.2))
-            : null,
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(10),
-            decoration: BoxDecoration(
-              color: Colors.white12,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(icon, color: Colors.white, size: 22),
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          // surfaceRaised ensures the card pops off the page background
+          // in both light (0xFFDDE6FF on 0xFFEDF2FF) and dark modes.
+          // gradient is intentionally removed — it overrides color in Flutter.
+          color: c.surfaceRaised,
+          borderRadius: BorderRadius.circular(14),
+          border: Border.all(
+            color: onTap != null ? accentColor.withOpacity(0.4) : c.border,
           ),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
+        ),
+        child: Row(
+          children: [
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: accentColor.withOpacity(0.12),
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: Icon(icon, color: accentColor, size: 22),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w700,
+                    ),
                   ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  trend,
-                  style: const TextStyle(color: Colors.white70, fontSize: 14),
-                ),
-              ],
+                  const SizedBox(height: 4),
+                  Text(
+                    trend,
+                    style: TextStyle(color: c.textSecondary, fontSize: 14),
+                  ),
+                ],
+              ),
             ),
-          ),
-          if (onTap != null)
-            Icon(
-              Icons.chevron_right,
-              color: accentColor.withOpacity(0.6),
-              size: 20,
-            ),
-        ],
+            if (onTap != null)
+              Icon(
+                Icons.chevron_right,
+                color: accentColor.withOpacity(0.7),
+                size: 20,
+              ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 }
 
 class _ProgressList extends StatelessWidget {
   const _ProgressList();
 
   @override
-  Widget build(BuildContext context) => const Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      _ProgressRow(label: 'Bench press', value: '+5 kg', trend: 'Up'),
-      SizedBox(height: 10),
-      _ProgressRow(label: 'Squat', value: '+7 kg', trend: 'Up'),
-      SizedBox(height: 10),
-      _ProgressRow(label: 'Deadlift', value: '+4 kg', trend: 'Up'),
-      SizedBox(height: 10),
-      _ProgressRow(label: 'Pull-ups', value: '+3 reps', trend: 'Steady'),
-    ],
-  );
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Section header
+        Text(
+          'Recent Progress',
+          style: TextStyle(
+            color: c.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 10),
+        // Wrap in a card so it reads consistently with other surfaces
+        Container(
+          decoration: BoxDecoration(
+            color: c.surface,
+            border: Border.all(color: c.border),
+            borderRadius: BorderRadius.circular(12),
+          ),
+          child: Column(
+            children: const [
+              _ProgressRow(label: 'Bench press', value: '+5 kg', trend: 'Up'),
+              _ProgressRow(label: 'Squat', value: '+7 kg', trend: 'Up'),
+              _ProgressRow(label: 'Deadlift', value: '+4 kg', trend: 'Up'),
+              _ProgressRow(
+                label: 'Pull-ups',
+                value: '+3 reps',
+                trend: 'Steady',
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
 }
 
 class _ProgressRow extends StatelessWidget {
@@ -1110,39 +1297,49 @@ class _ProgressRow extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Row(
-    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-    children: [
-      Text(
-        label,
-        style: const TextStyle(
-          color: Colors.white,
-          fontSize: 15,
-          fontWeight: FontWeight.w600,
-        ),
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    final isUp = trend == 'Up';
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+      decoration: BoxDecoration(
+        border: Border(bottom: BorderSide(color: c.border, width: 0.5)),
       ),
-      Text(
-        value,
-        style: const TextStyle(
-          color: Colors.greenAccent,
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
-      Row(
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Icon(
-            trend == 'Up' ? Icons.arrow_upward : Icons.remove,
-            color: trend == 'Up' ? Colors.greenAccent : Colors.orangeAccent,
-            size: 16,
-          ),
-          const SizedBox(width: 6),
           Text(
-            trend,
-            style: const TextStyle(color: Colors.white70, fontSize: 13),
+            label,
+            style: TextStyle(
+              color: c.textPrimary,
+              fontSize: 15,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+          Text(
+            value,
+            style: const TextStyle(
+              color: Color(0xFF4CAF50),
+              fontSize: 15,
+              fontWeight: FontWeight.w700,
+            ),
+          ),
+          Row(
+            children: [
+              Icon(
+                isUp ? Icons.arrow_upward : Icons.remove,
+                color: isUp ? const Color(0xFF4CAF50) : const Color(0xFFFF9800),
+                size: 16,
+              ),
+              const SizedBox(width: 6),
+              Text(
+                trend,
+                style: TextStyle(color: c.textSecondary, fontSize: 13),
+              ),
+            ],
           ),
         ],
       ),
-    ],
-  );
+    );
+  }
 }
