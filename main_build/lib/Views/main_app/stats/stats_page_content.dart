@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:main_build/Views/SharedWidgets/toggle-Unit.dart';
+import 'package:main_build/Theme/theme_scope.dart';
 import 'athlete_page.dart';
 import 'trend_detail_page.dart';
 import 'package:main_build/theme/app_theme.dart';
@@ -204,6 +205,7 @@ Future<String> _buildColoredSvg(
   final outlineHex = _colorToHex(outlineColor);
 
   // Step 1 — blank every white/black stroke & fill → background colour
+  // Handles both SVG attribute form (stroke="white") and CSS style form (stroke:white)
   svg = svg
       .replaceAll('stroke="white"', 'stroke="$bgHex"')
       .replaceAll('stroke="#FFFFFF"', 'stroke="$bgHex"')
@@ -214,28 +216,62 @@ Future<String> _buildColoredSvg(
       .replaceAll('fill="white"', 'fill="$bgHex"')
       .replaceAll('fill="#FFFFFF"', 'fill="$bgHex"')
       .replaceAll('fill="#ffffff"', 'fill="$bgHex"')
-      .replaceAll('fill="#D9D9D9"', 'fill="$bgHex"');
+      .replaceAll('fill="#D9D9D9"', 'fill="$bgHex"')
+      // CSS style="" variants
+      .replaceAll('stroke:white', 'stroke:$bgHex')
+      .replaceAll('stroke:#FFFFFF', 'stroke:$bgHex')
+      .replaceAll('stroke:#ffffff', 'stroke:$bgHex')
+      .replaceAll('stroke:#000000', 'stroke:$bgHex')
+      .replaceAll('stroke:black', 'stroke:$bgHex')
+      .replaceAll('stroke:#000', 'stroke:$bgHex')
+      .replaceAll('fill:white', 'fill:$bgHex')
+      .replaceAll('fill:#FFFFFF', 'fill:$bgHex')
+      .replaceAll('fill:#ffffff', 'fill:$bgHex')
+      .replaceAll('fill:#D9D9D9', 'fill:$bgHex');
 
   // Step 2 — restore humanoid silhouette strokes → outlineColour (textPrimary)
   // face.svg uses id="front_outline"; back.svg uses id="back_ouline" (SVG typo)
+  // Handles <path>, self-closing <g>, and <g>…</g> with stroke as attribute OR in style=""
+  String applyOutline(String s) => s
+      .replaceAll(
+        RegExp(r'\bstroke="[^"]*"', caseSensitive: false),
+        'stroke="$outlineHex"',
+      )
+      .replaceAllMapped(
+        RegExp(r'\bstroke:([^;}" ]+)', caseSensitive: false),
+        (_) => 'stroke:$outlineHex',
+      );
+
   for (final outlineId in ['front_outline', 'back_ouline']) {
     final eid = RegExp.escape(outlineId);
 
-    // stroke attribute AFTER id="…"
+    // Self-closing <path id="outlineId" … />
     svg = svg.replaceAllMapped(
       RegExp(
-        r'(<path\b[^>]*\bid="' + eid + r'"[^>]*stroke=")([^"]+)(")',
+        r'(<path\b)([^>]*\bid="' + eid + r'"[^>]*?)(/>)',
         caseSensitive: false,
       ),
-      (m) => '${m[1]}$outlineHex${m[3]}',
+      (m) => '${m[1]}${applyOutline(m[2]!)}${m[3]}',
     );
-    // stroke attribute BEFORE id="…"
+
+    // Non-self-closing <path id="outlineId" …> … </path>
     svg = svg.replaceAllMapped(
       RegExp(
-        r'(<path\b[^>]*stroke=")([^"]+)("[^>]*\bid="' + eid + r'"[^>]*>)',
+        r'(<path\b)([^>]*\bid="' + eid + r'"[^>]*?)>(.*?)(</path>)',
         caseSensitive: false,
+        dotAll: true,
       ),
-      (m) => '${m[1]}$outlineHex${m[3]}',
+      (m) => '${m[1]}${applyOutline(m[2]!)}>${m[3]}${m[4]}',
+    );
+
+    // <g id="outlineId" …> … </g> — fix opening tag attrs + all child strokes
+    svg = svg.replaceAllMapped(
+      RegExp(
+        r'(<g\b)([^>]*\bid="' + eid + r'"[^>]*)(>)(.*?)(</g>)',
+        caseSensitive: false,
+        dotAll: true,
+      ),
+      (m) => '${m[1]}${applyOutline(m[2]!)}${m[3]}${applyOutline(m[4]!)}${m[5]}',
     );
   }
 
@@ -414,25 +450,25 @@ class _SvgCache {
       final r = await Future.wait([
         _get(
           frontRecoveryLight,
-          'assets/img/anatomy/face.svg',
+          'assets/img/anatomy/face_light.svg',
           _frontMuscles,
           true,
         ),
         _get(
           backRecoveryLight,
-          'assets/img/anatomy/back.svg',
+          'assets/img/anatomy/back_light.svg',
           _backMuscles,
           true,
         ),
         _get(
           frontBalanceLight,
-          'assets/img/anatomy/face.svg',
+          'assets/img/anatomy/face_light.svg',
           _frontMuscles,
           false,
         ),
         _get(
           backBalanceLight,
-          'assets/img/anatomy/back.svg',
+          'assets/img/anatomy/back_light.svg',
           _backMuscles,
           false,
         ),
@@ -488,6 +524,12 @@ class _AnatomyViewState extends State<AnatomyView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
+    _ensureWarmed();
+  }
+
+  @override
+  void didUpdateWidget(AnatomyView oldWidget) {
+    super.didUpdateWidget(oldWidget);
     _ensureWarmed();
   }
 
@@ -862,6 +904,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
 
   @override
   Widget build(BuildContext context) {
+    ThemeScope.of(context); // depend directly on ThemeProvider so toggleTheme() forces rebuild
     final c = context.colors;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 22),
@@ -1003,6 +1046,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 ),
                 const SizedBox(height: 12),
                 _TrendCard(
+                  themeColors: c,
                   title: 'Strength',
                   trend: '+8% last month',
                   icon: Icons.trending_up,
@@ -1017,6 +1061,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 ),
                 const SizedBox(height: 12),
                 _TrendCard(
+                  themeColors: c,
                   title: 'Bodyweight',
                   trend: '-1.2 kg over 4 weeks',
                   icon: Icons.monitor_weight,
@@ -1030,7 +1075,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
                   ),
                 ),
                 const SizedBox(height: 28),
-                const _ProgressList(),
+                _ProgressList(),
                 const SizedBox(height: 80),
               ],
             ),
@@ -1155,6 +1200,7 @@ class _TrendCard extends StatelessWidget {
   final Color accentColor;
   final IconData icon;
   final VoidCallback? onTap;
+  final CorelyColors? themeColors;
   const _TrendCard({
     required this.title,
     required this.trend,
@@ -1162,11 +1208,12 @@ class _TrendCard extends StatelessWidget {
     this.unit = '',
     this.accentColor = Colors.blue,
     this.onTap,
+    this.themeColors,
   });
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    final c = themeColors ?? context.colors;
     return GestureDetector(
       onTap: onTap,
       child: Container(
@@ -1246,16 +1293,12 @@ class _ProgressList extends StatelessWidget {
             border: Border.all(color: c.border),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Column(
+          child: Column(
             children: [
               _ProgressRow(label: 'Bench press', value: '+5 kg', trend: 'Up'),
               _ProgressRow(label: 'Squat', value: '+7 kg', trend: 'Up'),
               _ProgressRow(label: 'Deadlift', value: '+4 kg', trend: 'Up'),
-              _ProgressRow(
-                label: 'Pull-ups',
-                value: '+3 reps',
-                trend: 'Steady',
-              ),
+              _ProgressRow(label: 'Pull-ups', value: '+3 reps', trend: 'Steady'),
             ],
           ),
         ),

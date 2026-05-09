@@ -81,6 +81,8 @@ flutter:
     - assets/img/bot_4712038.png
     - assets/img/anatomy/back.svg
     - assets/img/anatomy/face.svg
+    - assets/img/anatomy/face_light.svg
+    - assets/img/anatomy/back_light.svg
     - assets/img/plans/
     - assets/Icons/
     - assets/Fonts/
