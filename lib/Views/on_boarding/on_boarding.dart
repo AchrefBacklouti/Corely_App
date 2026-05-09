@@ -14,28 +14,19 @@ class CorelyOnboardingFlow extends StatefulWidget {
 class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   int _currentStep = 0;
 
-  // user data
+  // ── User data (raw numeric strings) ───────────
   String? gender;
   String? age;
   String selectedWeight = '190';
   String selectedUnitWeight = 'lbs';
-  String selectedHeightUnit = 'cm';
+  String selectedHeightUnit = 'ft';
   String selectedHeightFt = '5';
   String selectedHeightIn = '9';
   String selectedHeightCm = '175';
   String selectedGoal = 'Build more muscle';
   String selectedTrainingDays = '5';
 
-  // controllers for pickers
-  late FixedExtentScrollController ageController;
-  late FixedExtentScrollController weightController;
-  late FixedExtentScrollController heightFtController;
-  late FixedExtentScrollController heightInController;
-  late FixedExtentScrollController heightCmController;
-  late FixedExtentScrollController goalController;
-  late FixedExtentScrollController trainingDaysController;
-
-  // data
+  // ── Raw data lists ─────────────────────────────
   final List<String> ages = List.generate(68, (i) => (13 + i).toString());
   final List<String> weightsKg = List.generate(171, (i) => (30 + i).toString());
   final List<String> weightsLbs = List.generate(
@@ -56,57 +47,65 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   ];
   final List<String> trainingDays = ['2', '3', '4', '5', '6', '7'];
 
+  // ── Labelled lists (unit appended — shown in picker) ──
+  List<String> get weightsKgLabelled => weightsKg.map((v) => '$v kg').toList();
+  List<String> get weightsLbsLabelled =>
+      weightsLbs.map((v) => '$v lbs').toList();
+  List<String> get cmHeightsLabelled => cmHeights.map((v) => '$v cm').toList();
+  List<String> get ftHeightsLabelled => ftHeights.map((v) => '$v ft').toList();
+  List<String> get inHeightsLabelled => inHeights.map((v) => '$v in').toList();
+
+  // ── Helpers ───────────────────────────────────
+  // Build the labelled string for a raw value + unit suffix.
+  String _label(String raw, String unit) => '$raw $unit';
+
+  // Recover raw numeric string from a labelled picker value.
+  String _raw(String labelled) => labelled.split(' ').first;
+
+  // Safe index lookup — returns 0 if not found so the picker never crashes.
+  int _idx(List<String> list, String value) {
+    final i = list.indexOf(value);
+    return i < 0 ? 0 : i;
+  }
+
+  // ── Scroll controllers ────────────────────────
+  late FixedExtentScrollController ageController;
+  late FixedExtentScrollController weightController;
+  late FixedExtentScrollController heightFtController;
+  late FixedExtentScrollController heightInController;
+  late FixedExtentScrollController heightCmController;
+  late FixedExtentScrollController goalController;
+  late FixedExtentScrollController trainingDaysController;
+
   double get progress => (_currentStep + 1) / 6;
-
-  void _next() {
-    if (_currentStep < 5) {
-      setState(() => _currentStep++);
-      return;
-    }
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => UserSummary(
-          gender: gender ?? 'male',
-          age: int.parse(age ?? '21'),
-          weight: double.parse(selectedWeight),
-          height: int.parse(selectedHeightCm),
-          goal: selectedGoal,
-          trainingDays: int.parse(selectedTrainingDays),
-          weightUnit: selectedUnitWeight,
-          heightUnit: selectedHeightUnit,
-        ),
-      ),
-    );
-  }
-
-  void _back() {
-    if (_currentStep > 0) setState(() => _currentStep--);
-  }
 
   @override
   void initState() {
     super.initState();
-    ageController = FixedExtentScrollController(
-      initialItem: ages.indexOf(age ?? '21'),
-    );
+    // Weight — starts on lbs
+    final initWeightLabel = _label(selectedWeight, selectedUnitWeight);
     weightController = FixedExtentScrollController(
-      initialItem: weightsKg.indexOf(selectedWeight),
+      initialItem: _idx(weightsLbsLabelled, initWeightLabel),
+    );
+    // Height — starts on cm
+    final initCmLabel = _label(selectedHeightCm, 'cm');
+    heightCmController = FixedExtentScrollController(
+      initialItem: _idx(cmHeightsLabelled, initCmLabel),
     );
     heightFtController = FixedExtentScrollController(
-      initialItem: ftHeights.indexOf(selectedHeightFt),
+      initialItem: _idx(ftHeightsLabelled, _label(selectedHeightFt, 'ft')),
     );
     heightInController = FixedExtentScrollController(
-      initialItem: inHeights.indexOf(selectedHeightIn),
+      initialItem: _idx(inHeightsLabelled, _label(selectedHeightIn, 'in')),
     );
-    heightCmController = FixedExtentScrollController(
-      initialItem: cmHeights.indexOf(selectedHeightCm),
+    ageController = FixedExtentScrollController(
+      initialItem: _idx(ages, age ?? '21'),
     );
     goalController = FixedExtentScrollController(
-      initialItem: goals.indexOf(selectedGoal),
+      initialItem: _idx(goals, selectedGoal),
     );
     trainingDaysController = FixedExtentScrollController(
-      initialItem: trainingDays.indexOf(selectedTrainingDays),
+      initialItem: _idx(trainingDays, selectedTrainingDays),
     );
   }
 
@@ -122,11 +121,45 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     super.dispose();
   }
 
+  void _next() {
+    if (_currentStep < 5) {
+      if (_currentStep == 2) {
+        // Leaving weight step: sync height unit to match the chosen weight unit.
+        setState(() {
+          selectedHeightUnit = selectedUnitWeight == 'kg' ? 'cm' : 'ft';
+          _currentStep++;
+        });
+      } else {
+        setState(() => _currentStep++);
+      }
+      return;
+    }
+    final heightDisplay = selectedHeightUnit == 'ft'
+        ? '${selectedHeightFt}ft ${selectedHeightIn}in'
+        : '${selectedHeightCm}cm';
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => UserSummary(
+          gender: gender ?? 'male',
+          age: int.parse(age ?? '21'),
+          weight: double.parse(selectedWeight),
+          heightDisplay: heightDisplay,
+          goal: selectedGoal,
+          trainingDays: int.parse(selectedTrainingDays),
+          weightUnit: selectedUnitWeight,
+        ),
+      ),
+    );
+  }
+
+  void _back() {
+    if (_currentStep > 0) setState(() => _currentStep--);
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Use the theme extension for all colours — auto-switches dark/light.
     final c = context.colors;
-
     return Scaffold(
       backgroundColor: c.background,
       appBar: AppBar(
@@ -186,7 +219,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     );
   }
 
-  // ── Step router ───────────────────────────────
   Widget _buildStep(BuildContext context) {
     return switch (_currentStep) {
       0 => _genderStep(),
@@ -230,7 +262,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   Widget _genderButton(String label, IconData icon) {
     final c = context.colors;
     final isSelected = gender == label;
-
     return GestureDetector(
       onTap: () => setState(() => gender = label),
       child: AnimatedContainer(
@@ -238,7 +269,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
         width: 180,
         height: 180,
         decoration: BoxDecoration(
-          // Selected → accent; unselected → surface card colour
           color: isSelected ? AppTheme.accent : c.surfaceRaised,
           shape: BoxShape.circle,
           border: Border.all(
@@ -280,12 +310,11 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   Widget _ageStep() {
     final c = context.colors;
     final ageValue = age ?? '21';
-    final ageIndex = ages.indexOf(ageValue);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!ageController.hasClients) return;
-      if (ageController.selectedItem != ageIndex)
-        ageController.jumpToItem(ageIndex);
+      final i = _idx(ages, ageValue);
+      if (ageController.selectedItem != i) ageController.jumpToItem(i);
     });
 
     return Column(
@@ -319,14 +348,15 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   // ── Weight ────────────────────────────────────
   Widget _weightStep() {
     final c = context.colors;
-    final weights = selectedUnitWeight == 'kg' ? weightsKg : weightsLbs;
-    final weightIndex = weights.indexOf(selectedWeight);
+    final labelled = selectedUnitWeight == 'kg'
+        ? weightsKgLabelled
+        : weightsLbsLabelled;
+    final currentLbl = _label(selectedWeight, selectedUnitWeight);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!weightController.hasClients) return;
-      if (weightController.selectedItem != weightIndex) {
-        weightController.jumpToItem(weightIndex);
-      }
+      final i = _idx(labelled, currentLbl);
+      if (weightController.selectedItem != i) weightController.jumpToItem(i);
     });
 
     return Column(
@@ -353,8 +383,11 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                 final converted = val == 'kg'
                     ? (numeric / 2.20462).round().toString()
                     : (numeric * 2.20462).round().toString();
-                final newList = val == 'kg' ? weightsKg : weightsLbs;
-                weightController.jumpToItem(newList.indexOf(converted));
+                final newLabelled = val == 'kg'
+                    ? weightsKgLabelled
+                    : weightsLbsLabelled;
+                final i = _idx(newLabelled, _label(converted, val));
+                weightController.jumpToItem(i);
                 setState(() {
                   selectedWeight = converted;
                   selectedUnitWeight = val;
@@ -366,10 +399,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
         Expanded(
           child: _pickerStack(
             buildPicker(
-              weights,
-              selectedWeight,
+              labelled,
+              currentLbl,
               Theme.of(context).brightness == Brightness.dark,
-              (val) => setState(() => selectedWeight = val),
+              (val) => setState(() => selectedWeight = _raw(val)),
               fontSize: 36,
               selectedHeight: 280,
               controller: weightController,
@@ -388,17 +421,17 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (selectedHeightUnit == 'cm') {
         if (!heightCmController.hasClients) return;
-        final i = cmHeights.indexOf(selectedHeightCm);
+        final i = _idx(cmHeightsLabelled, _label(selectedHeightCm, 'cm'));
         if (heightCmController.selectedItem != i)
           heightCmController.jumpToItem(i);
       } else {
         if (heightFtController.hasClients) {
-          final i = ftHeights.indexOf(selectedHeightFt);
+          final i = _idx(ftHeightsLabelled, _label(selectedHeightFt, 'ft'));
           if (heightFtController.selectedItem != i)
             heightFtController.jumpToItem(i);
         }
         if (heightInController.hasClients) {
-          final i = inHeights.indexOf(selectedHeightIn);
+          final i = _idx(inHeightsLabelled, _label(selectedHeightIn, 'in'));
           if (heightInController.selectedItem != i)
             heightInController.jumpToItem(i);
         }
@@ -420,9 +453,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
           mainAxisAlignment: MainAxisAlignment.end,
           children: [
             UnitToggle(
-              leftLabel: 'in',
+              leftLabel: 'ft',
               rightLabel: 'cm',
-              value: selectedHeightUnit,
+              value:
+                  selectedHeightUnit, // 'cm' on first entry → cm tab is highlighted
               onChanged: (val) {
                 if (selectedHeightUnit == val) return;
                 if (val == 'cm') {
@@ -431,7 +465,9 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                               int.parse(selectedHeightIn) * 2.54)
                           .round()
                           .toString();
-                  heightCmController.jumpToItem(cmHeights.indexOf(cm));
+                  heightCmController.jumpToItem(
+                    _idx(cmHeightsLabelled, _label(cm, 'cm')),
+                  );
                   setState(() {
                     selectedHeightCm = cm;
                     selectedHeightUnit = val;
@@ -442,8 +478,12 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                   final inch = ((cmVal - int.parse(ft) * 30.48) / 2.54)
                       .round()
                       .toString();
-                  heightFtController.jumpToItem(ftHeights.indexOf(ft));
-                  heightInController.jumpToItem(inHeights.indexOf(inch));
+                  heightFtController.jumpToItem(
+                    _idx(ftHeightsLabelled, _label(ft, 'ft')),
+                  );
+                  heightInController.jumpToItem(
+                    _idx(inHeightsLabelled, _label(inch, 'in')),
+                  );
                   setState(() {
                     selectedHeightFt = ft;
                     selectedHeightIn = inch;
@@ -459,11 +499,11 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
           child: selectedHeightUnit == 'cm'
               ? _pickerStack(
                   buildPicker(
-                    cmHeights,
-                    selectedHeightCm,
+                    cmHeightsLabelled,
+                    _label(selectedHeightCm, 'cm'), // e.g. "175 cm"
                     isDark,
-                    (val) => setState(() => selectedHeightCm = val),
-                    fontSize: 20,
+                    (val) => setState(() => selectedHeightCm = _raw(val)),
+                    fontSize: 28,
                     selectedHeight: 280,
                     controller: heightCmController,
                   ),
@@ -473,10 +513,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                     Expanded(
                       child: _pickerStack(
                         buildPicker(
-                          ftHeights,
-                          selectedHeightFt,
+                          ftHeightsLabelled,
+                          _label(selectedHeightFt, 'ft'), // e.g. "5 ft"
                           isDark,
-                          (val) => setState(() => selectedHeightFt = val),
+                          (val) => setState(() => selectedHeightFt = _raw(val)),
                           fontSize: 28,
                           selectedHeight: 240,
                           controller: heightFtController,
@@ -489,10 +529,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                     Expanded(
                       child: _pickerStack(
                         buildPicker(
-                          inHeights,
-                          selectedHeightIn,
+                          inHeightsLabelled,
+                          _label(selectedHeightIn, 'in'), // e.g. "9 in"
                           isDark,
-                          (val) => setState(() => selectedHeightIn = val),
+                          (val) => setState(() => selectedHeightIn = _raw(val)),
                           fontSize: 28,
                           selectedHeight: 240,
                           controller: heightInController,
@@ -563,13 +603,12 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   Widget _trainingStep() {
     final c = context.colors;
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final trainingIndex = trainingDays.indexOf(selectedTrainingDays);
+    final ti = _idx(trainingDays, selectedTrainingDays);
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!trainingDaysController.hasClients) return;
-      if (trainingDaysController.selectedItem != trainingIndex) {
-        trainingDaysController.jumpToItem(trainingIndex);
-      }
+      if (trainingDaysController.selectedItem != ti)
+        trainingDaysController.jumpToItem(ti);
     });
 
     return Column(
@@ -630,8 +669,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   }
 
   // ── Shared picker scaffold ─────────────────────
-  // Wraps any picker in the two yellow selection bars so we don't
-  // repeat that Stack boilerplate six times.
   Widget _pickerStack(
     Widget picker, {
     double horizontalMargin = 60,
@@ -641,7 +678,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     return Stack(
       alignment: Alignment.center,
       children: [
-        // Top bar
         Align(
           alignment: const Alignment(0, -0.15),
           child: Container(
@@ -650,12 +686,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
             margin: EdgeInsets.symmetric(horizontal: horizontalMargin),
             decoration: BoxDecoration(
               borderRadius: BorderRadius.circular(10),
-              color: AppTheme
-                  .accent, // uses the theme accent, not hardcoded yellow
+              color: AppTheme.accent,
             ),
           ),
         ),
-        // Bottom bar
         Align(
           alignment: const Alignment(0, 0.15),
           child: Container(
@@ -680,8 +714,6 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   Widget _buildBottomButton(BuildContext context) {
     return ElevatedButton(
       onPressed: _next,
-      // Inherits ElevatedButtonThemeData from AppTheme._build;
-      // override only the shape/padding that differs from the default.
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.accent,
         foregroundColor: Colors.black,

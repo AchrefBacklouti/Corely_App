@@ -11,8 +11,14 @@ import 'dart:io';
 class EditPlanPage extends StatefulWidget {
   final WorkoutPlan? existingPlan;
   final int? planIndex;
+  final List<WorkoutDay>? prefillDays;
 
-  const EditPlanPage({super.key, this.existingPlan, this.planIndex});
+  const EditPlanPage({
+    super.key,
+    this.existingPlan,
+    this.planIndex,
+    this.prefillDays,
+  });
 
   @override
   State<EditPlanPage> createState() => _EditPlanPageState();
@@ -78,6 +84,17 @@ class _EditPlanPageState extends State<EditPlanPage> {
         }
         return <Exercise>[];
       });
+    } else if (widget.prefillDays != null && widget.prefillDays!.isNotEmpty) {
+      final prefill = widget.prefillDays!;
+      final count = prefill.length.clamp(1, weekdays.length);
+      _selectedDays = {};
+      _dayExercises = [];
+      for (int i = 0; i < count; i++) {
+        _selectedDays.add(weekdays[i]);
+        _dayNameControllers.add(TextEditingController(text: prefill[i].label));
+        _dayExercises.add(prefill[i].exercises.map(_stubExercise).toList());
+      }
+      _imagePath = null;
     } else {
       _selectedDays = Set.from(weekdays.take(3));
       for (int i = 0; i < 3; i++) {
@@ -87,6 +104,14 @@ class _EditPlanPageState extends State<EditPlanPage> {
       _imagePath = null;
     }
   }
+
+  static Exercise _stubExercise(String name) => Exercise(
+    id: name.hashCode.toString(),
+    name: name,
+    bodyPart: 'general',
+    target: 'General',
+    equipment: 'body only',
+  );
 
   @override
   void dispose() {
