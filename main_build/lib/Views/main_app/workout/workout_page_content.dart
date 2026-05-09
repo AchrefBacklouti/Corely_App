@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/Views/main_app/workout/edit_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
+import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart'; // ← import the shared sheet
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/data_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
@@ -23,7 +24,6 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   bool _showCustom = false;
   bool _squareLayout = true;
   List<WorkoutPlan> _customPlans = [];
-  // Suggested plans come from the static catalogue — no network call needed.
   final List<WorkoutPlan> _suggestedPlans = kSuggestedPlans;
   bool _isLoading = true;
   String? _loadError;
@@ -55,7 +55,6 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
     }
   }
 
-  // ── Plan context menu ────────────────────────
   void _showPlanMenu(BuildContext pageContext, WorkoutPlan plan, int index) {
     final c = pageContext.colors;
 
@@ -505,7 +504,7 @@ class _TabButton extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// Custom plans section (unchanged behaviour)
+// Custom plans section
 // ─────────────────────────────────────────────
 class _CustomPlansSection extends StatelessWidget {
   const _CustomPlansSection({
@@ -576,7 +575,7 @@ class _CustomPlansSection extends StatelessWidget {
 }
 
 // ─────────────────────────────────────────────
-// Suggested section — categorised + per-category search
+// Suggested section
 // ─────────────────────────────────────────────
 class _SuggestedSection extends StatefulWidget {
   const _SuggestedSection({
@@ -593,7 +592,6 @@ class _SuggestedSection extends StatefulWidget {
 }
 
 class _SuggestedSectionState extends State<_SuggestedSection> {
-  // One search query per category
   final Map<PlanCategory, String> _queries = {
     PlanCategory.cardio: '',
     PlanCategory.strength: '',
@@ -702,7 +700,6 @@ class _CategorySection extends StatelessWidget {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // ── Header row ───────────────────────────
         Row(
           children: [
             Container(
@@ -724,7 +721,6 @@ class _CategorySection extends StatelessWidget {
               ),
             ),
             const Spacer(),
-            // Search toggle
             GestureDetector(
               onTap: onSearchToggle,
               child: AnimatedContainer(
@@ -747,8 +743,6 @@ class _CategorySection extends StatelessWidget {
             ),
           ],
         ),
-
-        // ── Search bar (animated) ────────────────
         AnimatedSize(
           duration: const Duration(milliseconds: 250),
           curve: Curves.easeOutCubic,
@@ -785,10 +779,7 @@ class _CategorySection extends StatelessWidget {
                 )
               : const SizedBox.shrink(),
         ),
-
         const SizedBox(height: 14),
-
-        // ── Cards ────────────────────────────────
         if (plans.isEmpty)
           Padding(
             padding: const EdgeInsets.symmetric(vertical: 12),
@@ -850,6 +841,7 @@ class _CategorySection extends StatelessWidget {
       );
   }
 
+  // ← Now uses PlanDetailSheet from doc 2, which has the full copy-days flow
   static void _showPlanDetail(
     BuildContext context,
     WorkoutPlan plan,
@@ -859,345 +851,13 @@ class _CategorySection extends StatelessWidget {
       context: context,
       isScrollControlled: true,
       backgroundColor: Colors.transparent,
-      builder: (_) => _PlanDetailSheet(plan: plan, onPlanAdded: onPlanAdded),
+      builder: (_) => PlanDetailSheet(plan: plan, onPlanAdded: onPlanAdded),
     );
   }
 }
 
 // ─────────────────────────────────────────────
-// Plan detail bottom sheet
-// ─────────────────────────────────────────────
-class _PlanDetailSheet extends StatefulWidget {
-  const _PlanDetailSheet({required this.plan, required this.onPlanAdded});
-  final WorkoutPlan plan;
-  final VoidCallback onPlanAdded;
-
-  @override
-  State<_PlanDetailSheet> createState() => _PlanDetailSheetState();
-}
-
-class _PlanDetailSheetState extends State<_PlanDetailSheet> {
-  final Set<int> _selectedDays = {};
-  bool _selectingDays = false;
-
-  Future<void> _copyAll() async {
-    await LocalPlanService.savePlan(widget.plan);
-    widget.onPlanAdded();
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('${widget.plan.title} added to your plans!')),
-      );
-    }
-  }
-
-  Future<void> _copySelected() async {
-    final days = widget.plan.days;
-    if (days == null || _selectedDays.isEmpty) return;
-    final selectedDays = _selectedDays.map((i) => days[i]).toList();
-    final partial = widget.plan.copyWith(
-      title: '${widget.plan.title} (custom)',
-      days: selectedDays,
-    );
-    await LocalPlanService.savePlan(partial);
-    widget.onPlanAdded();
-    if (mounted) {
-      Navigator.pop(context);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('${_selectedDays.length} day(s) added to your plans!'),
-        ),
-      );
-    }
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    final plan = widget.plan;
-    final days = plan.days ?? [];
-    final screenH = MediaQuery.of(context).size.height;
-
-    return Container(
-      height: screenH * 0.88,
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
-        border: Border.all(color: c.border),
-      ),
-      child: Column(
-        children: [
-          // ── Handle ───────────────────────────
-          Padding(
-            padding: const EdgeInsets.only(top: 12, bottom: 4),
-            child: Container(
-              width: 40,
-              height: 4,
-              decoration: BoxDecoration(
-                color: c.border,
-                borderRadius: BorderRadius.circular(2),
-              ),
-            ),
-          ),
-
-          // ── Header image + title ─────────────
-          if (plan.imageAsset != null)
-            ClipRRect(
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(20),
-              ),
-              child: SizedBox(
-                height: 160,
-                width: double.infinity,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    Image.asset(plan.imageAsset!, fit: BoxFit.cover),
-                    Container(
-                      decoration: BoxDecoration(
-                        gradient: LinearGradient(
-                          begin: Alignment.bottomCenter,
-                          end: Alignment.topCenter,
-                          colors: [c.surface, c.surface.withValues(alpha: 0)],
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-
-          // ── Scrollable content ───────────────
-          Expanded(
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // Title + difficulty
-                  Row(
-                    children: [
-                      Expanded(
-                        child: Text(
-                          plan.title,
-                          style: TextStyle(
-                            color: c.textPrimary,
-                            fontSize: 22,
-                            fontWeight: FontWeight.w800,
-                          ),
-                        ),
-                      ),
-                      _DifficultyIcons(level: plan.difficulty),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    '${plan.duration}  ·  ${plan.exercises}',
-                    style: TextStyle(color: c.textMuted, fontSize: 13),
-                  ),
-                  const SizedBox(height: 14),
-
-                  // Description
-                  if (plan.description != null) ...[
-                    Text(
-                      plan.description!,
-                      style: TextStyle(
-                        color: c.textSecondary,
-                        fontSize: 14,
-                        height: 1.6,
-                      ),
-                    ),
-                    const SizedBox(height: 20),
-                  ],
-
-                  // Days breakdown
-                  if (days.isNotEmpty) ...[
-                    Row(
-                      children: [
-                        Text(
-                          'Workout Days',
-                          style: TextStyle(
-                            color: c.textPrimary,
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                          ),
-                        ),
-                        const Spacer(),
-                        if (_selectingDays)
-                          TextButton(
-                            onPressed: () => setState(() {
-                              _selectingDays = false;
-                              _selectedDays.clear();
-                            }),
-                            child: const Text('Cancel'),
-                          ),
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    ...List.generate(days.length, (i) {
-                      final day = days[i];
-                      final selected = _selectedDays.contains(i);
-                      return GestureDetector(
-                        onTap: _selectingDays
-                            ? () => setState(() {
-                                selected
-                                    ? _selectedDays.remove(i)
-                                    : _selectedDays.add(i);
-                              })
-                            : null,
-                        child: AnimatedContainer(
-                          duration: const Duration(milliseconds: 180),
-                          margin: const EdgeInsets.only(bottom: 10),
-                          decoration: BoxDecoration(
-                            color: selected ? c.accentSoft : c.surfaceRaised,
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: selected ? c.accent : c.border,
-                              width: selected ? 1.5 : 1,
-                            ),
-                          ),
-                          child: Theme(
-                            data: Theme.of(
-                              context,
-                            ).copyWith(dividerColor: Colors.transparent),
-                            child: ExpansionTile(
-                              tilePadding: const EdgeInsets.symmetric(
-                                horizontal: 14,
-                                vertical: 2,
-                              ),
-                              childrenPadding: const EdgeInsets.fromLTRB(
-                                14,
-                                0,
-                                14,
-                                12,
-                              ),
-                              leading: _selectingDays
-                                  ? AnimatedContainer(
-                                      duration: const Duration(
-                                        milliseconds: 150,
-                                      ),
-                                      width: 22,
-                                      height: 22,
-                                      decoration: BoxDecoration(
-                                        shape: BoxShape.circle,
-                                        color: selected
-                                            ? c.accent
-                                            : Colors.transparent,
-                                        border: Border.all(
-                                          color: selected ? c.accent : c.border,
-                                          width: 1.5,
-                                        ),
-                                      ),
-                                      child: selected
-                                          ? const Icon(
-                                              Icons.check,
-                                              color: Colors.black,
-                                              size: 14,
-                                            )
-                                          : null,
-                                    )
-                                  : null,
-                              title: Text(
-                                day.label,
-                                style: TextStyle(
-                                  color: c.textPrimary,
-                                  fontSize: 14,
-                                  fontWeight: FontWeight.w600,
-                                ),
-                              ),
-                              iconColor: c.textMuted,
-                              collapsedIconColor: c.textMuted,
-                              children: day.exercises
-                                  .map(
-                                    (ex) => Padding(
-                                      padding: const EdgeInsets.only(bottom: 6),
-                                      child: Row(
-                                        children: [
-                                          Container(
-                                            width: 5,
-                                            height: 5,
-                                            decoration: BoxDecoration(
-                                              shape: BoxShape.circle,
-                                              color: c.accent,
-                                            ),
-                                          ),
-                                          const SizedBox(width: 10),
-                                          Expanded(
-                                            child: Text(
-                                              ex,
-                                              style: TextStyle(
-                                                color: c.textSecondary,
-                                                fontSize: 13,
-                                              ),
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  )
-                                  .toList(),
-                            ),
-                          ),
-                        ),
-                      );
-                    }),
-                  ],
-                ],
-              ),
-            ),
-          ),
-
-          // ── Action buttons ───────────────────
-          Container(
-            padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-            decoration: BoxDecoration(
-              color: c.surface,
-              border: Border(top: BorderSide(color: c.border)),
-            ),
-            child: _selectingDays
-                ? Row(
-                    children: [
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _selectedDays.isEmpty
-                              ? null
-                              : _copySelected,
-                          child: Text(
-                            'Copy ${_selectedDays.isEmpty ? '' : '${_selectedDays.length} '}Day${_selectedDays.length == 1 ? '' : 's'}',
-                          ),
-                        ),
-                      ),
-                    ],
-                  )
-                : Row(
-                    children: [
-                      Expanded(
-                        child: OutlinedButton(
-                          onPressed: () => setState(() {
-                            _selectingDays = true;
-                            _selectedDays.clear();
-                          }),
-                          child: const Text('Copy Days'),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: ElevatedButton(
-                          onPressed: _copyAll,
-                          child: const Text('Copy Plan'),
-                        ),
-                      ),
-                    ],
-                  ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-// ─────────────────────────────────────────────
-// Suggested plan card (grid + list)
+// Suggested plan card
 // ─────────────────────────────────────────────
 class _SuggestedCard extends StatelessWidget {
   const _SuggestedCard({
@@ -1312,7 +972,6 @@ class _SuggestedCard extends StatelessWidget {
       );
     }
 
-    // List layout
     return GestureDetector(
       onTap: onTap,
       child: Container(

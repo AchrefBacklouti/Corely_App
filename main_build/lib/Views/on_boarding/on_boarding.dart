@@ -19,7 +19,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   String? age;
   String selectedWeight = '190';
   String selectedUnitWeight = 'lbs';
-  String selectedHeightUnit = 'cm';
+  String selectedHeightUnit = 'ft';
   String selectedHeightFt = '5';
   String selectedHeightIn = '9';
   String selectedHeightCm = '175';
@@ -123,9 +123,20 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
   void _next() {
     if (_currentStep < 5) {
-      setState(() => _currentStep++);
+      if (_currentStep == 2) {
+        // Leaving weight step: sync height unit to match the chosen weight unit.
+        setState(() {
+          selectedHeightUnit = selectedUnitWeight == 'kg' ? 'cm' : 'ft';
+          _currentStep++;
+        });
+      } else {
+        setState(() => _currentStep++);
+      }
       return;
     }
+    final heightDisplay = selectedHeightUnit == 'ft'
+        ? '${selectedHeightFt}ft ${selectedHeightIn}in'
+        : '${selectedHeightCm}cm';
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -133,11 +144,10 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
           gender: gender ?? 'male',
           age: int.parse(age ?? '21'),
           weight: double.parse(selectedWeight),
-          height: int.parse(selectedHeightCm),
+          heightDisplay: heightDisplay,
           goal: selectedGoal,
           trainingDays: int.parse(selectedTrainingDays),
           weightUnit: selectedUnitWeight,
-          heightUnit: selectedHeightUnit,
         ),
       ),
     );
