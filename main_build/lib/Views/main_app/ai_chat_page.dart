@@ -1,4 +1,6 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import 'package:main_build/Theme/app_theme.dart';
 
 class AiChatPage extends StatefulWidget {
@@ -20,6 +22,16 @@ class _AiChatPageState extends State<AiChatPage> {
   ];
   bool _isTyping = false;
 
+  static const _apiKey = 'AIzaSyBZf6JIMQCj30NbGExIgv6zIdVZkUMR6gA';
+  static const _systemPrompt =
+      'You are Corely AI, a personal gym trainer and fitness buddy. '
+      'You talk like a knowledgeable friend at the gym — casual, motivating, and straight to the point. '
+      'You ONLY answer questions about: gym workouts and training programs, exercise form and technique, '
+      'nutrition and diet for fitness goals, recovery, sleep, and injury prevention, and workout suggestions. '
+      'If someone asks about anything outside those topics, redirect them with something like: '
+      '"Ha, that\'s outside my lane bro! I\'m your gym buddy — ask me about gains, nutrition, or recovery." '
+      'Keep replies concise and practical. Use gym lingo naturally. Address the user like a training partner.';
+
   @override
   void dispose() {
     _controller.dispose();
@@ -28,6 +40,10 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 
   void _send() {
+    _doSend();
+  }
+
+  Future<void> _doSend() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
     setState(() {
@@ -36,18 +52,72 @@ class _AiChatPageState extends State<AiChatPage> {
       _controller.clear();
     });
     _scrollToBottom();
-    Future.delayed(const Duration(milliseconds: 1200), () {
+
+    try {
+      final reply = await _callGemini();
       if (!mounted) return;
       setState(() {
         _isTyping = false;
-        _messages.add(const _Message(
-          text:
-              "AI-powered responses are coming soon! I'll be able to help you with workout advice, nutrition tips, and progress tracking.",
+        _messages.add(_Message(text: reply, isBot: true));
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isTyping = false;
+        _messages.add(_Message(
+          text: "DEBUG ERROR: $e",
           isBot: true,
         ));
       });
-      _scrollToBottom();
+    }
+    _scrollToBottom();
+  }
+
+  Future<String> _callGemini() async {
+    final url = Uri.parse(
+      'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
+    );
+
+    // Gemini requires the first turn to be 'user' — skip the static greeting.
+    final firstUserIdx = _messages.indexWhere((m) => !m.isBot);
+    final contents = _messages.skip(firstUserIdx).map((m) {
+      return {
+        'role': m.isBot ? 'model' : 'user',
+        'parts': [
+          {'text': m.text},
+        ],
+      };
+    }).toList();
+
+    final body = jsonEncode({
+      'system_instruction': {
+        'parts': [
+          {'text': _systemPrompt},
+        ],
+      },
+      'contents': contents,
     });
+
+    final response = await http
+        .post(
+          url,
+          headers: {
+            'Content-Type': 'application/json',
+            'X-goog-api-key': _apiKey,
+          },
+          body: body,
+        )
+        .timeout(const Duration(seconds: 30));
+
+    if (response.statusCode != 200) {
+      throw Exception('HTTP ${response.statusCode}: ${response.body}');
+    }
+
+    final json = jsonDecode(response.body) as Map<String, dynamic>;
+    final candidates = json['candidates'] as List<dynamic>;
+    final content = candidates[0]['content'] as Map<String, dynamic>;
+    final parts = content['parts'] as List<dynamic>;
+    return parts[0]['text'] as String;
   }
 
   void _scrollToBottom() {
