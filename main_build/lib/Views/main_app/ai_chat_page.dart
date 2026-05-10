@@ -2,6 +2,8 @@ import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/data/local_plan_service.dart';
+import 'package:main_build/data/workout_plans.dart';
 
 class AiChatPage extends StatefulWidget {
   const AiChatPage({super.key});
@@ -21,6 +23,7 @@ class _AiChatPageState extends State<AiChatPage> {
     ),
   ];
   bool _isTyping = false;
+  final Set<int> _savedPlanIndices = {};
 
   static const _apiKey = 'AIzaSyBZf6JIMQCj30NbGExIgv6zIdVZkUMR6gA';
   static const _systemPrompt =
@@ -120,6 +123,52 @@ class _AiChatPageState extends State<AiChatPage> {
     return parts[0]['text'] as String;
   }
 
+  Future<void> _saveAsPlan(int messageIndex) async {
+    final text = _messages[messageIndex].text;
+    final nameController = TextEditingController(text: 'AI Plan');
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Save as workout plan'),
+        content: TextField(
+          controller: nameController,
+          autofocus: true,
+          decoration: const InputDecoration(labelText: 'Plan name'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true || !mounted) return;
+
+    final plan = WorkoutPlan(
+      title: nameController.text.trim().isEmpty
+          ? 'AI Plan'
+          : nameController.text.trim(),
+      duration: 'AI suggested',
+      exercises: 'See AI chat',
+      difficulty: 2,
+    );
+    await LocalPlanService.savePlan(
+      plan,
+      source: 'ai_generated',
+      aiRawText: text,
+    );
+    if (!mounted) return;
+    setState(() => _savedPlanIndices.add(messageIndex));
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Plan saved! Check My Plans in the Workout tab.')),
+    );
+  }
+
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (_scrollController.hasClients) {
@@ -189,7 +238,15 @@ class _AiChatPageState extends State<AiChatPage> {
                 if (i == _messages.length) {
                   return _TypingIndicator(c: c);
                 }
-                return _MessageBubble(message: _messages[i], c: c);
+                final msg = _messages[i];
+                return _MessageBubble(
+                  message: msg,
+                  c: c,
+                  isSaved: _savedPlanIndices.contains(i),
+                  onSave: msg.looksLikeWorkoutPlan
+                      ? () => _saveAsPlan(i)
+                      : null,
+                );
               },
             ),
           ),
@@ -207,15 +264,36 @@ class _Message {
   final bool isBot;
 
   const _Message({required this.text, required this.isBot});
+
+  bool get looksLikeWorkoutPlan {
+    if (!isBot) return false;
+    final lower = text.toLowerCase();
+    final hasDays = lower.contains('day 1') || lower.contains('day 2') ||
+        lower.contains('day one') || lower.contains('day two');
+    final hasExerciseTerms =
+        lower.contains('sets') && lower.contains('reps');
+    final hasWorkoutTerms = lower.contains('workout') ||
+        lower.contains('program') ||
+        lower.contains('routine') ||
+        lower.contains('training');
+    return (hasDays || hasExerciseTerms) && hasWorkoutTerms;
+  }
 }
 
 // ─── Message Bubble ──────────────────────────────
 
 class _MessageBubble extends StatelessWidget {
-  const _MessageBubble({required this.message, required this.c});
+  const _MessageBubble({
+    required this.message,
+    required this.c,
+    this.onSave,
+    this.isSaved = false,
+  });
 
   final _Message message;
   final CorelyColors c;
+  final VoidCallback? onSave;
+  final bool isSaved;
 
   @override
   Widget build(BuildContext context) {
@@ -246,26 +324,62 @@ class _MessageBubble extends StatelessWidget {
             const SizedBox(width: 8),
           ],
           Flexible(
-            child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              decoration: BoxDecoration(
-                color: isBot ? c.surface : AppTheme.accent,
-                borderRadius: BorderRadius.only(
-                  topLeft: const Radius.circular(16),
-                  topRight: const Radius.circular(16),
-                  bottomLeft: Radius.circular(isBot ? 4 : 16),
-                  bottomRight: Radius.circular(isBot ? 16 : 4),
+            child: Column(
+              crossAxisAlignment: isBot
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.end,
+              children: [
+                Container(
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 14, vertical: 10),
+                  decoration: BoxDecoration(
+                    color: isBot ? c.surface : AppTheme.accent,
+                    borderRadius: BorderRadius.only(
+                      topLeft: const Radius.circular(16),
+                      topRight: const Radius.circular(16),
+                      bottomLeft: Radius.circular(isBot ? 4 : 16),
+                      bottomRight: Radius.circular(isBot ? 16 : 4),
+                    ),
+                    border: isBot ? Border.all(color: c.border) : null,
+                  ),
+                  child: Text(
+                    message.text,
+                    style: TextStyle(
+                      color: isBot ? c.textPrimary : Colors.black,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
                 ),
-                border: isBot ? Border.all(color: c.border) : null,
-              ),
-              child: Text(
-                message.text,
-                style: TextStyle(
-                  color: isBot ? c.textPrimary : Colors.black,
-                  fontSize: 14,
-                  height: 1.4,
-                ),
-              ),
+                if (onSave != null) ...[
+                  const SizedBox(height: 4),
+                  GestureDetector(
+                    onTap: isSaved ? null : onSave,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          isSaved
+                              ? Icons.check_circle_rounded
+                              : Icons.bookmark_add_outlined,
+                          size: 14,
+                          color: isSaved
+                              ? Colors.green
+                              : c.textMuted,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          isSaved ? 'Saved' : 'Save as plan',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isSaved ? Colors.green : c.textMuted,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
             ),
           ),
         ],
