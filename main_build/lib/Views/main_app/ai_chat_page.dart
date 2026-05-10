@@ -33,7 +33,11 @@ class _AiChatPageState extends State<AiChatPage> {
       'nutrition and diet for fitness goals, recovery, sleep, and injury prevention, and workout suggestions. '
       'If someone asks about anything outside those topics, redirect them with something like: '
       '"Ha, that\'s outside my lane bro! I\'m your gym buddy — ask me about gains, nutrition, or recovery." '
-      'Keep replies concise and practical. Use gym lingo naturally. Address the user like a training partner.';
+      'Keep replies concise and practical. Use gym lingo naturally. Address the user like a training partner. '
+      'IMPORTANT: Whenever you provide a full workout plan (a structured response that includes specific days, '
+      'exercises, sets and reps), you MUST begin your entire response with the exact text "[WORKOUT_PLAN]" '
+      'on its own line. Do not use this tag for general advice, single exercise tips, or nutrition info — '
+      'only for complete, ready-to-follow workout plans.';
 
   @override
   void dispose() {
@@ -149,13 +153,17 @@ class _AiChatPageState extends State<AiChatPage> {
     );
     if (confirmed != true || !mounted) return;
 
+    final parsed = _parseAiWorkout(text);
     final plan = WorkoutPlan(
       title: nameController.text.trim().isEmpty
           ? 'AI Plan'
           : nameController.text.trim(),
-      duration: 'AI suggested',
-      exercises: 'See AI chat',
+      duration: parsed.duration,
+      exercises: parsed.summary,
       difficulty: 2,
+      dayExercises: parsed.dayExercises,
+      dayNames: parsed.dayNames,
+      selectedDays: parsed.selectedDays,
     );
     await LocalPlanService.savePlan(
       plan,
@@ -166,6 +174,134 @@ class _AiChatPageState extends State<AiChatPage> {
     setState(() => _savedPlanIndices.add(messageIndex));
     ScaffoldMessenger.of(context).showSnackBar(
       const SnackBar(content: Text('Plan saved! Check My Plans in the Workout tab.')),
+    );
+  }
+
+  ({
+    List<List<Map<String, dynamic>>> dayExercises,
+    List<String> dayNames,
+    List<String> selectedDays,
+    String summary,
+    String duration,
+  }) _parseAiWorkout(String text) {
+    final dayNames = <String>[];
+    final allDayExercises = <List<Map<String, dynamic>>>[];
+    List<Map<String, dynamic>>? current;
+
+    // Matches day-level headers like "Day 1", "Day 1 – Push", "Session A", "Week 2"
+    final dayRe = RegExp(
+      r'^(?:day\s*\d+|session\s+[a-z]|week\s*\d+|workout\s+[ab])',
+      caseSensitive: false,
+    );
+    // Matches sets × reps in two forms:
+    //   Form A: "3x10", "3 sets x 10", "3 × 10", "3 sets × 10-12"
+    //   Form B: "3 sets of 10", "3 sets, 10", "3 sets 10 reps"
+    final setsRepsRe = RegExp(
+      r'(\d+)\s*(?:sets?\s*)?[x×]\s*(\d+(?:[–\-]\d+)?)'
+      r'|'
+      r'(\d+)\s*sets?\s*(?:(?:of|,)\s*)?(\d+(?:[–\-]\d+)?)\s*(?:reps?)?',
+      caseSensitive: false,
+    );
+
+    for (var raw in text.split('\n')) {
+      final line = raw.replaceAll(RegExp(r'[*#_`]'), '').trim();
+      if (line.isEmpty) continue;
+
+      if (dayRe.hasMatch(line)) {
+        if (current != null) allDayExercises.add(current);
+        current = [];
+        var name = line.replaceAll(RegExp(r':\s*$'), '').trim();
+        if (name.length > 45) name = name.substring(0, 45);
+        dayNames.add(name);
+        continue;
+      }
+
+      // Auto-start Day 1 if exercise lines appear before any day header
+      if (current == null) {
+        final hasBullet = RegExp(r'^[-*•]').hasMatch(raw.trim());
+        if (!hasBullet && !setsRepsRe.hasMatch(line)) continue;
+        current = [];
+        dayNames.add('Day 1');
+      }
+
+      // Strip leading bullet / number markers
+      var ex = line.replaceFirst(RegExp(r'^[-*•\d]+[.):]?\s*'), '').trim();
+      if (ex.isEmpty) continue;
+
+      final lower = ex.toLowerCase();
+      if (lower.startsWith('rest') ||
+          lower.startsWith('note') ||
+          lower.startsWith('tip') ||
+          lower.startsWith('optional')) {
+        continue;
+      }
+
+      int sets = 3;
+      String reps = '10';
+
+      // Form A/B: sets-first — "3x10", "3 sets x 10", "3 sets of 10", "3 sets, 10"
+      final m = setsRepsRe.firstMatch(ex);
+      if (m != null) {
+        final sRaw = m.group(1) ?? m.group(3);
+        final rRaw = m.group(2) ?? m.group(4);
+        final s = int.tryParse(sRaw ?? '');
+        if (s != null && s >= 1 && s <= 12 && rRaw != null) {
+          sets = s;
+          reps = rRaw;
+        }
+        ex = ex.substring(0, m.start)
+            .replaceAll(RegExp(r'[:\-–,\s]+$'), '')
+            .trim();
+      } else {
+        // Form C: reps-first — "8 reps 5 sets", "8 reps, 5 sets"
+        final repsFirst = RegExp(
+          r'(\d+(?:[–\-]\d+)?)\s*reps?\s*,?\s*(\d+)\s*sets?',
+          caseSensitive: false,
+        ).firstMatch(ex);
+        if (repsFirst != null) {
+          reps = repsFirst.group(1) ?? '10';
+          sets = int.tryParse(repsFirst.group(2) ?? '') ?? 3;
+          ex = ex.substring(0, repsFirst.start)
+              .replaceAll(RegExp(r'[:\-–,\s]+$'), '')
+              .trim();
+        } else {
+          // No sets/reps found at all — skip sub-headers (lines that end with ':')
+          // but keep plain exercise names like "Squats" (saved with 3×10 default)
+          final stripped = ex.replaceAll(RegExp(r'[:\s]+$'), '');
+          if (ex.endsWith(':') || stripped != ex && stripped.isEmpty) continue;
+          ex = stripped;
+        }
+      }
+
+      if (ex.isEmpty) continue;
+
+      current.add({
+        'id': ex.hashCode.toString(),
+        'name': ex,
+        'bodyPart': 'general',
+        'target': 'General',
+        'equipment': 'body only',
+        'sets': sets,
+        'reps': reps,
+      });
+    }
+
+    if (current != null) allDayExercises.add(current);
+
+    const weekdays = [
+      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
+      'Friday', 'Saturday', 'Sunday',
+    ];
+    final count = dayNames.length.clamp(0, 7);
+    final selected = List<String>.from(weekdays.take(count));
+    final total = allDayExercises.fold(0, (s, d) => s + d.length);
+
+    return (
+      dayExercises: allDayExercises,
+      dayNames: dayNames,
+      selectedDays: selected,
+      summary: total > 0 ? '$total exercises' : 'AI suggested',
+      duration: count > 1 ? '$count-day plan' : 'AI suggested',
     );
   }
 
@@ -265,18 +401,29 @@ class _Message {
 
   const _Message({required this.text, required this.isBot});
 
+  // Strip the internal tag before showing in the bubble
+  String get displayText =>
+      text.replaceFirst(RegExp(r'^\[WORKOUT_PLAN\]\s*\n?'), '').trim();
+
   bool get looksLikeWorkoutPlan {
     if (!isBot) return false;
+    // Primary: AI explicitly tagged this response as a workout plan
+    if (text.contains('[WORKOUT_PLAN]')) return true;
+    // Fallback: keyword heuristic for edge cases the tag misses
     final lower = text.toLowerCase();
     final hasDays = lower.contains('day 1') || lower.contains('day 2') ||
-        lower.contains('day one') || lower.contains('day two');
+        lower.contains('day 3') || lower.contains('day one') ||
+        lower.contains('day two') || lower.contains('day three');
     final hasExerciseTerms =
-        lower.contains('sets') && lower.contains('reps');
+        (lower.contains('sets') || lower.contains('set')) &&
+        (lower.contains('reps') || lower.contains('rep'));
     final hasWorkoutTerms = lower.contains('workout') ||
         lower.contains('program') ||
         lower.contains('routine') ||
-        lower.contains('training');
-    return (hasDays || hasExerciseTerms) && hasWorkoutTerms;
+        lower.contains('training plan') ||
+        lower.contains('exercise plan');
+    return (hasDays && hasExerciseTerms) ||
+        (hasExerciseTerms && hasWorkoutTerms);
   }
 }
 
@@ -343,7 +490,7 @@ class _MessageBubble extends StatelessWidget {
                     border: isBot ? Border.all(color: c.border) : null,
                   ),
                   child: Text(
-                    message.text,
+                    message.displayText,
                     style: TextStyle(
                       color: isBot ? c.textPrimary : Colors.black,
                       fontSize: 14,
