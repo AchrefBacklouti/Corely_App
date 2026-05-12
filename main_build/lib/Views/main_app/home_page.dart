@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Views/main_app/ai_chat_page.dart';
 import 'package:main_build/Views/main_app/home/home_page_content.dart';
 import 'package:main_build/Views/main_app/nutrition/nutrition_page_content.dart';
 import 'package:main_build/Views/main_app/settings_page.dart';
@@ -50,10 +51,55 @@ class _MainShellPageState extends State<MainShellPage> {
           ],
         ),
       ),
+      floatingActionButton: _AiChatBubble(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _BottomNav(
         currentIndex: _index,
         icons: _navIcons,
         onTap: (i) => setState(() => _index = i),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// AI Chat Bubble
+// ─────────────────────────────────────────────
+class _AiChatBubble extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      height: 58,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [AppTheme.accent, AppTheme.accent_2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x662979FF),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AiChatPage()),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Image.asset('assets/img/bot_4712038.png'),
+          ),
+        ),
       ),
     );
   }

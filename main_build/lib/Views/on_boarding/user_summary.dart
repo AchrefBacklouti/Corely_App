@@ -6,22 +6,20 @@ class UserSummary extends StatelessWidget {
   final String gender;
   final int age;
   final double weight;
-  final int height;
+  final String heightDisplay;
   final String goal;
   final int trainingDays;
   final String weightUnit;
-  final String heightUnit;
 
   const UserSummary({
     super.key,
     required this.gender,
     required this.age,
     required this.weight,
-    required this.height,
+    required this.heightDisplay,
     required this.goal,
     required this.trainingDays,
     required this.weightUnit,
-    required this.heightUnit,
   });
 
   @override
@@ -67,7 +65,7 @@ class UserSummary extends StatelessWidget {
               _infoTile(
                 icon: Icons.person_outline,
                 label:
-                    "User: $gender, $age yrs, ${weight.toStringAsFixed(1)} $weightUnit, $height$heightUnit",
+                    "User: $gender, $age yrs, ${weight.toStringAsFixed(1)} $weightUnit, $heightDisplay",
                 context: context,
               ),
               const SizedBox(height: 12),

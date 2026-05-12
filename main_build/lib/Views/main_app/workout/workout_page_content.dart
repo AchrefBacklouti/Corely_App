@@ -3,6 +3,7 @@ import 'package:flutter/services.dart';
 import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/Views/main_app/workout/edit_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
+import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart'; // ← import the shared sheet
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/data_service.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
@@ -10,6 +11,9 @@ import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/plan_share_service.dart';
 import 'dart:io';
 
+// ─────────────────────────────────────────────
+// Main page
+// ─────────────────────────────────────────────
 class WorkoutPageContent extends StatefulWidget {
   const WorkoutPageContent({super.key});
 
@@ -21,7 +25,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   bool _showCustom = false;
   bool _squareLayout = true;
   List<WorkoutPlan> _customPlans = [];
-  List<WorkoutPlan> _suggestedPlans = [];
+  final List<WorkoutPlan> _suggestedPlans = kSuggestedPlans;
   bool _isLoading = true;
   String? _loadError;
 
@@ -45,17 +49,11 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
       _isLoading = true;
       _loadError = null;
     });
-
     try {
-      final results = await Future.wait([
-        DataService.getCustomWorkoutPlans(),
-        DataService.getSuggestedWorkoutPlans(),
-      ]);
-
+      final customPlans = await DataService.getCustomWorkoutPlans();
       if (!mounted) return;
       setState(() {
-        _customPlans = results[0];
-        _suggestedPlans = results[1];
+        _customPlans = customPlans;
         _isLoading = false;
       });
     } catch (_) {
@@ -68,12 +66,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   }
 
   void _showPlanMenu(BuildContext pageContext, WorkoutPlan plan, int index) {
-    final theme = Theme.of(pageContext);
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (theme.brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
+    final c = pageContext.colors;
 
     showGeneralDialog<void>(
       context: pageContext,
@@ -84,7 +77,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
       ).modalBarrierDismissLabel,
       barrierColor: Colors.black.withValues(alpha: 0.75),
       transitionDuration: const Duration(milliseconds: 220),
-      pageBuilder: (dialogContext, animation, secondaryAnimation) {
+      pageBuilder: (dialogContext, _, __) {
         return SafeArea(
           child: Center(
             child: ConstrainedBox(
@@ -94,14 +87,14 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                 child: Container(
                   padding: const EdgeInsets.fromLTRB(22, 22, 22, 18),
                   decoration: BoxDecoration(
-                    color: palette.surface,
+                    color: c.surface,
                     borderRadius: BorderRadius.circular(28),
-                    border: Border.all(color: palette.border),
+                    border: Border.all(color: c.border),
                     boxShadow: [
                       BoxShadow(
                         color: Colors.black.withValues(alpha: 0.54),
                         blurRadius: 30,
-                        offset: Offset(0, 18),
+                        offset: const Offset(0, 18),
                       ),
                     ],
                   ),
@@ -112,7 +105,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                         width: 54,
                         height: 5,
                         decoration: BoxDecoration(
-                          color: palette.border,
+                          color: c.border,
                           borderRadius: BorderRadius.circular(999),
                         ),
                       ),
@@ -121,7 +114,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                         plan.title,
                         textAlign: TextAlign.center,
                         style: TextStyle(
-                          color: palette.textPrimary,
+                          color: c.textPrimary,
                           fontSize: 20,
                           fontWeight: FontWeight.w700,
                         ),
@@ -129,10 +122,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                       const SizedBox(height: 6),
                       Text(
                         'Choose an action',
-                        style: TextStyle(
-                          color: palette.textMuted,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: c.textMuted, fontSize: 13),
                       ),
                       const SizedBox(height: 22),
                       Wrap(
@@ -140,7 +130,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                         runSpacing: 16,
                         alignment: WrapAlignment.center,
                         children: [
-                          _CircleMenuAction(
+                          _CircleAction(
                             icon: Icons.play_arrow_rounded,
                             label: 'Play',
                             color: Colors.greenAccent,
@@ -154,7 +144,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                               );
                             },
                           ),
-                          _CircleMenuAction(
+                          _CircleAction(
                             icon: Icons.edit_rounded,
                             label: 'Edit',
                             color: Colors.yellow,
@@ -169,12 +159,10 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                                   ),
                                 ),
                               );
-                              if (result == true && mounted) {
-                                await _loadData();
-                              }
+                              if (result == true && mounted) await _loadData();
                             },
                           ),
-                          _CircleMenuAction(
+                          _CircleAction(
                             icon: Icons.share_rounded,
                             label: 'Share',
                             color: Colors.blueAccent,
@@ -183,7 +171,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                               _showShareDialog(pageContext, plan);
                             },
                           ),
-                          _CircleMenuAction(
+                          _CircleAction(
                             icon: Icons.delete_rounded,
                             label: 'Delete',
                             color: Colors.redAccent,
@@ -191,31 +179,26 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                               Navigator.pop(dialogContext);
                               final confirm = await showDialog<bool>(
                                 context: pageContext,
-                                builder: (confirmContext) => AlertDialog(
-                                  backgroundColor: palette.surface,
+                                builder: (ctx) => AlertDialog(
+                                  backgroundColor: c.surface,
                                   title: Text(
                                     'Delete Plan?',
-                                    style: TextStyle(
-                                      color: palette.textPrimary,
-                                    ),
+                                    style: TextStyle(color: c.textPrimary),
                                   ),
                                   content: Text(
                                     'Are you sure you want to delete "${plan.title}"?',
-                                    style: TextStyle(
-                                      color: palette.textSecondary,
-                                    ),
+                                    style: TextStyle(color: c.textSecondary),
                                   ),
                                   actions: [
                                     TextButton(
                                       onPressed: () =>
-                                          Navigator.pop(confirmContext, false),
+                                          Navigator.pop(ctx, false),
                                       child: const Text('Cancel'),
                                     ),
                                     TextButton(
-                                      onPressed: () =>
-                                          Navigator.pop(confirmContext, true),
+                                      onPressed: () => Navigator.pop(ctx, true),
                                       style: TextButton.styleFrom(
-                                        foregroundColor: Colors.red,
+                                        foregroundColor: Colors.redAccent,
                                       ),
                                       child: const Text('Delete'),
                                     ),
@@ -225,16 +208,14 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                               if (confirm == true && mounted) {
                                 await LocalPlanService.deletePlan(index);
                                 await _loadData();
-                                if (mounted) {
+                                if (mounted)
                                   ScaffoldMessenger.of(
                                     pageContext,
                                   ).showSnackBar(
                                     SnackBar(
                                       content: Text('${plan.title} deleted'),
-                                      backgroundColor: Colors.green,
                                     ),
                                   );
-                                }
                               }
                             },
                           ),
@@ -248,33 +229,213 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
           ),
         );
       },
-      transitionBuilder: (context, animation, secondaryAnimation, child) {
-        final fade = CurvedAnimation(parent: animation, curve: Curves.easeOut);
-        final scale = Tween<double>(begin: 0.92, end: 1.0).animate(
-          CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
-        );
-
-        return FadeTransition(
-          opacity: fade,
-          child: ScaleTransition(scale: scale, child: child),
-        );
-      },
+      transitionBuilder: (_, animation, __, child) => FadeTransition(
+        opacity: CurvedAnimation(parent: animation, curve: Curves.easeOut),
+        child: ScaleTransition(
+          scale: Tween<double>(begin: 0.92, end: 1.0).animate(
+            CurvedAnimation(parent: animation, curve: Curves.easeOutBack),
+          ),
+          child: child,
+        ),
+      ),
     );
   }
 
-  Widget _CircleMenuAction({
-    required IconData icon,
-    required String label,
-    required Color color,
-    required VoidCallback onTap,
-  }) {
-    final theme = Theme.of(context);
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (theme.brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
+  void _showShareDialog(BuildContext context, WorkoutPlan plan) {
+    final c = context.colors;
+    final shareCode = PlanShareService.generateShareCode(plan);
 
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: c.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => Padding(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: c.border,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+            const SizedBox(height: 20),
+            Text(
+              'Share Plan',
+              style: TextStyle(
+                color: c.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const SizedBox(height: 20),
+            Container(
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: c.inputFill,
+                borderRadius: BorderRadius.circular(12),
+                border: Border.all(color: c.border),
+              ),
+              child: Row(
+                children: [
+                  Expanded(
+                    child: SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Text(
+                        shareCode,
+                        style: TextStyle(
+                          color: c.textPrimary,
+                          fontSize: 12,
+                          fontFamily: 'monospace',
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                  IconButton(
+                    onPressed: () {
+                      Clipboard.setData(ClipboardData(text: shareCode));
+                      ScaffoldMessenger.of(context).showSnackBar(
+                        const SnackBar(content: Text('Share code copied!')),
+                      );
+                    },
+                    icon: Icon(Icons.copy, color: c.accent),
+                    padding: EdgeInsets.zero,
+                    constraints: const BoxConstraints(
+                      minWidth: 40,
+                      minHeight: 40,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: () {
+                  Navigator.pop(context);
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    const SnackBar(content: Text('Plan shared successfully')),
+                  );
+                },
+                icon: const Icon(Icons.share),
+                label: const Text('Share'),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+
+    if (_isLoading)
+      return Center(child: CircularProgressIndicator(color: c.accent));
+
+    if (_loadError != null) {
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Text(
+                _loadError!,
+                textAlign: TextAlign.center,
+                style: TextStyle(color: c.textSecondary, fontSize: 15),
+              ),
+              const SizedBox(height: 12),
+              ElevatedButton(onPressed: _loadData, child: const Text('Retry')),
+            ],
+          ),
+        ),
+      );
+    }
+
+    return Column(
+      children: [
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 16),
+          child: Row(
+            children: [
+              _TabButton(
+                label: 'Custom',
+                isActive: _showCustom,
+                onTap: () => setState(() => _showCustom = true),
+              ),
+              const SizedBox(width: 12),
+              _TabButton(
+                label: 'Suggested',
+                isActive: !_showCustom,
+                onTap: () => setState(() => _showCustom = false),
+              ),
+              const Spacer(),
+              IconButton(
+                icon: Icon(
+                  _squareLayout ? Icons.view_agenda_outlined : Icons.grid_view,
+                  color: c.accent,
+                ),
+                tooltip: _squareLayout ? 'List cards' : 'Grid cards',
+                onPressed: () => setState(() => _squareLayout = !_squareLayout),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 6),
+            child: _showCustom
+                ? _CustomPlansSection(
+                    plans: _customPlans,
+                    squareLayout: _squareLayout,
+                    onAdd: () async {
+                      final result = await Navigator.push(
+                        context,
+                        MaterialPageRoute(builder: (_) => const EditPlanPage()),
+                      );
+                      if (result == true) _loadData();
+                    },
+                    onPlanTap: _showPlanMenu,
+                  )
+                : _SuggestedSection(
+                    plans: _suggestedPlans,
+                    squareLayout: _squareLayout,
+                    onPlanAdded: _loadData,
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Circle action button (plan menu)
+// ─────────────────────────────────────────────
+class _CircleAction extends StatelessWidget {
+  const _CircleAction({
+    required this.icon,
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+  final IconData icon;
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
     return SizedBox(
       width: 108,
       child: InkResponse(
@@ -302,7 +463,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
             Text(
               label,
               style: TextStyle(
-                color: palette.textPrimary,
+                color: c.textPrimary,
                 fontSize: 13,
                 fontWeight: FontWeight.w600,
               ),
@@ -529,39 +690,36 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   }
 }
 
+// ─────────────────────────────────────────────
+// Tab button
+// ─────────────────────────────────────────────
 class _TabButton extends StatelessWidget {
-  final String label;
-  final bool isActive;
-  final VoidCallback onTap;
-
   const _TabButton({
     required this.label,
     required this.isActive,
     required this.onTap,
   });
+  final String label;
+  final bool isActive;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
-
+    final c = context.colors;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
         decoration: BoxDecoration(
-          color: isActive ? palette.surfaceRaised : Colors.transparent,
+          color: isActive ? c.surfaceRaised : Colors.transparent,
           borderRadius: BorderRadius.circular(12),
-          border: Border.all(color: isActive ? palette.accent : palette.border),
+          border: Border.all(color: isActive ? c.accent : c.border),
         ),
         child: Text(
           label,
           style: TextStyle(
-            color: palette.textPrimary,
+            color: c.textPrimary,
             fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
           ),
         ),
@@ -570,36 +728,31 @@ class _TabButton extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────
+// Custom plans section
+// ─────────────────────────────────────────────
 class _CustomPlansSection extends StatelessWidget {
-  final List<WorkoutPlan> plans;
-  final ThemeData theme;
-  final bool squareLayout;
-  final VoidCallback onAdd;
-  final Function(WorkoutPlan, int) onPlanTap;
-
   const _CustomPlansSection({
     required this.plans,
-    required this.theme,
     required this.squareLayout,
     required this.onAdd,
     required this.onPlanTap,
   });
+  final List<WorkoutPlan> plans;
+  final bool squareLayout;
+  final VoidCallback onAdd;
+  final void Function(BuildContext, WorkoutPlan, int) onPlanTap;
 
   @override
   Widget build(BuildContext context) {
-    final palette =
-        Theme.of(context).extension<CorelyColors>() ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
-
+    final c = context.colors;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          "Custom plans",
+          'Custom plans',
           style: TextStyle(
-            color: palette.textPrimary,
+            color: c.textPrimary,
             fontSize: 22,
             fontWeight: FontWeight.bold,
           ),
@@ -608,7 +761,7 @@ class _CustomPlansSection extends StatelessWidget {
         if (squareLayout)
           LayoutBuilder(
             builder: (context, constraints) {
-              final spacing = 12.0;
+              const spacing = 12.0;
               final cardWidth = (constraints.maxWidth - spacing) / 2;
               return Wrap(
                 spacing: spacing,
@@ -618,15 +771,10 @@ class _CustomPlansSection extends StatelessWidget {
                     SizedBox(
                       width: cardWidth,
                       child: _WorkoutCard(
-                        title: plans[i].title,
-                        duration: plans[i].duration,
-                        exercises: plans[i].exercises,
-                        imageAsset: plans[i].imageAsset,
-                        imagePath: plans[i].imagePath,
+                        plan: plans[i],
                         squareLayout: true,
-                        color: palette.accent.withValues(alpha: 0.08),
-                        onTap: () => onPlanTap(plans[i], i),
                         tileWidth: cardWidth,
+                        onTap: () => onPlanTap(context, plans[i], i),
                       ),
                     ),
                 ],
@@ -636,14 +784,9 @@ class _CustomPlansSection extends StatelessWidget {
         else ...[
           for (var i = 0; i < plans.length; i++) ...[
             _WorkoutCard(
-              title: plans[i].title,
-              duration: plans[i].duration,
-              exercises: plans[i].exercises,
-              imageAsset: plans[i].imageAsset,
-              imagePath: plans[i].imagePath,
+              plan: plans[i],
               squareLayout: false,
-              color: palette.accent.withValues(alpha: 0.08),
-              onTap: () => onPlanTap(plans[i], i),
+              onTap: () => onPlanTap(context, plans[i], i),
             ),
             const SizedBox(height: 12),
           ],
@@ -656,34 +799,224 @@ class _CustomPlansSection extends StatelessWidget {
   }
 }
 
-class _SuggestedSection extends StatelessWidget {
+// ─────────────────────────────────────────────
+// Suggested section
+// ─────────────────────────────────────────────
+class _SuggestedSection extends StatefulWidget {
+  const _SuggestedSection({
+    required this.plans,
+    required this.squareLayout,
+    required this.onPlanAdded,
+  });
   final List<WorkoutPlan> plans;
   final bool squareLayout;
+  final VoidCallback onPlanAdded;
 
-  const _SuggestedSection({required this.plans, required this.squareLayout});
+  @override
+  State<_SuggestedSection> createState() => _SuggestedSectionState();
+}
+
+class _SuggestedSectionState extends State<_SuggestedSection> {
+  final Map<PlanCategory, String> _queries = {
+    PlanCategory.cardio: '',
+    PlanCategory.strength: '',
+    PlanCategory.hypertrophy: '',
+  };
+  final Map<PlanCategory, bool> _searchOpen = {
+    PlanCategory.cardio: false,
+    PlanCategory.strength: false,
+    PlanCategory.hypertrophy: false,
+  };
+  final Map<PlanCategory, TextEditingController> _controllers = {
+    PlanCategory.cardio: TextEditingController(),
+    PlanCategory.strength: TextEditingController(),
+    PlanCategory.hypertrophy: TextEditingController(),
+  };
+
+  @override
+  void dispose() {
+    for (final c in _controllers.values) c.dispose();
+    super.dispose();
+  }
+
+  List<WorkoutPlan> _plansFor(PlanCategory cat) {
+    final q = _queries[cat]!.toLowerCase();
+    final all = widget.plans.where((p) => p.category == cat).toList();
+    if (q.isEmpty) return all;
+    return all
+        .where(
+          (p) =>
+              p.title.toLowerCase().contains(q) ||
+              (p.description?.toLowerCase().contains(q) ?? false),
+        )
+        .toList();
+  }
+
+  static const _catMeta = {
+    PlanCategory.strength: (label: 'Strength', icon: Icons.fitness_center),
+    PlanCategory.hypertrophy: (
+      label: 'Hypertrophy',
+      icon: Icons.accessibility_new_rounded,
+    ),
+    PlanCategory.cardio: (label: 'Cardio', icon: Icons.directions_run),
+  };
 
   @override
   Widget build(BuildContext context) {
-    final palette =
-        Theme.of(context).extension<CorelyColors>() ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        for (final cat in PlanCategory.values) ...[
+          _CategorySection(
+            category: cat,
+            meta: _catMeta[cat]!,
+            plans: _plansFor(cat),
+            squareLayout: widget.squareLayout,
+            searchOpen: _searchOpen[cat]!,
+            controller: _controllers[cat]!,
+            onSearchToggle: () => setState(() {
+              _searchOpen[cat] = !_searchOpen[cat]!;
+              if (!_searchOpen[cat]!) {
+                _controllers[cat]!.clear();
+                _queries[cat] = '';
+              }
+            }),
+            onQueryChanged: (q) => setState(() => _queries[cat] = q),
+            onPlanAdded: widget.onPlanAdded,
+          ),
+          const SizedBox(height: 32),
+        ],
+        const SizedBox(height: 60),
+      ],
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Single category block
+// ─────────────────────────────────────────────
+class _CategorySection extends StatelessWidget {
+  const _CategorySection({
+    required this.category,
+    required this.meta,
+    required this.plans,
+    required this.squareLayout,
+    required this.searchOpen,
+    required this.controller,
+    required this.onSearchToggle,
+    required this.onQueryChanged,
+    required this.onPlanAdded,
+  });
+
+  final PlanCategory category;
+  final ({String label, IconData icon}) meta;
+  final List<WorkoutPlan> plans;
+  final bool squareLayout;
+  final bool searchOpen;
+  final TextEditingController controller;
+  final VoidCallback onSearchToggle;
+  final ValueChanged<String> onQueryChanged;
+  final VoidCallback onPlanAdded;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          "Suggestions",
-          style: Theme.of(
-            context,
-          ).textTheme.titleLarge?.copyWith(color: palette.textPrimary),
+        Row(
+          children: [
+            Container(
+              width: 34,
+              height: 34,
+              decoration: BoxDecoration(
+                color: c.accentSoft,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Icon(meta.icon, color: c.accent, size: 18),
+            ),
+            const SizedBox(width: 10),
+            Text(
+              meta.label,
+              style: TextStyle(
+                color: c.textPrimary,
+                fontSize: 20,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+            const Spacer(),
+            GestureDetector(
+              onTap: onSearchToggle,
+              child: AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 6,
+                ),
+                decoration: BoxDecoration(
+                  color: searchOpen ? c.accentSoft : Colors.transparent,
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: searchOpen ? c.accent : c.border),
+                ),
+                child: Icon(
+                  searchOpen ? Icons.search_off : Icons.search,
+                  color: searchOpen ? c.accent : c.textMuted,
+                  size: 18,
+                ),
+              ),
+            ),
+          ],
         ),
-        const SizedBox(height: 12),
-        if (squareLayout)
+        AnimatedSize(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          child: searchOpen
+              ? Padding(
+                  padding: const EdgeInsets.only(top: 10),
+                  child: TextField(
+                    controller: controller,
+                    onChanged: onQueryChanged,
+                    autofocus: true,
+                    style: TextStyle(color: c.textPrimary, fontSize: 14),
+                    decoration: InputDecoration(
+                      hintText: 'Search ${meta.label.toLowerCase()} plans…',
+                      prefixIcon: Icon(
+                        Icons.search,
+                        color: c.textMuted,
+                        size: 18,
+                      ),
+                      suffixIcon: controller.text.isNotEmpty
+                          ? IconButton(
+                              icon: Icon(
+                                Icons.clear,
+                                color: c.textMuted,
+                                size: 16,
+                              ),
+                              onPressed: () {
+                                controller.clear();
+                                onQueryChanged('');
+                              },
+                            )
+                          : null,
+                    ),
+                  ),
+                )
+              : const SizedBox.shrink(),
+        ),
+        const SizedBox(height: 14),
+        if (plans.isEmpty)
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 12),
+            child: Text(
+              'No plans match your search.',
+              style: TextStyle(color: c.textMuted, fontSize: 13),
+            ),
+          )
+        else if (squareLayout)
           LayoutBuilder(
             builder: (context, constraints) {
-              final spacing = 12.0;
+              const spacing = 12.0;
               final cardWidth = (constraints.maxWidth - spacing) / 2;
               return Wrap(
                 spacing: spacing,
@@ -693,27 +1026,12 @@ class _SuggestedSection extends StatelessWidget {
                     SizedBox(
                       width: cardWidth,
                       child: _SuggestedCard(
-                        title: plan.title,
-                        description: "${plan.duration} · ${plan.exercises}",
-                        color: palette.surfaceRaised,
-                        imageAsset: plan.imageAsset,
+                        plan: plan,
                         squareLayout: true,
                         tileWidth: cardWidth,
-                        difficulty: plan.difficulty,
-                        plan: plan,
-                        onAddPlan: () async {
-                          await LocalPlanService.savePlan(plan);
-                          if (context.mounted) {
-                            ScaffoldMessenger.of(context).showSnackBar(
-                              SnackBar(
-                                content: Text(
-                                  '${plan.title} added to your custom plans!',
-                                ),
-                                backgroundColor: Colors.green,
-                              ),
-                            );
-                          }
-                        },
+                        onTap: () =>
+                            _showPlanDetail(context, plan, onPlanAdded),
+                        onAddPlan: () => _addPlan(context, plan, onPlanAdded),
                       ),
                     ),
                 ],
@@ -723,48 +1041,264 @@ class _SuggestedSection extends StatelessWidget {
         else ...[
           for (final plan in plans) ...[
             _SuggestedCard(
-              title: plan.title,
-              description: "${plan.duration} · ${plan.exercises}",
-              color: palette.surfaceRaised,
-              imageAsset: plan.imageAsset,
-              squareLayout: false,
-              difficulty: plan.difficulty,
               plan: plan,
-              onAddPlan: () async {
-                await LocalPlanService.savePlan(plan);
-                if (context.mounted) {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text(
-                        '${plan.title} added to your custom plans!',
-                      ),
-                      backgroundColor: Colors.green,
-                    ),
-                  );
-                }
-              },
+              squareLayout: false,
+              onTap: () => _showPlanDetail(context, plan, onPlanAdded),
+              onAddPlan: () => _addPlan(context, plan, onPlanAdded),
             ),
             const SizedBox(height: 12),
           ],
         ],
-        const SizedBox(height: 80),
       ],
+    );
+  }
+
+  static Future<void> _addPlan(
+    BuildContext context,
+    WorkoutPlan plan,
+    VoidCallback onDone,
+  ) async {
+    await LocalPlanService.savePlan(plan);
+    onDone();
+    if (context.mounted)
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('${plan.title} added to your plans!')),
+      );
+  }
+
+  // ← Now uses PlanDetailSheet from doc 2, which has the full copy-days flow
+  static void _showPlanDetail(
+    BuildContext context,
+    WorkoutPlan plan,
+    VoidCallback onPlanAdded,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PlanDetailSheet(plan: plan, onPlanAdded: onPlanAdded),
     );
   }
 }
 
-class _AddPlanCard extends StatelessWidget {
-  final VoidCallback onTap;
+// ─────────────────────────────────────────────
+// Suggested plan card
+// ─────────────────────────────────────────────
+class _SuggestedCard extends StatelessWidget {
+  const _SuggestedCard({
+    required this.plan,
+    required this.squareLayout,
+    this.tileWidth,
+    required this.onTap,
+    required this.onAddPlan,
+  });
 
-  const _AddPlanCard({required this.onTap});
+  final WorkoutPlan plan;
+  final bool squareLayout;
+  final double? tileWidth;
+  final VoidCallback onTap;
+  final VoidCallback onAddPlan;
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
+
+    if (squareLayout) {
+      return GestureDetector(
+        onTap: onTap,
+        child: Container(
+          width: tileWidth ?? double.infinity,
+          decoration: BoxDecoration(
+            color: c.surfaceRaised,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: c.border),
+          ),
+          child: AspectRatio(
+            aspectRatio: 1,
+            child: Stack(
+              children: [
+                if (plan.imageAsset != null)
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
+                    ),
+                  ),
+                Container(
+                  decoration: BoxDecoration(
+                    borderRadius: BorderRadius.circular(16),
+                    gradient: LinearGradient(
+                      begin: Alignment.bottomCenter,
+                      end: Alignment.topCenter,
+                      colors: [
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black.withValues(alpha: 0.1),
+                      ],
+                    ),
+                  ),
+                ),
+                Positioned(
+                  left: 12,
+                  bottom: 12,
+                  right: 12,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      _DifficultyIcons(level: plan.difficulty),
+                      const SizedBox(height: 6),
+                      Text(
+                        plan.title,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 17,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        '${plan.duration} · ${plan.exercises}',
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.75),
+                          fontSize: 12,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Positioned(
+                  top: 10,
+                  right: 10,
+                  child: GestureDetector(
+                    onTap: onAddPlan,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: Text(
+                        'Add',
+                        style: TextStyle(
+                          color: c.accent,
+                          fontSize: 12,
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      );
+    }
+
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: double.infinity,
+        padding: const EdgeInsets.all(16),
+        decoration: BoxDecoration(
+          color: c.surfaceRaised,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: c.border),
+        ),
+        child: Row(
+          children: [
+            if (plan.imageAsset != null)
+              ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: SizedBox(
+                  width: 60,
+                  height: 60,
+                  child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
+                ),
+              )
+            else
+              Container(
+                width: 60,
+                height: 60,
+                decoration: BoxDecoration(
+                  color: c.accentSoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.fitness_center, color: c.accent),
+              ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    plan.title,
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: 15,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${plan.duration} · ${plan.exercises}',
+                    style: TextStyle(color: c.textSecondary, fontSize: 12),
+                  ),
+                  const SizedBox(height: 6),
+                  _DifficultyIcons(level: plan.difficulty),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Column(
+              children: [
+                GestureDetector(
+                  onTap: onAddPlan,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 5,
+                    ),
+                    decoration: BoxDecoration(
+                      color: c.accentSoft,
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(
+                        color: c.accent.withValues(alpha: 0.4),
+                      ),
+                    ),
+                    child: Text(
+                      'Add',
+                      style: TextStyle(
+                        color: c.accent,
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Icon(Icons.chevron_right, color: c.textMuted, size: 18),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Add plan card
+// ─────────────────────────────────────────────
+class _AddPlanCard extends StatelessWidget {
+  const _AddPlanCard({required this.onTap});
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
     return InkWell(
       onTap: onTap,
       child: Container(
@@ -772,18 +1306,18 @@ class _AddPlanCard extends StatelessWidget {
         padding: const EdgeInsets.all(18),
         decoration: BoxDecoration(
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: palette.border),
-          color: palette.surface,
+          border: Border.all(color: c.border),
+          color: c.surface,
         ),
         child: Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(Icons.add, color: palette.accent),
+            Icon(Icons.add, color: c.accent),
             const SizedBox(width: 8),
             Text(
-              "Add another plan",
+              'Add another plan',
               style: TextStyle(
-                color: palette.textPrimary,
+                color: c.textPrimary,
                 fontSize: 16,
                 fontWeight: FontWeight.w700,
               ),
@@ -795,36 +1329,25 @@ class _AddPlanCard extends StatelessWidget {
   }
 }
 
+// ─────────────────────────────────────────────
+// Custom workout card
+// ─────────────────────────────────────────────
 class _WorkoutCard extends StatelessWidget {
-  final String title;
-  final String duration;
-  final String exercises;
-  final String? imageAsset;
-  final String? imagePath;
-  final bool squareLayout;
-  final double? tileWidth;
-  final Color color;
-  final VoidCallback onTap;
-
   const _WorkoutCard({
-    required this.title,
-    required this.duration,
-    required this.exercises,
-    required this.imageAsset,
-    required this.imagePath,
+    required this.plan,
     required this.squareLayout,
     this.tileWidth,
-    required this.color,
     required this.onTap,
   });
+  final WorkoutPlan plan;
+  final bool squareLayout;
+  final double? tileWidth;
+  final VoidCallback onTap;
 
   @override
   Widget build(BuildContext context) {
-    final palette =
-        Theme.of(context).extension<CorelyColors>() ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
+    final c = context.colors;
+    final color = c.accent.withValues(alpha: 0.08);
 
     if (squareLayout) {
       return InkWell(
@@ -834,24 +1357,28 @@ class _WorkoutCard extends StatelessWidget {
           decoration: BoxDecoration(
             color: color,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: palette.border),
+            border: Border.all(color: c.border),
           ),
           child: AspectRatio(
             aspectRatio: 1,
             child: Stack(
               children: [
-                if (imagePath != null && File(imagePath!).existsSync())
+                if (plan.imagePath != null &&
+                    File(plan.imagePath!).existsSync())
                   Positioned.fill(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.file(File(imagePath!), fit: BoxFit.cover),
+                      child: Image.file(
+                        File(plan.imagePath!),
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   )
-                else if (imageAsset != null)
+                else if (plan.imageAsset != null)
                   Positioned.fill(
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
-                      child: Image.asset(imageAsset!, fit: BoxFit.cover),
+                      child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
                     ),
                   ),
                 Container(
@@ -875,21 +1402,17 @@ class _WorkoutCard extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        title,
+                        plan.title,
                         style: TextStyle(
-                          color: palette.textPrimary,
+                          color: c.textPrimary,
                           fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
-                        "$duration · $exercises",
-                        style: TextStyle(
-                          color: palette.textSecondary,
-                          fontSize: 13,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        '${plan.duration} · ${plan.exercises}',
+                        style: TextStyle(color: c.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
@@ -909,7 +1432,7 @@ class _WorkoutCard extends StatelessWidget {
         decoration: BoxDecoration(
           color: color,
           borderRadius: BorderRadius.circular(14),
-          border: Border.all(color: palette.border),
+          border: Border.all(color: c.border),
         ),
         child: Row(
           children: [
@@ -917,18 +1440,16 @@ class _WorkoutCard extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: palette.surfaceRaised,
+                color: c.surfaceRaised,
                 borderRadius: BorderRadius.circular(12),
               ),
               clipBehavior: Clip.hardEdge,
-              child: (imagePath != null && File(imagePath!).existsSync())
-                  ? Image.file(File(imagePath!), fit: BoxFit.cover)
-                  : (imageAsset != null
-                        ? Image.asset(imageAsset!, fit: BoxFit.cover)
-                        : const Icon(
-                            Icons.fitness_center,
-                            color: AppTheme.accent,
-                          )),
+              child:
+                  (plan.imagePath != null && File(plan.imagePath!).existsSync())
+                  ? Image.file(File(plan.imagePath!), fit: BoxFit.cover)
+                  : (plan.imageAsset != null
+                        ? Image.asset(plan.imageAsset!, fit: BoxFit.cover)
+                        : Icon(Icons.fitness_center, color: c.accent)),
             ),
             const SizedBox(width: 16),
             Expanded(
@@ -936,29 +1457,22 @@ class _WorkoutCard extends StatelessWidget {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text(
-                    title,
+                    plan.title,
                     style: TextStyle(
-                      color: palette.textPrimary,
+                      color: c.textPrimary,
                       fontSize: 18,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   const SizedBox(height: 6),
                   Text(
-                    "$duration · $exercises",
-                    style: TextStyle(
-                      color: palette.textSecondary,
-                      fontSize: 14,
-                    ),
+                    '${plan.duration} · ${plan.exercises}',
+                    style: TextStyle(color: c.textSecondary, fontSize: 14),
                   ),
                 ],
               ),
             ),
-            Icon(
-              Icons.arrow_forward_ios,
-              color: palette.textSecondary,
-              size: 18,
-            ),
+            Icon(Icons.arrow_forward_ios, color: c.textSecondary, size: 18),
           ],
         ),
       ),
@@ -966,197 +1480,26 @@ class _WorkoutCard extends StatelessWidget {
   }
 }
 
-class _SuggestedCard extends StatelessWidget {
-  final String title;
-  final String description;
-  final Color color;
-  final String? imageAsset;
-  final bool squareLayout;
-  final double? tileWidth;
-  final int difficulty;
-  final WorkoutPlan? plan; // Added to support adding to custom
-  final VoidCallback? onAddPlan; // Added callback for adding plan
-
-  const _SuggestedCard({
-    required this.title,
-    required this.description,
-    required this.color,
-    required this.imageAsset,
-    required this.squareLayout,
-    this.tileWidth,
-    required this.difficulty,
-    this.plan,
-    this.onAddPlan,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final palette =
-        Theme.of(context).extension<CorelyColors>() ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
-
-    if (squareLayout) {
-      return Container(
-        width: tileWidth ?? double.infinity,
-        decoration: BoxDecoration(
-          color: color,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: palette.border),
-        ),
-        child: AspectRatio(
-          aspectRatio: 1,
-          child: Stack(
-            children: [
-              if (imageAsset != null)
-                Positioned.fill(
-                  child: ClipRRect(
-                    borderRadius: BorderRadius.circular(16),
-                    child: Image.asset(imageAsset!, fit: BoxFit.cover),
-                  ),
-                ),
-              Container(
-                decoration: BoxDecoration(
-                  borderRadius: BorderRadius.circular(16),
-                  gradient: LinearGradient(
-                    begin: Alignment.bottomCenter,
-                    end: Alignment.topCenter,
-                    colors: [
-                      Colors.black.withValues(alpha: 0.55),
-                      Colors.black.withValues(alpha: 0.15),
-                    ],
-                  ),
-                ),
-              ),
-              Positioned(
-                left: 12,
-                bottom: 12,
-                right: 12,
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    _DifficultyIcons(level: difficulty),
-                    const SizedBox(height: 6),
-                    Text(
-                      title,
-                      style: TextStyle(
-                        color: palette.textPrimary,
-                        fontSize: 17,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
-                    const SizedBox(height: 4),
-                    Text(
-                      description,
-                      style: TextStyle(
-                        color: palette.textSecondary,
-                        fontSize: 13,
-                        fontWeight: FontWeight.w500,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Positioned(
-                top: 10,
-                right: 10,
-                child: TextButton(
-                  style: TextButton.styleFrom(
-                    backgroundColor: Colors.black.withValues(alpha: 0.45),
-                    foregroundColor: palette.accent,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 6,
-                    ),
-                    minimumSize: Size.zero,
-                    tapTargetSize: MaterialTapTargetSize.shrinkWrap,
-                  ),
-                  onPressed: onAddPlan,
-                  child: const Text(
-                    "Add",
-                    style: TextStyle(fontWeight: FontWeight.w700),
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    }
-
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: color,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          Icon(Icons.local_fire_department, color: palette.accent),
-          const SizedBox(width: 14),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: palette.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(color: palette.textSecondary, fontSize: 14),
-                ),
-                const SizedBox(height: 6),
-                _DifficultyIcons(level: difficulty),
-              ],
-            ),
-          ),
-          TextButton(
-            onPressed: onAddPlan,
-            child: Text(
-              "Add",
-              style: TextStyle(
-                color: palette.accent,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
+// ─────────────────────────────────────────────
+// Difficulty icons
+// ─────────────────────────────────────────────
 class _DifficultyIcons extends StatelessWidget {
+  const _DifficultyIcons({required this.level});
   final int level;
 
-  const _DifficultyIcons({required this.level});
-
   @override
   Widget build(BuildContext context) {
-    final palette =
-        Theme.of(context).extension<CorelyColors>() ??
-        (Theme.of(context).brightness == Brightness.dark
-            ? AppTheme.darkColors
-            : AppTheme.lightColors);
-
-    final clamped = level.clamp(1, 4);
+    final c = context.colors;
     return Row(
-      children: List.generate(4, (index) {
-        final isActive = index < clamped;
-        return Icon(
+      mainAxisSize: MainAxisSize.min,
+      children: List.generate(
+        4,
+        (i) => Icon(
           Icons.flash_on,
           size: 16,
-          color: isActive ? palette.accent : palette.textMuted,
-        );
-      }),
+          color: i < level.clamp(1, 4) ? c.accent : c.textMuted,
+        ),
+      ),
     );
   }
 }
