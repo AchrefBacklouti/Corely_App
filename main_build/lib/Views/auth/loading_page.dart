@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -30,7 +31,11 @@ class _LoadingPageState extends State<LoadingPage>
 
     Future.delayed(const Duration(seconds: 3), () {
       if (!mounted) return; // ✅ Fix: prevent using context after dispose
-      Navigator.pushReplacementNamed(context, '/welcome');
+      final session = Supabase.instance.client.auth.currentSession;
+      Navigator.pushReplacementNamed(
+        context,
+        session == null ? '/welcome' : '/home',
+      );
     });
   }
 

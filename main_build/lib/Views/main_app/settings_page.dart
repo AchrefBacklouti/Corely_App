@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'settings/notifications_settings.dart';
 import 'settings/account_settings.dart';
 import 'settings/privacy_settings.dart';
@@ -111,11 +112,81 @@ class _SettingsPageState extends State<SettingsPage> {
                       ),
                       isDarkMode,
                     ),
+                    const SizedBox(height: 8),
+                    _buildSignOutTile(context, isDarkMode),
                   ],
                 ),
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSignOutTile(BuildContext context, bool isDarkMode) {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 8.0),
+      child: GestureDetector(
+        onTap: () async {
+          final navigator = Navigator.of(context);
+          try {
+            await Supabase.instance.client.auth.signOut();
+          } catch (_) {}
+          if (!mounted) return;
+          navigator.pushNamedAndRemoveUntil('/welcome', (r) => false);
+        },
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          decoration: BoxDecoration(
+            color: palette.surface,
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: palette.border),
+          ),
+          child: Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(10),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withValues(alpha: 0.12),
+                  borderRadius: BorderRadius.circular(8),
+                ),
+                child: Icon(Icons.logout, color: Colors.redAccent, size: 24),
+              ),
+              const SizedBox(width: 16),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Sign out',
+                      style: TextStyle(
+                        color: palette.textPrimary,
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Sign out of your Corely account',
+                      style: TextStyle(
+                        color: palette.textSecondary,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Icon(Icons.arrow_forward, color: palette.textMuted),
+            ],
+          ),
         ),
       ),
     );
