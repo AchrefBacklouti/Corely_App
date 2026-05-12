@@ -27,9 +27,17 @@ class Exercise {
 
   factory Exercise.fromJson(Map<String, dynamic> json) {
     final images = json['images'] as List<dynamic>? ?? [];
-    final imageUrl = images.isNotEmpty
-        ? 'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/${images[0]}'
-        : null;
+    String? imageUrl;
+    if (images.isNotEmpty) {
+      final firstImage = images[0].toString();
+      if (firstImage.startsWith('http://') ||
+          firstImage.startsWith('https://')) {
+        imageUrl = firstImage;
+      } else {
+        imageUrl =
+            'https://raw.githubusercontent.com/yuhonas/free-exercise-db/main/exercises/$firstImage';
+      }
+    }
 
     final primaryMuscles = (json['primaryMuscles'] as List<dynamic>? ?? [])
         .map((m) => m.toString())

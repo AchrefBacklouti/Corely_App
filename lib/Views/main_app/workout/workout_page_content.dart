@@ -6,6 +6,7 @@ import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart'; // ← import the shared sheet
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/data_service.dart';
+import 'package:main_build/data/exercise_cache_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/plan_share_service.dart';
 import 'dart:io';
@@ -24,7 +25,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   bool _showCustom = false;
   bool _squareLayout = true;
   List<WorkoutPlan> _customPlans = [];
-  final List<WorkoutPlan> _suggestedPlans = kSuggestedPlans;
+  List<WorkoutPlan> _suggestedPlans = kSuggestedPlans;
   bool _isLoading = true;
   String? _loadError;
 
@@ -32,6 +33,26 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   void initState() {
     super.initState();
     _loadData();
+    _syncExercisesIfStale();
+    LocalPlanService.plansChanged.addListener(_onPlansChanged);
+  }
+
+  void _onPlansChanged() {
+    if (mounted) _loadData();
+  }
+
+  @override
+  void dispose() {
+    LocalPlanService.plansChanged.removeListener(_onPlansChanged);
+    super.dispose();
+  }
+
+  Future<void> _syncExercisesIfStale() async {
+    try {
+      await ExerciseCacheService.refreshIfStale();
+    } catch (_) {
+      // Keep workout tab resilient; sync failures should not block UI.
+    }
   }
 
   Future<void> _loadData() async {
@@ -40,10 +61,14 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
       _loadError = null;
     });
     try {
-      final customPlans = await DataService.getCustomWorkoutPlans();
+      final results = await Future.wait([
+        DataService.getCustomWorkoutPlans(),
+        DataService.getSuggestedWorkoutPlans(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _customPlans = customPlans;
+        _customPlans = results[0];
+        if (results[1].isNotEmpty) _suggestedPlans = results[1];
         _isLoading = false;
       });
     } catch (_) {

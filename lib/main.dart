@@ -10,10 +10,12 @@ import 'package:main_build/Views/main_app/home_page.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
 import 'package:main_build/data/workout_progress_service.dart';
+import 'package:main_build/data/supabase_service.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Hive.initFlutter();
+  await SupabaseService.initialize(); // opens Supabase + app_config Hive box
   await LocalPlanService.init();
   await ExerciseCacheService.init();
   await WorkoutProgressService.init();

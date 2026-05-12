@@ -3,6 +3,7 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/local_plan_service.dart';
+import 'package:main_build/data/supabase_service.dart';
 
 class DataService {
   static Map<String, dynamic>? _cachedData;
@@ -23,6 +24,10 @@ class DataService {
   }
 
   static Future<List<WorkoutPlan>> getSuggestedWorkoutPlans() async {
+    // Try Supabase first; fall back to local JSON if unavailable.
+    final remote = await SupabaseService.getSuggestedPlans();
+    if (remote.isNotEmpty) return remote;
+
     try {
       final data = await loadAccountData();
       final workouts = data['workouts'];

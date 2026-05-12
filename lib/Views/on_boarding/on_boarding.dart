@@ -422,18 +422,21 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
       if (selectedHeightUnit == 'cm') {
         if (!heightCmController.hasClients) return;
         final i = _idx(cmHeightsLabelled, _label(selectedHeightCm, 'cm'));
-        if (heightCmController.selectedItem != i)
+        if (heightCmController.selectedItem != i) {
           heightCmController.jumpToItem(i);
+        }
       } else {
         if (heightFtController.hasClients) {
           final i = _idx(ftHeightsLabelled, _label(selectedHeightFt, 'ft'));
-          if (heightFtController.selectedItem != i)
+          if (heightFtController.selectedItem != i) {
             heightFtController.jumpToItem(i);
+          }
         }
         if (heightInController.hasClients) {
           final i = _idx(inHeightsLabelled, _label(selectedHeightIn, 'in'));
-          if (heightInController.selectedItem != i)
+          if (heightInController.selectedItem != i) {
             heightInController.jumpToItem(i);
+          }
         }
       }
     });
@@ -455,8 +458,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
             UnitToggle(
               leftLabel: 'ft',
               rightLabel: 'cm',
-              value:
-                  selectedHeightUnit, // 'cm' on first entry → cm tab is highlighted
+              value: selectedHeightUnit,
               onChanged: (val) {
                 if (selectedHeightUnit == val) return;
                 if (val == 'cm') {
@@ -500,7 +502,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
               ? _pickerStack(
                   buildPicker(
                     cmHeightsLabelled,
-                    _label(selectedHeightCm, 'cm'), // e.g. "175 cm"
+                    _label(selectedHeightCm, 'cm'),
                     isDark,
                     (val) => setState(() => selectedHeightCm = _raw(val)),
                     fontSize: 28,
@@ -514,7 +516,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                       child: _pickerStack(
                         buildPicker(
                           ftHeightsLabelled,
-                          _label(selectedHeightFt, 'ft'), // e.g. "5 ft"
+                          _label(selectedHeightFt, 'ft'),
                           isDark,
                           (val) => setState(() => selectedHeightFt = _raw(val)),
                           fontSize: 28,
@@ -530,7 +532,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
                       child: _pickerStack(
                         buildPicker(
                           inHeightsLabelled,
-                          _label(selectedHeightIn, 'in'), // e.g. "9 in"
+                          _label(selectedHeightIn, 'in'),
                           isDark,
                           (val) => setState(() => selectedHeightIn = _raw(val)),
                           fontSize: 28,
@@ -712,8 +714,9 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
   // ── Continue / Finish button ───────────────────
   Widget _buildBottomButton(BuildContext context) {
+    final isDisabled = _currentStep == 0 && gender == null;
     return ElevatedButton(
-      onPressed: _next,
+      onPressed: isDisabled ? null : _next,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.accent,
         foregroundColor: Colors.black,

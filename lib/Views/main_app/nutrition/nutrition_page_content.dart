@@ -6,11 +6,7 @@ class NutritionPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
@@ -60,7 +56,7 @@ class NutritionPageContent extends StatelessWidget {
           Text(
             "Today’s meals",
             style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: c.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
@@ -93,7 +89,7 @@ class NutritionPageContent extends StatelessWidget {
           Text(
             "Hydration",
             style: TextStyle(
-              color: isDarkMode ? Colors.white : Colors.black,
+              color: c.textPrimary,
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
