@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Models/exercise.dart';
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Views/main_app/workout/exercise_visibility_page.dart';
 import 'package:main_build/Views/main_app/workout/widgets/filter_widgets.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
 
@@ -31,9 +32,82 @@ class _CreateWorkoutPlanPageState extends State<CreateWorkoutPlanPage> {
 
     final exercises = await ExerciseCacheService.getExercises(
       forceRefresh: forceRefresh,
+      limit: 350,
     );
     _cachedExercises = exercises;
     return exercises;
+  }
+
+  Future<void> _openVisibilityManager() async {
+    final pin = await _askAdminPin();
+    if (pin == null) return;
+
+    final ok = await ExerciseCacheService.verifyAdminPin(pin);
+    if (!ok) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Wrong admin PIN.')));
+      return;
+    }
+
+    final changed = await Navigator.push<bool>(
+      context,
+      MaterialPageRoute(builder: (_) => const ExerciseVisibilityPage()),
+    );
+    if (changed == true && mounted) {
+      setState(() {
+        _cachedExercises = null;
+        _exercisesFuture = _fetchExercises(forceRefresh: false);
+      });
+    }
+  }
+
+  Future<String?> _askAdminPin() async {
+    final theme = Theme.of(context);
+    final palette =
+        theme.extension<CorelyColors>() ??
+        (theme.brightness == Brightness.dark
+            ? AppTheme.darkColors
+            : AppTheme.lightColors);
+
+    final controller = TextEditingController();
+    return showDialog<String>(
+      context: context,
+      builder: (dialogContext) {
+        return AlertDialog(
+          backgroundColor: palette.surface,
+          title: Text(
+            'Admin Access',
+            style: TextStyle(color: palette.textPrimary),
+          ),
+          content: TextField(
+            controller: controller,
+            keyboardType: TextInputType.number,
+            obscureText: true,
+            style: TextStyle(color: palette.textPrimary),
+            decoration: InputDecoration(
+              hintText: 'Enter PIN',
+              hintStyle: TextStyle(color: palette.textMuted),
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(dialogContext),
+              child: Text('Cancel', style: TextStyle(color: palette.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(dialogContext, controller.text),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: palette.accent,
+                foregroundColor: palette.background,
+              ),
+              child: const Text('Open'),
+            ),
+          ],
+        );
+      },
+    );
   }
 
   @override
@@ -54,6 +128,13 @@ class _CreateWorkoutPlanPageState extends State<CreateWorkoutPlanPage> {
           "Create Workout Plan",
           style: TextStyle(color: palette.textPrimary),
         ),
+        actions: [
+          IconButton(
+            icon: Icon(Icons.tune, color: palette.accent),
+            tooltip: 'Visible exercise list',
+            onPressed: _openVisibilityManager,
+          ),
+        ],
       ),
       body: Padding(
         padding: const EdgeInsets.all(22),

@@ -4,6 +4,14 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
 
+CorelyColors _workoutPalette(BuildContext context) {
+  final theme = Theme.of(context);
+  return theme.extension<CorelyColors>() ??
+      (theme.brightness == Brightness.dark
+          ? AppTheme.darkColors
+          : AppTheme.lightColors);
+}
+
 class StartTrainPage extends StatefulWidget {
   final String planTitle;
   final String dayName;
@@ -270,6 +278,7 @@ class _StartTrainPageState extends State<StartTrainPage> {
       0,
       (sum, lines) => sum + lines.where((line) => line.checked).length,
     );
+    final palette = _workoutPalette(context);
 
     final proceed = await showModalBottomSheet<bool>(
       context: context,
@@ -284,12 +293,12 @@ class _StartTrainPageState extends State<StartTrainPage> {
             maxHeight: MediaQuery.of(sheetContext).size.height * 0.85,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF171B22),
+            color: palette.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white12),
-            boxShadow: const [
+            border: Border.all(color: palette.border),
+            boxShadow: [
               BoxShadow(
-                color: Colors.black54,
+                color: Colors.black.withValues(alpha: 0.54),
                 blurRadius: 16,
                 offset: Offset(0, -2),
               ),
@@ -298,18 +307,18 @@ class _StartTrainPageState extends State<StartTrainPage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const Text(
+              Text(
                 'Congratulations!',
                 style: TextStyle(
-                  color: Colors.yellow,
+                  color: palette.accent,
                   fontSize: 24,
                   fontWeight: FontWeight.w800,
                 ),
               ),
               const SizedBox(height: 6),
-              const Text(
+              Text(
                 'You finished this training session.',
-                style: TextStyle(color: Colors.white70, fontSize: 14),
+                style: TextStyle(color: palette.textSecondary, fontSize: 14),
               ),
               const SizedBox(height: 12),
               Wrap(
@@ -335,10 +344,10 @@ class _StartTrainPageState extends State<StartTrainPage> {
                 ],
               ),
               const SizedBox(height: 14),
-              const Text(
+              Text(
                 'What You Did And Improved',
                 style: TextStyle(
-                  color: Colors.white,
+                  color: palette.textPrimary,
                   fontSize: 15,
                   fontWeight: FontWeight.w700,
                 ),
@@ -353,9 +362,9 @@ class _StartTrainPageState extends State<StartTrainPage> {
                     return Container(
                       padding: const EdgeInsets.all(12),
                       decoration: BoxDecoration(
-                        color: Colors.white10,
+                        color: palette.surfaceRaised,
                         borderRadius: BorderRadius.circular(12),
-                        border: Border.all(color: Colors.white12),
+                        border: Border.all(color: palette.border),
                       ),
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
@@ -367,8 +376,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
                                   item.name,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: palette.textPrimary,
                                     fontSize: 14,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -382,7 +391,7 @@ class _StartTrainPageState extends State<StartTrainPage> {
                                 decoration: BoxDecoration(
                                   color: item.improved
                                       ? Colors.green.withValues(alpha: 0.2)
-                                      : Colors.white12,
+                                      : palette.surface,
                                   borderRadius: BorderRadius.circular(999),
                                 ),
                                 child: Text(
@@ -392,7 +401,7 @@ class _StartTrainPageState extends State<StartTrainPage> {
                                   style: TextStyle(
                                     color: item.improved
                                         ? Colors.greenAccent
-                                        : Colors.white70,
+                                        : palette.textSecondary,
                                     fontSize: 11,
                                     fontWeight: FontWeight.w700,
                                   ),
@@ -422,8 +431,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
                               Expanded(
                                 child: Text(
                                   'Reps: ${item.beforeReps} -> ${item.afterReps}',
-                                  style: const TextStyle(
-                                    color: Colors.white70,
+                                  style: TextStyle(
+                                    color: palette.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -432,8 +441,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
                                 child: Text(
                                   'KG: ${item.beforeKg.toStringAsFixed(item.beforeKg % 1 == 0 ? 0 : 1)} -> ${item.afterKg.toStringAsFixed(item.afterKg % 1 == 0 ? 0 : 1)}',
                                   textAlign: TextAlign.right,
-                                  style: const TextStyle(
-                                    color: Colors.white70,
+                                  style: TextStyle(
+                                    color: palette.textSecondary,
                                     fontSize: 12,
                                   ),
                                 ),
@@ -452,8 +461,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
                 child: ElevatedButton(
                   onPressed: () => Navigator.pop(sheetContext, true),
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: Colors.yellow,
-                    foregroundColor: Colors.black,
+                    backgroundColor: palette.accent,
+                    foregroundColor: palette.background,
                     padding: const EdgeInsets.symmetric(vertical: 12),
                   ),
                   child: const Text('Continue'),
@@ -473,6 +482,7 @@ class _StartTrainPageState extends State<StartTrainPage> {
     final imagePath = _exercise['imagePath']?.toString();
     final imageUrl =
         _exercise['imageUrl']?.toString() ?? _exercise['gifUrl']?.toString();
+    final palette = _workoutPalette(context);
 
     await showModalBottomSheet<void>(
       context: context,
@@ -486,12 +496,12 @@ class _StartTrainPageState extends State<StartTrainPage> {
             maxHeight: MediaQuery.of(sheetContext).size.height * 0.82,
           ),
           decoration: BoxDecoration(
-            color: const Color(0xFF171B22),
+            color: palette.surface,
             borderRadius: BorderRadius.circular(18),
-            border: Border.all(color: Colors.white12),
-            boxShadow: const [
+            border: Border.all(color: palette.border),
+            boxShadow: [
               BoxShadow(
-                color: Colors.black54,
+                color: Colors.black.withValues(alpha: 0.54),
                 blurRadius: 18,
                 offset: Offset(0, -2),
               ),
@@ -524,8 +534,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
                         children: [
                           Text(
                             _exerciseName,
-                            style: const TextStyle(
-                              color: Colors.white,
+                            style: TextStyle(
+                              color: palette.textPrimary,
                               fontSize: 20,
                               fontWeight: FontWeight.w700,
                             ),
@@ -533,8 +543,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
                           const SizedBox(height: 10),
                           Text(
                             _exerciseDescription,
-                            style: const TextStyle(
-                              color: Colors.white70,
+                            style: TextStyle(
+                              color: palette.textSecondary,
                               fontSize: 14,
                               height: 1.4,
                             ),
@@ -557,11 +567,11 @@ class _StartTrainPageState extends State<StartTrainPage> {
                     decoration: BoxDecoration(
                       color: Colors.black.withValues(alpha: 0.6),
                       shape: BoxShape.circle,
-                      border: Border.all(color: Colors.white24),
+                      border: Border.all(color: palette.border),
                     ),
-                    child: const Icon(
+                    child: Icon(
                       Icons.close,
-                      color: Colors.white,
+                      color: palette.textPrimary,
                       size: 18,
                     ),
                   ),
@@ -576,22 +586,23 @@ class _StartTrainPageState extends State<StartTrainPage> {
 
   Future<bool> _askToSaveAndExit({required bool completed}) async {
     _saveCurrentExerciseInputs();
+    final palette = _workoutPalette(context);
 
     final decision = await showDialog<String>(
       context: context,
       barrierDismissible: false,
       builder: (dialogContext) {
         return AlertDialog(
-          backgroundColor: const Color(0xFF1A1D23),
+          backgroundColor: palette.surface,
           title: Text(
             completed ? 'Workout Complete' : 'Exit Training',
-            style: const TextStyle(color: Colors.white),
+            style: TextStyle(color: palette.textPrimary),
           ),
           content: Text(
             completed
                 ? 'Do you want to update your reps and kg changes?'
                 : 'Do you want to save your current reps and kg changes before leaving?',
-            style: const TextStyle(color: Colors.white70),
+            style: TextStyle(color: palette.textSecondary),
           ),
           actions: [
             TextButton(
@@ -608,8 +619,8 @@ class _StartTrainPageState extends State<StartTrainPage> {
             ElevatedButton(
               onPressed: () => Navigator.pop(dialogContext, 'save'),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.yellow,
-                foregroundColor: Colors.black,
+                backgroundColor: palette.accent,
+                foregroundColor: palette.background,
               ),
               child: const Text('Yes, Save'),
             ),
@@ -670,7 +681,7 @@ class _StartTrainPageState extends State<StartTrainPage> {
           title: Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: Colors.black45,
+              color: palette.surfaceRaised,
               borderRadius: BorderRadius.circular(999),
               border: Border.all(color: palette.border),
             ),
@@ -1009,12 +1020,13 @@ class _ExerciseImage extends StatelessWidget {
   }
 
   Widget _imageFallback() {
+    final palette = AppTheme.darkColors;
     return Container(
-      color: const Color(0xFF151921),
+      color: palette.surface,
       alignment: Alignment.center,
-      child: const Icon(
+      child: Icon(
         Icons.fitness_center_rounded,
-        color: Colors.white24,
+        color: palette.textMuted,
         size: 64,
       ),
     );
@@ -1036,11 +1048,12 @@ class _BottomActionButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _workoutPalette(context);
     final enabled = onPressed != null;
     final background = highlighted
-        ? Colors.yellow.withValues(alpha: enabled ? 1 : 0.5)
+        ? palette.accent.withValues(alpha: enabled ? 1 : 0.5)
         : Colors.transparent;
-    final foreground = highlighted ? Colors.black : Colors.white;
+    final foreground = highlighted ? palette.background : palette.textPrimary;
 
     return SizedBox(
       height: 42,
@@ -1048,8 +1061,10 @@ class _BottomActionButton extends StatelessWidget {
         onPressed: onPressed,
         style: TextButton.styleFrom(
           backgroundColor: background,
-          foregroundColor: enabled ? foreground : Colors.white30,
-          side: BorderSide(color: highlighted ? Colors.yellow : Colors.white30),
+          foregroundColor: enabled ? foreground : palette.textMuted,
+          side: BorderSide(
+            color: highlighted ? palette.accent : palette.textMuted,
+          ),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(10),
           ),
@@ -1073,29 +1088,27 @@ class _SummaryPill extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _workoutPalette(context);
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black26,
+        color: palette.surfaceRaised,
         borderRadius: BorderRadius.circular(10),
-        border: Border.all(color: Colors.white12),
+        border: Border.all(color: palette.border),
       ),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
           Text(
             value,
-            style: const TextStyle(
-              color: Colors.white,
+            style: TextStyle(
+              color: palette.textPrimary,
               fontSize: 13,
               fontWeight: FontWeight.w700,
             ),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: const TextStyle(color: Colors.white60, fontSize: 11),
-          ),
+          Text(label, style: TextStyle(color: palette.textMuted, fontSize: 11)),
         ],
       ),
     );
@@ -1176,17 +1189,15 @@ class _InfoRow extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _workoutPalette(context);
     return Row(
       children: [
-        Text(
-          label,
-          style: const TextStyle(color: Colors.white54, fontSize: 13),
-        ),
+        Text(label, style: TextStyle(color: palette.textMuted, fontSize: 13)),
         const Spacer(),
         Text(
           value,
-          style: const TextStyle(
-            color: Colors.white,
+          style: TextStyle(
+            color: palette.textPrimary,
             fontSize: 14,
             fontWeight: FontWeight.w600,
           ),
@@ -1211,13 +1222,14 @@ class _TrainInput extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _workoutPalette(context);
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(
-            color: Colors.white70,
+          style: TextStyle(
+            color: palette.textSecondary,
             fontSize: 12,
             fontWeight: FontWeight.w600,
           ),
@@ -1226,24 +1238,24 @@ class _TrainInput extends StatelessWidget {
         TextField(
           controller: controller,
           keyboardType: keyboardType,
-          style: const TextStyle(color: Colors.white),
+          style: TextStyle(color: palette.textPrimary),
           decoration: InputDecoration(
             isDense: true,
             hintText: hintText,
-            hintStyle: const TextStyle(color: Colors.white38),
+            hintStyle: TextStyle(color: palette.textMuted),
             filled: true,
-            fillColor: const Color(0xFF0F1115),
+            fillColor: palette.inputFill,
             contentPadding: const EdgeInsets.symmetric(
               horizontal: 12,
               vertical: 10,
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.white24),
+              borderSide: BorderSide(color: palette.border),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Colors.yellow),
+              borderSide: BorderSide(color: palette.accent),
             ),
           ),
         ),
@@ -1292,32 +1304,33 @@ class _InlineKgFieldState extends State<_InlineKgField> {
 
   @override
   Widget build(BuildContext context) {
+    final palette = _workoutPalette(context);
     return TextField(
       controller: _controller,
       keyboardType: const TextInputType.numberWithOptions(decimal: true),
       onChanged: (value) => widget.onChanged(value.trim()),
       textAlign: TextAlign.center,
-      style: const TextStyle(
-        color: Colors.white,
+      style: TextStyle(
+        color: palette.textPrimary,
         fontSize: 13,
         fontWeight: FontWeight.w700,
       ),
       decoration: InputDecoration(
         isDense: true,
         hintText: 'KG',
-        hintStyle: const TextStyle(color: Colors.white38, fontSize: 12),
+        hintStyle: TextStyle(color: palette.textMuted, fontSize: 12),
         suffixText: 'KG',
-        suffixStyle: const TextStyle(color: Colors.white54, fontSize: 11),
+        suffixStyle: TextStyle(color: palette.textMuted, fontSize: 11),
         contentPadding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
         filled: true,
-        fillColor: const Color(0xFF0F1115),
+        fillColor: palette.inputFill,
         enabledBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.white24),
+          borderSide: BorderSide(color: palette.border),
         ),
         focusedBorder: OutlineInputBorder(
           borderRadius: BorderRadius.circular(8),
-          borderSide: const BorderSide(color: Colors.yellow),
+          borderSide: BorderSide(color: palette.accent),
         ),
       ),
     );

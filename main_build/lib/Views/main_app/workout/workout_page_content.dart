@@ -5,6 +5,7 @@ import 'package:main_build/Views/main_app/workout/edit_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/data_service.dart';
+import 'package:main_build/data/exercise_cache_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/plan_share_service.dart';
 import 'dart:io';
@@ -28,6 +29,15 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   void initState() {
     super.initState();
     _loadData();
+    _syncExercisesIfStale();
+  }
+
+  Future<void> _syncExercisesIfStale() async {
+    try {
+      await ExerciseCacheService.refreshIfStale();
+    } catch (_) {
+      // Keep workout tab resilient; sync failures should not block UI.
+    }
   }
 
   Future<void> _loadData() async {
@@ -446,7 +456,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
               ElevatedButton(
                 onPressed: _loadData,
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow,
+                  backgroundColor: palette.accent,
                   foregroundColor: palette.background,
                 ),
                 child: const Text('Retry'),

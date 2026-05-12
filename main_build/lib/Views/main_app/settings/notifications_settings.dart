@@ -91,7 +91,7 @@ class _NotifTile extends StatelessWidget {
       ),
       subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
       value: value,
-      activeColor: Colors.black,
+      activeThumbColor: Colors.black,
       activeTrackColor: c.accent,
       inactiveThumbColor: c.textMuted,
       inactiveTrackColor: c.border,

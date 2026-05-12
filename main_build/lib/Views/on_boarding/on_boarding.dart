@@ -284,8 +284,9 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!ageController.hasClients) return;
-      if (ageController.selectedItem != ageIndex)
+      if (ageController.selectedItem != ageIndex) {
         ageController.jumpToItem(ageIndex);
+      }
     });
 
     return Column(
@@ -389,18 +390,21 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
       if (selectedHeightUnit == 'cm') {
         if (!heightCmController.hasClients) return;
         final i = cmHeights.indexOf(selectedHeightCm);
-        if (heightCmController.selectedItem != i)
+        if (heightCmController.selectedItem != i) {
           heightCmController.jumpToItem(i);
+        }
       } else {
         if (heightFtController.hasClients) {
           final i = ftHeights.indexOf(selectedHeightFt);
-          if (heightFtController.selectedItem != i)
+          if (heightFtController.selectedItem != i) {
             heightFtController.jumpToItem(i);
+          }
         }
         if (heightInController.hasClients) {
           final i = inHeights.indexOf(selectedHeightIn);
-          if (heightInController.selectedItem != i)
+          if (heightInController.selectedItem != i) {
             heightInController.jumpToItem(i);
+          }
         }
       }
     });
