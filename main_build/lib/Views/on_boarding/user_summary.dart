@@ -1,5 +1,6 @@
+import 'package:main_build/Views/auth/signup_page.dart';
 import 'package:flutter/material.dart';
-import 'package:main_build/Views/main_app/home_page.dart';
+// import 'package:main_build/Views/main_app/home_page.dart';
 import 'package:main_build/Theme/app_theme.dart';
 
 class UserSummary extends StatelessWidget {
@@ -95,8 +96,9 @@ class UserSummary extends StatelessWidget {
               _emailButton(
                 label: "Sign up with Email",
                 onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(content: Text("Email Sign-Up Placeholder")),
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(builder: (_) => const SignUpPage()),
                   );
                 },
               ),
@@ -116,10 +118,7 @@ class UserSummary extends StatelessWidget {
               // Log in button
               TextButton(
                 onPressed: () {
-                  Navigator.pushReplacement(
-                    context,
-                    MaterialPageRoute(builder: (_) => const MainShellPage()),
-                  );
+                  Navigator.pushReplacementNamed(context, '/login');
                 },
                 child: const Text(
                   "Log in with existing account",
