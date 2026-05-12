@@ -41,10 +41,7 @@ class _SignUpPageState extends State<SignUpPage> {
     });
 
     try {
-      await _supabase.auth.signUp(
-        email: email,
-        password: password,
-      );
+      await _supabase.auth.signUp(email: email, password: password);
 
       // If a session is returned the user is signed in immediately.
       if (_supabase.auth.currentSession != null) {
@@ -56,7 +53,9 @@ class _SignUpPageState extends State<SignUpPage> {
       // Otherwise the user likely needs to confirm their email.
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Check your email to confirm your account.')),
+        const SnackBar(
+          content: Text('Check your email to confirm your account.'),
+        ),
       );
       Navigator.pushReplacementNamed(context, '/welcome');
     } on AuthException catch (error) {
@@ -128,7 +127,10 @@ class _SignUpPageState extends State<SignUpPage> {
               ),
               const SizedBox(height: 16),
               if (_errorMessage != null) ...[
-                Text(_errorMessage!, style: const TextStyle(color: Colors.redAccent)),
+                Text(
+                  _errorMessage!,
+                  style: const TextStyle(color: Colors.redAccent),
+                ),
                 const SizedBox(height: 10),
               ],
               SizedBox(
@@ -136,14 +138,22 @@ class _SignUpPageState extends State<SignUpPage> {
                 child: ElevatedButton(
                   onPressed: _isLoading ? null : _signUp,
                   child: _isLoading
-                      ? const SizedBox(width: 20, height: 20, child: CircularProgressIndicator(strokeWidth: 2))
+                      ? const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        )
                       : const Text('Create account'),
                 ),
               ),
               const SizedBox(height: 12),
               TextButton(
-                onPressed: () => Navigator.pushReplacementNamed(context, '/login'),
-                child: Text('Have an account? Log in', style: TextStyle(color: palette.textSecondary)),
+                onPressed: () =>
+                    Navigator.pushReplacementNamed(context, '/login'),
+                child: Text(
+                  'Have an account? Log in',
+                  style: TextStyle(color: palette.textSecondary),
+                ),
               ),
             ],
           ),
