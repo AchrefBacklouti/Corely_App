@@ -25,7 +25,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   bool _showCustom = false;
   bool _squareLayout = true;
   List<WorkoutPlan> _customPlans = [];
-  final List<WorkoutPlan> _suggestedPlans = kSuggestedPlans;
+  List<WorkoutPlan> _suggestedPlans = kSuggestedPlans;
   bool _isLoading = true;
   String? _loadError;
 
@@ -50,10 +50,14 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
       _loadError = null;
     });
     try {
-      final customPlans = await DataService.getCustomWorkoutPlans();
+      final results = await Future.wait([
+        DataService.getCustomWorkoutPlans(),
+        DataService.getSuggestedWorkoutPlans(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _customPlans = customPlans;
+        _customPlans = results[0];
+        if (results[1].isNotEmpty) _suggestedPlans = results[1];
         _isLoading = false;
       });
     } catch (_) {
