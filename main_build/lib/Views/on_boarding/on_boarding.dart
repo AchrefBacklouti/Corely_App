@@ -714,8 +714,9 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
   // ── Continue / Finish button ───────────────────
   Widget _buildBottomButton(BuildContext context) {
+    final isDisabled = _currentStep == 0 && gender == null;
     return ElevatedButton(
-      onPressed: _next,
+      onPressed: isDisabled ? null : _next,
       style: ElevatedButton.styleFrom(
         backgroundColor: AppTheme.accent,
         foregroundColor: Colors.black,
