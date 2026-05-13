@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../../../Theme/app_theme.dart';
 
 class NutritionPageContent extends StatelessWidget {
   const NutritionPageContent({super.key});
@@ -13,41 +14,49 @@ class NutritionPageContent extends StatelessWidget {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _MacroCard(
-                label: "Calories",
-                value: "1,980",
-                subtitle: "of 2,400 kcal",
-                progress: 0.82,
-                color: Colors.orange,
+              Expanded(
+                child: _MacroCard(
+                  label: "Calories",
+                  value: "1,980",
+                  subtitle: "of 2,400 kcal",
+                  progress: 0.82,
+                  color: Colors.orange,
+                ),
               ),
-              _MacroCard(
-                label: "Protein",
-                value: "132g",
-                subtitle: "of 160g",
-                progress: 0.82,
-                color: Colors.green,
+              const SizedBox(width: 14),
+              Expanded(
+                child: _MacroCard(
+                  label: "Protein",
+                  value: "132g",
+                  subtitle: "of 160g",
+                  progress: 0.82,
+                  color: Colors.green,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 14),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _MacroCard(
-                label: "Carbs",
-                value: "210g",
-                subtitle: "of 280g",
-                progress: 0.75,
-                color: Colors.blue,
+              Expanded(
+                child: _MacroCard(
+                  label: "Carbs",
+                  value: "210g",
+                  subtitle: "of 280g",
+                  progress: 0.75,
+                  color: Colors.blue,
+                ),
               ),
-              _MacroCard(
-                label: "Fats",
-                value: "62g",
-                subtitle: "of 70g",
-                progress: 0.88,
-                color: Colors.purple,
+              const SizedBox(width: 14),
+              Expanded(
+                child: _MacroCard(
+                  label: "Fats",
+                  value: "62g",
+                  subtitle: "of 70g",
+                  progress: 0.88,
+                  color: Colors.purple,
+                ),
               ),
             ],
           ),
@@ -453,6 +462,203 @@ class _MacroBox extends StatelessWidget {
               fontSize: 18,
               fontWeight: FontWeight.bold,
             ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MacroCard extends StatelessWidget {
+  final String label;
+  final String value;
+  final String subtitle;
+  final double progress;
+  final Color color;
+
+  const _MacroCard({
+    required this.label,
+    required this.value,
+    required this.subtitle,
+    required this.progress,
+    required this.color,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.pie_chart, color: color, size: 16),
+              const SizedBox(width: 8),
+              Text(
+                label,
+                style: TextStyle(
+                  color: c.textSecondary,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Text(
+            value,
+            style: TextStyle(
+              color: c.textPrimary,
+              fontSize: 20,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 4),
+          Text(
+            subtitle,
+            style: TextStyle(
+              color: c.textMuted,
+              fontSize: 12,
+            ),
+          ),
+          const SizedBox(height: 12),
+          LinearProgressIndicator(
+            value: progress,
+            color: color,
+            backgroundColor: c.border,
+            minHeight: 6,
+            borderRadius: BorderRadius.circular(3),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _MealRow extends StatelessWidget {
+  final String title;
+  final String calories;
+  final String description;
+
+  const _MealRow({
+    required this.title,
+    required this.calories,
+    required this.description,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: c.border),
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: c.surfaceRaised,
+              borderRadius: BorderRadius.circular(12),
+            ),
+            child: Icon(Icons.fastfood, color: c.accent, size: 24),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: TextStyle(
+                    color: c.textPrimary,
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Text(
+                  description,
+                  style: TextStyle(
+                    color: c.textSecondary,
+                    fontSize: 13,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Text(
+            calories,
+            style: TextStyle(
+              color: c.accent,
+              fontSize: 14,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _HydrationCard extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+    return Container(
+      padding: const EdgeInsets.all(20),
+      decoration: BoxDecoration(
+        color: c.surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Icon(Icons.water_drop, color: Colors.blue, size: 24),
+                  const SizedBox(width: 8),
+                  Text(
+                    "Water Intake",
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ],
+              ),
+              Text(
+                "2.1L / 3.0L",
+                style: TextStyle(
+                  color: Colors.blue,
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 20),
+          LinearProgressIndicator(
+            value: 0.7,
+            color: Colors.blue,
+            backgroundColor: c.border,
+            minHeight: 8,
+            borderRadius: BorderRadius.circular(4),
           ),
         ],
       ),
