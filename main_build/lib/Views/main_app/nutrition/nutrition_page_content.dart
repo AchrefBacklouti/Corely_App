@@ -6,111 +6,67 @@ class NutritionPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
+    return Container(
+      decoration: const BoxDecoration(
+        gradient: LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF05070D),
+            Color(0xFF0B0F1A),
+            Color(0xFF121826),
+          ],
+        ),
+      ),
+      child: SingleChildScrollView(
+        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildHeader(),
 
-    return SingleChildScrollView(
-      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Expanded(
-                child: _MacroCard(
-                  label: "Calories",
-                  value: "1,980",
-                  subtitle: "of 2,400 kcal",
-                  progress: 0.82,
-                  color: Colors.orange,
-                ),
+            const SizedBox(height: 30),
+
+            _buildStatsRow(),
+
+            const SizedBox(height: 32),
+
+            const Text(
+              "Workout Meals",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
               ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: _MacroCard(
-                  label: "Protein",
-                  value: "132g",
-                  subtitle: "of 160g",
-                  progress: 0.82,
-                  color: Colors.green,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          Row(
-            children: [
-              Expanded(
-                child: _MacroCard(
-                  label: "Carbs",
-                  value: "210g",
-                  subtitle: "of 280g",
-                  progress: 0.75,
-                  color: Colors.blue,
-                ),
-              ),
-              const SizedBox(width: 14),
-              Expanded(
-                child: _MacroCard(
-                  label: "Fats",
-                  value: "62g",
-                  subtitle: "of 70g",
-                  progress: 0.88,
-                  color: Colors.purple,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 24),
-          Text(
-            "Today’s meals",
-            style: TextStyle(
-              color: c.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
             ),
-          ),
-          const SizedBox(height: 12),
-          const _MealRow(
-            title: "Breakfast",
-            calories: "420 kcal",
-            description: "Oats, berries, protein shake",
-          ),
-          const SizedBox(height: 10),
-          const _MealRow(
-            title: "Lunch",
-            calories: "680 kcal",
-            description: "Chicken, rice, veggies",
-          ),
-          const SizedBox(height: 10),
-          const _MealRow(
-            title: "Snack",
-            calories: "180 kcal",
-            description: "Greek yogurt, nuts",
-          ),
-          const SizedBox(height: 10),
-          const _MealRow(
-            title: "Dinner",
-            calories: "620 kcal",
-            description: "Salmon, sweet potato, broccoli",
-          ),
-          const SizedBox(height: 26),
-          Text(
-            "Hydration",
-            style: TextStyle(
-              color: c.textPrimary,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
+
+            const SizedBox(height: 20),
+
+            _buildMealsList(),
+
+            const SizedBox(height: 32),
+
+            const Text(
+              "Hydration",
+              style: TextStyle(
+                color: Colors.white,
+                fontSize: 22,
+                fontWeight: FontWeight.bold,
+              ),
             ),
-          ),
-          const SizedBox(height: 12),
-          _HydrationCard(),
-          const SizedBox(height: 80),
-        ],
+
+            const SizedBox(height: 16),
+
+            const _HydrationCard(),
+
+            const SizedBox(height: 100),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildHeader(BuildContext context) {
+  Widget _buildHeader() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -124,6 +80,7 @@ class NutritionPageContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
+
         RichText(
           text: const TextSpan(
             style: TextStyle(
@@ -141,27 +98,41 @@ class NutritionPageContent extends StatelessWidget {
             ],
           ),
         ),
+
         const SizedBox(height: 16),
+
         const Text(
           "Discover healthy meals designed to boost your energy, improve recovery, and support your fitness goals.",
-          style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
+          style: TextStyle(
+            color: Colors.white70,
+            fontSize: 15,
+            height: 1.5,
+          ),
         ),
+
         const SizedBox(height: 24),
+
         ElevatedButton(
           onPressed: () {},
           style: ElevatedButton.styleFrom(
             backgroundColor: Colors.orange,
             foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 16),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+            elevation: 10,
+            shadowColor: Colors.orange,
+            padding: const EdgeInsets.symmetric(
+              horizontal: 28,
+              vertical: 18,
             ),
-            elevation: 8,
-            shadowColor: Colors.orange.withOpacity(0.4),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(18),
+            ),
           ),
           child: const Text(
             "Explore Plans",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ),
       ],
@@ -174,19 +145,28 @@ class NutritionPageContent extends StatelessWidget {
         Row(
           children: const [
             Expanded(
-              child: _StatCard(title: "Daily Calories", value: "2,450"),
+              child: _StatCard(
+                title: "Daily Calories",
+                value: "2,450",
+              ),
             ),
             SizedBox(width: 16),
             Expanded(
-              child: _StatCard(title: "Protein Goal", value: "145g"),
+              child: _StatCard(
+                title: "Protein Goal",
+                value: "145g",
+              ),
             ),
           ],
         ),
-        const SizedBox(height: 16),
+        SizedBox(height: 16),
         Row(
-          children: const [
+          children: [
             Expanded(
-              child: _StatCard(title: "Water Intake", value: "3.2L"),
+              child: _StatCard(
+                title: "Water Intake",
+                value: "3.2L",
+              ),
             ),
           ],
         ),
@@ -210,23 +190,36 @@ class _StatCard extends StatelessWidget {
   final String title;
   final String value;
 
-  const _StatCard({required this.title, required this.value});
+  const _StatCard({
+    required this.title,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: const Color(0xFF141A29),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1A1F2E),
+            Color(0xFF111522),
+          ],
+        ),
         borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.05),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Text(
             title,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
+            style: const TextStyle(
+              color: Colors.white54,
+              fontSize: 13,
+            ),
           ),
           const SizedBox(height: 8),
           Text(
@@ -299,28 +292,54 @@ const List<Meal> meals = [
 class _MealCard extends StatelessWidget {
   final Meal meal;
 
-  const _MealCard({required this.meal});
+  const _MealCard({
+    required this.meal,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
       decoration: BoxDecoration(
-        color: const Color(0xFF141A29).withOpacity(0.9),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            Color(0xFF1A1F2E),
+            Color(0xFF111522),
+          ],
+        ),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.orange.withOpacity(0.1)),
+        border: Border.all(
+          color: Colors.orange.withOpacity(0.15),
+          width: 1.2,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.orange.withOpacity(0.12),
+            blurRadius: 24,
+            spreadRadius: 2,
+            offset: const Offset(0, 10),
+          ),
+        ],
       ),
       clipBehavior: Clip.antiAlias,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Image and Level badge
           Stack(
             children: [
               SizedBox(
                 height: 220,
                 width: double.infinity,
-                child: Image.network(meal.image, fit: BoxFit.cover),
+                child: Hero(
+                  tag: meal.name,
+                  child: Image.network(
+                    meal.image,
+                    fit: BoxFit.cover,
+                  ),
+                ),
               ),
+
               Positioned(
                 top: 16,
                 left: 16,
@@ -332,7 +351,9 @@ class _MealCard extends StatelessWidget {
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                    border: Border.all(
+                      color: Colors.orange.withOpacity(0.2),
+                    ),
                   ),
                   child: Text(
                     meal.level,
@@ -340,21 +361,19 @@ class _MealCard extends StatelessWidget {
                       color: Colors.orange[400],
                       fontSize: 13,
                       fontWeight: FontWeight.bold,
-                      letterSpacing: 0.5,
                     ),
                   ),
                 ),
               ),
             ],
           ),
-          // Content
+
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
                       child: Text(
@@ -366,6 +385,7 @@ class _MealCard extends StatelessWidget {
                         ),
                       ),
                     ),
+
                     Container(
                       padding: const EdgeInsets.symmetric(
                         horizontal: 12,
@@ -379,30 +399,42 @@ class _MealCard extends StatelessWidget {
                         "${meal.calories} kcal",
                         style: TextStyle(
                           color: Colors.orange[400],
-                          fontSize: 13,
-                          fontWeight: FontWeight.w600,
+                          fontWeight: FontWeight.bold,
                         ),
                       ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 20),
+
                 Row(
                   children: [
                     Expanded(
-                      child: _MacroBox(label: "PROTEIN", value: meal.protein),
+                      child: _MacroBox(
+                        label: "PROTEIN",
+                        value: meal.protein,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MacroBox(label: "CARBS", value: meal.carbs),
+                      child: _MacroBox(
+                        label: "CARBS",
+                        value: meal.carbs,
+                      ),
                     ),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MacroBox(label: "FATS", value: meal.fats),
+                      child: _MacroBox(
+                        label: "FATS",
+                        value: meal.fats,
+                      ),
                     ),
                   ],
                 ),
+
                 const SizedBox(height: 24),
+
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -410,9 +442,11 @@ class _MealCard extends StatelessWidget {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 16),
+                      elevation: 10,
+                      shadowColor: Colors.orange,
+                      padding: const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(16),
+                        borderRadius: BorderRadius.circular(18),
                       ),
                     ),
                     child: const Text(
@@ -437,16 +471,24 @@ class _MacroBox extends StatelessWidget {
   final String label;
   final String value;
 
-  const _MacroBox({required this.label, required this.value});
+  const _MacroBox({
+    required this.label,
+    required this.value,
+  });
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 8),
+      padding: const EdgeInsets.symmetric(
+        vertical: 16,
+        horizontal: 8,
+      ),
       decoration: BoxDecoration(
-        color: const Color(0xFF0B0F1A),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: Colors.white.withOpacity(0.05)),
+        color: const Color(0xFF0D111B),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: Colors.white.withOpacity(0.04),
+        ),
       ),
       child: Column(
         children: [
@@ -455,11 +497,13 @@ class _MacroBox extends StatelessWidget {
             style: const TextStyle(
               color: Colors.white54,
               fontSize: 10,
-              fontWeight: FontWeight.w600,
               letterSpacing: 1,
+              fontWeight: FontWeight.w600,
             ),
           ),
+
           const SizedBox(height: 6),
+
           Text(
             value,
             style: const TextStyle(
@@ -474,187 +518,68 @@ class _MacroBox extends StatelessWidget {
   }
 }
 
-class _MacroCard extends StatelessWidget {
-  final String label;
-  final String value;
-  final String subtitle;
-  final double progress;
-  final Color color;
-
-  const _MacroCard({
-    required this.label,
-    required this.value,
-    required this.subtitle,
-    required this.progress,
-    required this.color,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.border),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              Icon(Icons.pie_chart, color: color, size: 16),
-              const SizedBox(width: 8),
-              Text(
-                label,
-                style: TextStyle(
-                  color: c.textSecondary,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Text(
-            value,
-            style: TextStyle(
-              color: c.textPrimary,
-              fontSize: 20,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-          const SizedBox(height: 4),
-          Text(subtitle, style: TextStyle(color: c.textMuted, fontSize: 12)),
-          const SizedBox(height: 12),
-          LinearProgressIndicator(
-            value: progress,
-            color: color,
-            backgroundColor: c.border,
-            minHeight: 6,
-            borderRadius: BorderRadius.circular(3),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _MealRow extends StatelessWidget {
-  final String title;
-  final String calories;
-  final String description;
-
-  const _MealRow({
-    required this.title,
-    required this.calories,
-    required this.description,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    final c = context.colors;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: c.border),
-      ),
-      child: Row(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: c.surfaceRaised,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Icon(Icons.fastfood, color: c.accent, size: 24),
-          ),
-          const SizedBox(width: 16),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    color: c.textPrimary,
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                const SizedBox(height: 4),
-                Text(
-                  description,
-                  style: TextStyle(color: c.textSecondary, fontSize: 13),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            calories,
-            style: TextStyle(
-              color: c.accent,
-              fontSize: 14,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 class _HydrationCard extends StatelessWidget {
+  const _HydrationCard();
+
   @override
   Widget build(BuildContext context) {
-    final c = context.colors;
     return Container(
-      padding: const EdgeInsets.all(20),
+      padding: const EdgeInsets.all(22),
       decoration: BoxDecoration(
-        color: c.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
+        gradient: const LinearGradient(
+          colors: [
+            Color(0xFF1A1F2E),
+            Color(0xFF111522),
+          ],
+        ),
+        borderRadius: BorderRadius.circular(24),
+        border: Border.all(
+          color: Colors.blue.withOpacity(0.3),
+        ),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Icon(Icons.water_drop, color: Colors.blue, size: 24),
-                  const SizedBox(width: 8),
-                  Text(
-                    "Water Intake",
-                    style: TextStyle(
-                      color: c.textPrimary,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                ],
+            children: const [
+              Icon(
+                Icons.water_drop,
+                color: Colors.blue,
               ),
+              SizedBox(width: 10),
               Text(
-                "2.1L / 3.0L",
+                "Water Intake",
                 style: TextStyle(
-                  color: Colors.blue,
-                  fontSize: 16,
+                  color: Colors.white,
+                  fontSize: 18,
                   fontWeight: FontWeight.bold,
                 ),
               ),
             ],
           ),
+
           const SizedBox(height: 20),
-          LinearProgressIndicator(
-            value: 0.7,
-            color: Colors.blue,
-            backgroundColor: c.border,
-            minHeight: 8,
-            borderRadius: BorderRadius.circular(4),
+
+          ClipRRect(
+            borderRadius: BorderRadius.circular(20),
+            child: LinearProgressIndicator(
+              value: 0.7,
+              minHeight: 10,
+              backgroundColor: Colors.white10,
+              valueColor: const AlwaysStoppedAnimation<Color>(
+                Colors.blue,
+              ),
+            ),
+          ),
+
+          const SizedBox(height: 14),
+
+          const Text(
+            "2.1L / 3.0L",
+            style: TextStyle(
+              color: Colors.blue,
+              fontWeight: FontWeight.bold,
+            ),
           ),
         ],
       ),
