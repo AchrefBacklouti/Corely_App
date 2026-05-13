@@ -94,7 +94,9 @@ class SupabaseService {
   }
 
   static Future<void> updateUserPlan(
-      String supabaseId, WorkoutPlan plan) async {
+    String supabaseId,
+    WorkoutPlan plan,
+  ) async {
     try {
       await _db
           .from('user_saved_plans')
@@ -178,13 +180,10 @@ class SupabaseService {
       description: r['description'] as String?,
       days: days,
       dayExercises: (r['day_exercises'] as List?) ?? [],
-      dayNames: (r['day_names'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
-          [],
-      selectedDays: (r['selected_days'] as List?)
-              ?.map((e) => e.toString())
-              .toList() ??
+      dayNames:
+          (r['day_names'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      selectedDays:
+          (r['selected_days'] as List?)?.map((e) => e.toString()).toList() ??
           [],
     );
   }
