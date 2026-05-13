@@ -120,7 +120,7 @@ class _StreakAndFocusRow extends StatelessWidget {
     return IntrinsicHeight(
       child: Row(
         children: [
-          // Streak card — accent
+          // Streak card — always accent fill, unchanged
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16),
@@ -136,26 +136,32 @@ class _StreakAndFocusRow extends StatelessWidget {
                   Text(
                     "12 Days",
                     style: TextStyle(
-                      color: palette.background,
+                      // Always black — accent is always vivid enough
+                      color: Colors.black,
                       fontSize: 20,
                       fontWeight: FontWeight.w700,
                     ),
                   ),
                   Text(
                     "Current streak",
-                    style: TextStyle(color: palette.textMuted, fontSize: 12),
+                    style: TextStyle(
+                      color: Colors.black.withOpacity(0.55),
+                      fontSize: 12,
+                    ),
                   ),
                 ],
               ),
             ),
           ),
           const SizedBox(width: 10),
-          // Today's focus card — dark
+          // Today's Focus card — surfaceRaised for clear lift
           Expanded(
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: palette.surface,
+                // surfaceRaised: 0xFF101B33 dark / 0xFFDDE6FF light
+                // gives clear contrast against the page background in both modes
+                color: palette.surfaceRaised,
                 borderRadius: BorderRadius.circular(16),
                 border: Border.all(color: palette.border),
               ),
@@ -245,7 +251,8 @@ class _StepsCardState extends State<StepsCard>
       width: double.infinity,
       padding: const EdgeInsets.all(20),
       decoration: BoxDecoration(
-        color: palette.surface,
+        // surfaceRaised so the steps card stands out from the page background
+        color: palette.surfaceRaised,
         borderRadius: BorderRadius.circular(20),
         border: Border.all(color: palette.border),
       ),
@@ -263,7 +270,7 @@ class _StepsCardState extends State<StepsCard>
                 ),
               ),
               Text(
-                "${widget.steps.toString()} / ${widget.goal}",
+                "${widget.steps} / ${widget.goal}",
                 style: TextStyle(color: palette.textMuted, fontSize: 13),
               ),
             ],
@@ -297,6 +304,7 @@ class _StepsCardState extends State<StepsCard>
           child: CircularProgressIndicator(
             value: progress,
             strokeWidth: 10,
+            // Use border as the track — visible in both modes
             backgroundColor: palette.border,
             valueColor: AlwaysStoppedAnimation<Color>(palette.accent),
             strokeCap: StrokeCap.round,
@@ -330,10 +338,9 @@ class _AchievementsSection extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final palette = _palette(context);
-    return Row(
+    return const Row(
       children: [
-        const Expanded(
+        Expanded(
           child: _AchievementCard(
             title: "10K Steps",
             progress: 0.8,
@@ -341,7 +348,7 @@ class _AchievementsSection extends StatelessWidget {
           ),
         ),
         SizedBox(width: 10),
-        const Expanded(
+        Expanded(
           child: _AchievementCard(
             title: "Consistency",
             progress: 0.6,
@@ -349,7 +356,7 @@ class _AchievementsSection extends StatelessWidget {
           ),
         ),
         SizedBox(width: 10),
-        const Expanded(
+        Expanded(
           child: _AchievementCard(
             title: "Strength",
             progress: 0.4,
@@ -378,7 +385,8 @@ class _AchievementCard extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 10),
       decoration: BoxDecoration(
-        color: palette.surface,
+        // surfaceRaised makes achievement cards stand out clearly in light mode
+        color: palette.surfaceRaised,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: palette.border),
       ),
@@ -437,6 +445,8 @@ class _TipOfTheDayCard extends StatelessWidget {
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
+        // surface (not surfaceRaised) — tip card is secondary info,
+        // sits at the same level as the page surface intentionally
         color: palette.surface,
         borderRadius: BorderRadius.circular(16),
         border: Border.all(color: palette.border),
@@ -447,7 +457,7 @@ class _TipOfTheDayCard extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(8),
             decoration: BoxDecoration(
-              color: palette.accent.withValues(alpha: 0.12),
+              color: palette.accentSoft,
               borderRadius: BorderRadius.circular(10),
             ),
             child: const Text("💡", style: TextStyle(fontSize: 18)),

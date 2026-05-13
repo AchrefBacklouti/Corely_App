@@ -1,22 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Views/main_app/ai_chat_page.dart';
 import 'package:main_build/Views/main_app/home/home_page_content.dart';
 import 'package:main_build/Views/main_app/nutrition/nutrition_page_content.dart';
 import 'package:main_build/Views/main_app/settings_page.dart';
 import 'package:main_build/Views/main_app/stats/stats_page_content.dart';
 import 'package:main_build/Views/main_app/workout/workout_page_content.dart';
 
-// ─── Design Tokens ────────────────────────────────────────────────────────────
-class _C {
-  static const bg = Color(0xFF0A0A0C);
-  static const surface = Color(0xFF111116);
-  static const border = Color(0xFF1E1E24);
-  static const accent = Color(0xFFC8FF00);
-  static const navInactive = Color(0xFF555555);
-  static const textPrimary = Color(0xFFFFFFFF);
-}
-
-// ─── Main Shell ───────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Main Shell
+// ─────────────────────────────────────────────
 class MainShellPage extends StatefulWidget {
   const MainShellPage({super.key});
 
@@ -36,14 +29,10 @@ class _MainShellPageState extends State<MainShellPage> {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
 
     return Scaffold(
-      backgroundColor: palette.background,
+      backgroundColor: c.background,
       body: SafeArea(
         child: Column(
           children: [
@@ -62,6 +51,8 @@ class _MainShellPageState extends State<MainShellPage> {
           ],
         ),
       ),
+      floatingActionButton: _AiChatBubble(),
+      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _BottomNav(
         currentIndex: _index,
         icons: _navIcons,
@@ -71,69 +62,108 @@ class _MainShellPageState extends State<MainShellPage> {
   }
 }
 
-// ─── Top Bar ──────────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// AI Chat Bubble
+// ─────────────────────────────────────────────
+class _AiChatBubble extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 58,
+      height: 58,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [AppTheme.accent, AppTheme.accent_2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: Color(0x662979FF),
+            blurRadius: 14,
+            offset: Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        shape: const CircleBorder(),
+        child: InkWell(
+          customBorder: const CircleBorder(),
+          onTap: () => Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => const AiChatPage()),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(12),
+            child: Image.asset('assets/img/bot_4712038.png'),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Top Bar
+// ─────────────────────────────────────────────
 class _TopBar extends StatelessWidget {
   const _TopBar();
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Padding(
       padding: const EdgeInsets.fromLTRB(20, 14, 8, 10),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          // Your original logo asset — unchanged
           Image.asset(
-            isDarkMode
-                ? 'assets/img/logo_dark.png'
-                : 'assets/img/logo_light.png',
+            isDark ? 'assets/img/logo_dark.png' : 'assets/img/logo_light.png',
             width: 75,
           ),
-
           Row(
             children: [
-              // Redesigned avatar with accent gradient
+              // Avatar — accent gradient, icon colour uses background token
               Container(
                 width: 34,
                 height: 34,
-                decoration: const BoxDecoration(
+                decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [AppTheme.accent, Color(0xFF86C900)],
+                    colors: [AppTheme.accent, AppTheme.accent.withOpacity(0.6)],
                   ),
                 ),
                 alignment: Alignment.center,
-                child: const Icon(
+                child: Icon(
                   Icons.person,
                   size: 18,
-                  color: AppTheme.darkBackground,
+                  // Black in both modes — accent is always light enough
+                  color: Colors.black,
                 ),
               ),
 
               const SizedBox(width: 10),
 
-              // Redesigned settings button
+              // Settings button
               Container(
                 width: 34,
                 height: 34,
                 decoration: BoxDecoration(
-                  color: palette.surface,
+                  color: c.surface,
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: palette.border),
+                  border: Border.all(color: c.border),
                 ),
                 child: IconButton(
                   padding: EdgeInsets.zero,
                   icon: Icon(
                     Icons.settings_outlined,
-                    color: palette.textMuted,
+                    color: c.textMuted,
                     size: 18,
                   ),
                   onPressed: () => Navigator.push(
@@ -150,7 +180,9 @@ class _TopBar extends StatelessWidget {
   }
 }
 
-// ─── Bottom Navigation ────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────
+// Bottom Navigation
+// ─────────────────────────────────────────────
 class _BottomNav extends StatelessWidget {
   const _BottomNav({
     required this.currentIndex,
@@ -164,21 +196,17 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
 
     return Container(
       height: 74,
       decoration: BoxDecoration(
-        color: palette.navigationBar,
-        borderRadius: BorderRadius.only(
+        color: c.navigationBar,
+        borderRadius: const BorderRadius.only(
           topLeft: Radius.circular(28),
           topRight: Radius.circular(28),
         ),
-        border: Border(top: BorderSide(color: palette.border, width: 1)),
+        border: Border(top: BorderSide(color: c.border)),
       ),
       padding: const EdgeInsets.symmetric(horizontal: 24),
       child: Row(
@@ -209,11 +237,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
 
     return GestureDetector(
       onTap: onTap,
@@ -222,7 +246,7 @@ class _NavItem extends StatelessWidget {
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
         decoration: BoxDecoration(
-          color: isActive ? palette.background : Colors.transparent,
+          color: isActive ? c.surfaceRaised : Colors.transparent,
           borderRadius: BorderRadius.circular(14),
         ),
         child: Column(
@@ -231,17 +255,16 @@ class _NavItem extends StatelessWidget {
             Icon(
               icon,
               size: isActive ? 26 : 22,
-              color: isActive ? palette.accent : palette.textMuted,
+              color: isActive ? c.accent : c.textMuted,
             ),
             const SizedBox(height: 4),
-            // Accent dot indicator under active icon
             AnimatedContainer(
               duration: const Duration(milliseconds: 180),
               width: 4,
               height: 4,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: isActive ? palette.accent : Colors.transparent,
+                color: isActive ? c.accent : Colors.transparent,
               ),
             ),
           ],
@@ -251,10 +274,11 @@ class _NavItem extends StatelessWidget {
   }
 }
 
-// ─── Reusable Design Components ───────────────────────────────────────────────
-// Drop these into your HomePageContent, WorkoutPageContent, etc.
+// ─────────────────────────────────────────────
+// Reusable Design Components
+// ─────────────────────────────────────────────
 
-/// Dark surface card with subtle border
+/// Standard surface card — adapts to dark/light via CorelyColors.
 class FitCard extends StatelessWidget {
   const FitCard({
     super.key,
@@ -271,13 +295,15 @@ class FitCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: _C.surface,
+        color: c.surface,
         borderRadius: BorderRadius.circular(borderRadius),
         border: Border.all(
-          color: accentBorder ? _C.accent : _C.border,
+          color: accentBorder ? c.accent : c.border,
           width: accentBorder ? 1.5 : 1,
         ),
       ),
@@ -286,7 +312,8 @@ class FitCard extends StatelessWidget {
   }
 }
 
-/// Accent (lime green) filled card
+/// Accent-filled streak card — intentionally always yellow, ignore theme.
+/// Use this for the daily streak widget only.
 class FitAccentCard extends StatelessWidget {
   const FitAccentCard({
     super.key,
@@ -301,10 +328,12 @@ class FitAccentCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Deliberately NOT reading context.colors — this card is always the
+    // brand accent colour regardless of dark/light mode (streak card).
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: _C.accent,
+        color: AppTheme.accent,
         borderRadius: BorderRadius.circular(borderRadius),
       ),
       child: child,
@@ -312,26 +341,28 @@ class FitAccentCard extends StatelessWidget {
   }
 }
 
-/// Uppercase muted section label
+/// Uppercase muted section label.
 class FitSectionLabel extends StatelessWidget {
   const FitSectionLabel(this.text, {super.key});
   final String text;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return Text(
       text.toUpperCase(),
-      style: const TextStyle(
+      style: TextStyle(
         fontSize: 11,
         fontWeight: FontWeight.w500,
-        color: _C.navInactive,
+        color: c.textMuted,
         letterSpacing: 1.5,
       ),
     );
   }
 }
 
-/// Bold white page header
+/// Bold page header — uses theme textPrimary.
 class FitPageHeader extends StatelessWidget {
   const FitPageHeader(this.text, {super.key});
   final String text;
@@ -340,37 +371,36 @@ class FitPageHeader extends StatelessWidget {
   Widget build(BuildContext context) {
     return Text(
       text,
-      style: const TextStyle(
-        fontSize: 30,
-        fontWeight: FontWeight.w700,
-        letterSpacing: 1.5,
-        color: _C.textPrimary,
-      ),
+      style: Theme.of(
+        context,
+      ).textTheme.displayMedium?.copyWith(letterSpacing: 1.5),
     );
   }
 }
 
-/// Slim accent-colored progress bar
+/// Slim accent-coloured progress bar.
 class FitProgressBar extends StatelessWidget {
   const FitProgressBar({super.key, required this.value, this.height = 5});
-  final double value; // 0.0 – 1.0
+  final double value;
   final double height;
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors;
+
     return ClipRRect(
       borderRadius: BorderRadius.circular(99),
       child: LinearProgressIndicator(
         value: value.clamp(0.0, 1.0),
         minHeight: height,
-        backgroundColor: const Color(0xFF222222),
-        valueColor: const AlwaysStoppedAnimation<Color>(_C.accent),
+        backgroundColor: c.border,
+        valueColor: AlwaysStoppedAnimation<Color>(c.accent),
       ),
     );
   }
 }
 
-/// Full-width primary CTA button
+/// Full-width primary CTA button.
 class FitButton extends StatelessWidget {
   const FitButton({super.key, required this.label, required this.onPressed});
 
@@ -383,14 +413,12 @@ class FitButton extends StatelessWidget {
       width: double.infinity,
       child: ElevatedButton(
         onPressed: onPressed,
+        // Inherits ElevatedButtonThemeData; only override shape/padding here.
         style: ElevatedButton.styleFrom(
-          backgroundColor: _C.accent,
-          foregroundColor: _C.bg,
           padding: const EdgeInsets.symmetric(vertical: 14),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
           ),
-          elevation: 0,
         ),
         child: Text(
           label,

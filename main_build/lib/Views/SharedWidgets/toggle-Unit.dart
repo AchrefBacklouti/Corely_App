@@ -6,6 +6,8 @@ class UnitToggle extends StatefulWidget {
   final String rightLabel;
   final String? value;
   final ValueChanged<String> onChanged;
+  final double? width;
+  final bool useMaxWidth;
 
   const UnitToggle({
     super.key,
@@ -13,6 +15,8 @@ class UnitToggle extends StatefulWidget {
     required this.rightLabel,
     this.value,
     required this.onChanged,
+    this.width,
+    this.useMaxWidth = false,
   });
 
   @override
@@ -25,24 +29,47 @@ class _UnitToggleState extends State<UnitToggle> {
   @override
   void initState() {
     super.initState();
-    selectedUnit = widget.value ?? widget.leftLabel; // default selection
+    selectedUnit = widget.value ?? widget.leftLabel;
+  }
+
+  @override
+  void didUpdateWidget(UnitToggle oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    // Keep internal state in sync when parent drives `value`
+    if (widget.value != null && widget.value != selectedUnit) {
+      selectedUnit = widget.value!;
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final c = context.colors; // theme extension
+    final expanded = widget.width != null || widget.useMaxWidth;
+    final screenWidth = MediaQuery.of(context).size.width;
+    final effectiveWidth = widget.useMaxWidth ? screenWidth - 20 : widget.width;
+
     return Container(
+      width: effectiveWidth,
       decoration: BoxDecoration(
-        border: Border.all(
-          color: const Color.fromARGB(255, 255, 255, 255),
-          width: 1,
-        ),
+        border: Border.all(color: c.border, width: 1.5),
         borderRadius: BorderRadius.circular(16),
+        color: c.surfaceRaised,
       ),
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisSize: expanded ? MainAxisSize.max : MainAxisSize.min,
         children: [
-          _unitButton(context, widget.leftLabel, isLeft: true),
-          _unitButton(context, widget.rightLabel, isLeft: false),
+          if (expanded)
+            Expanded(
+              child: _unitButton(context, widget.leftLabel, isLeft: true),
+            )
+          else
+            _unitButton(context, widget.leftLabel, isLeft: true),
+          if (expanded)
+            Expanded(
+              child: _unitButton(context, widget.rightLabel, isLeft: false),
+            )
+          else
+            _unitButton(context, widget.rightLabel, isLeft: false),
         ],
       ),
     );
@@ -53,35 +80,35 @@ class _UnitToggleState extends State<UnitToggle> {
     String label, {
     required bool isLeft,
   }) {
+    final c = context.colors;
     final bool isSelected = selectedUnit == label;
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
 
     return GestureDetector(
       onTap: () {
         setState(() => selectedUnit = label);
         widget.onChanged(label);
       },
-      child: Container(
-        width: 50,
-        padding: const EdgeInsets.symmetric(vertical: 5),
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 200),
+        padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 16),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFD9D9D9) : Colors.transparent,
+          // Selected → accent colour; unselected → transparent over surfaceRaised
+          color: isSelected ? AppTheme.accent : Colors.transparent,
           borderRadius: BorderRadius.only(
-            topLeft: isLeft ? const Radius.circular(16) : Radius.zero,
-            bottomLeft: isLeft ? const Radius.circular(16) : Radius.zero,
-            topRight: !isLeft ? const Radius.circular(16) : Radius.zero,
-            bottomRight: !isLeft ? const Radius.circular(16) : Radius.zero,
+            topLeft: isLeft ? const Radius.circular(15) : Radius.zero,
+            bottomLeft: isLeft ? const Radius.circular(15) : Radius.zero,
+            topRight: !isLeft ? const Radius.circular(15) : Radius.zero,
+            bottomRight: !isLeft ? const Radius.circular(15) : Radius.zero,
           ),
         ),
         child: Center(
           child: Text(
             label,
             style: TextStyle(
-              color: isSelected
-                  ? AppTheme.darkBackground
-                  : (isDarkMode ? Colors.white : Colors.black),
-              fontSize: 22,
-              fontWeight: FontWeight.w300,
+              // On accent → black; otherwise use theme text colours
+              color: isSelected ? Colors.black : c.textSecondary,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
             ),
           ),
         ),

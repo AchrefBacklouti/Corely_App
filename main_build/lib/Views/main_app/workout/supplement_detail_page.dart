@@ -57,7 +57,7 @@ class SupplementDetailPage extends StatelessWidget {
                         vertical: 6,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black87,
+                        color: Colors.black.withValues(alpha: 0.87),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: Row(

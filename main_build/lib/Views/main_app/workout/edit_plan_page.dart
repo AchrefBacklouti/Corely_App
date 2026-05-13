@@ -11,8 +11,14 @@ import 'dart:io';
 class EditPlanPage extends StatefulWidget {
   final WorkoutPlan? existingPlan;
   final int? planIndex;
+  final List<WorkoutDay>? prefillDays;
 
-  const EditPlanPage({super.key, this.existingPlan, this.planIndex});
+  const EditPlanPage({
+    super.key,
+    this.existingPlan,
+    this.planIndex,
+    this.prefillDays,
+  });
 
   @override
   State<EditPlanPage> createState() => _EditPlanPageState();
@@ -78,6 +84,17 @@ class _EditPlanPageState extends State<EditPlanPage> {
         }
         return <Exercise>[];
       });
+    } else if (widget.prefillDays != null && widget.prefillDays!.isNotEmpty) {
+      final prefill = widget.prefillDays!;
+      final count = prefill.length.clamp(1, weekdays.length);
+      _selectedDays = {};
+      _dayExercises = [];
+      for (int i = 0; i < count; i++) {
+        _selectedDays.add(weekdays[i]);
+        _dayNameControllers.add(TextEditingController(text: prefill[i].label));
+        _dayExercises.add(prefill[i].exercises.map(_stubExercise).toList());
+      }
+      _imagePath = null;
     } else {
       _selectedDays = Set.from(weekdays.take(3));
       for (int i = 0; i < 3; i++) {
@@ -87,6 +104,14 @@ class _EditPlanPageState extends State<EditPlanPage> {
       _imagePath = null;
     }
   }
+
+  static Exercise _stubExercise(String name) => Exercise(
+    id: name.hashCode.toString(),
+    name: name,
+    bodyPart: 'general',
+    target: 'General',
+    equipment: 'body only',
+  );
 
   @override
   void dispose() {
@@ -506,14 +531,16 @@ class _EditPlanPageState extends State<EditPlanPage> {
                             vertical: 6,
                           ),
                           decoration: BoxDecoration(
-                            color: const Color(0x1AFF4D4D),
+                            color: Colors.red.withValues(alpha: 0.12),
                             borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0x40FF4D4D)),
+                            border: Border.all(
+                              color: Colors.red.withValues(alpha: 0.35),
+                            ),
                           ),
-                          child: const Text(
+                          child: Text(
                             'Remove',
                             style: TextStyle(
-                              color: Color(0xFFFF4D4D),
+                              color: Colors.red,
                               fontSize: 11,
                               fontWeight: FontWeight.w600,
                             ),
@@ -567,13 +594,13 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       padding: const EdgeInsets.symmetric(vertical: 8),
                       decoration: BoxDecoration(
                         color: isSelected
-                            ? const Color(0x1AFFE600)
-                            : const Color(0xFF1C1F28),
+                            ? palette.accent.withValues(alpha: 0.12)
+                            : palette.surface,
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
                           color: isSelected
-                              ? const Color(0x73FFE600)
-                              : Colors.white10,
+                              ? palette.accent.withValues(alpha: 0.45)
+                              : palette.border,
                         ),
                       ),
                       child: Column(
@@ -586,8 +613,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                               fontWeight: FontWeight.w700,
                               letterSpacing: 0.8,
                               color: isSelected
-                                  ? Colors.yellow
-                                  : const Color(0xFF7A7F8E),
+                                  ? palette.accent
+                                  : palette.textMuted,
                             ),
                           ),
                           const SizedBox(height: 4),
@@ -597,7 +624,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               color: isSelected
-                                  ? Colors.yellow
+                                  ? palette.accent
                                   : Colors.transparent,
                             ),
                           ),
@@ -628,15 +655,15 @@ class _EditPlanPageState extends State<EditPlanPage> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: _currentDayIndex > 0
-                          ? Colors.yellow
-                          : const Color(0xFF252932),
+                          ? palette.accent
+                          : palette.surfaceRaised,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.arrow_back_ios_new,
                       color: _currentDayIndex > 0
-                          ? Colors.black
-                          : const Color(0xFF7A7F8E),
+                          ? palette.background
+                          : palette.textMuted,
                       size: 18,
                     ),
                   ),
@@ -649,8 +676,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       _selectedDays.isNotEmpty
                           ? _selectedDays.toList()[_currentDayIndex]
                           : 'No days',
-                      style: const TextStyle(
-                        color: Colors.white,
+                      style: TextStyle(
+                        color: palette.textPrimary,
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
                       ),
@@ -668,15 +695,15 @@ class _EditPlanPageState extends State<EditPlanPage> {
                     height: 40,
                     decoration: BoxDecoration(
                       color: _currentDayIndex < _selectedDays.length - 1
-                          ? Colors.yellow
-                          : const Color(0xFF252932),
+                          ? palette.accent
+                          : palette.surfaceRaised,
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Icon(
                       Icons.arrow_forward_ios,
                       color: _currentDayIndex < _selectedDays.length - 1
-                          ? Colors.black
-                          : const Color(0xFF7A7F8E),
+                          ? palette.background
+                          : palette.textMuted,
                       size: 18,
                     ),
                   ),
@@ -693,7 +720,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       child: Text(
                         'Select workout days to add exercises',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.5),
+                          color: palette.textMuted,
                           fontSize: 14,
                         ),
                       ),
@@ -703,9 +730,9 @@ class _EditPlanPageState extends State<EditPlanPage> {
                         // Day Header
                         Container(
                           decoration: BoxDecoration(
-                            color: const Color(0xFF12141A),
+                            color: palette.surface,
                             borderRadius: BorderRadius.circular(14),
-                            border: Border.all(color: Colors.white10),
+                            border: Border.all(color: palette.border),
                           ),
                           padding: const EdgeInsets.all(12),
                           child: Row(
@@ -714,16 +741,16 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                 width: 32,
                                 height: 32,
                                 decoration: BoxDecoration(
-                                  color: Colors.yellow,
+                                  color: palette.accent,
                                   borderRadius: BorderRadius.circular(8),
                                 ),
                                 child: Center(
                                   child: Text(
                                     '${_currentDayIndex + 1}',
-                                    style: const TextStyle(
+                                    style: TextStyle(
                                       fontSize: 16,
                                       fontWeight: FontWeight.w900,
-                                      color: Colors.black,
+                                      color: palette.background,
                                     ),
                                   ),
                                 ),
@@ -735,16 +762,16 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                   children: [
                                     Text(
                                       _selectedDays.toList()[_currentDayIndex],
-                                      style: const TextStyle(
-                                        color: Color(0xFF7A7F8E),
+                                      style: TextStyle(
+                                        color: palette.textMuted,
                                         fontSize: 11,
                                         fontWeight: FontWeight.w500,
                                       ),
                                     ),
                                     Text(
                                       '${_dayExercises[_currentDayIndex].length} exercise${_dayExercises[_currentDayIndex].length != 1 ? 's' : ''}',
-                                      style: const TextStyle(
-                                        color: Colors.yellow,
+                                      style: TextStyle(
+                                        color: palette.accent,
                                         fontSize: 12,
                                         fontWeight: FontWeight.w700,
                                       ),
@@ -757,20 +784,20 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                 child: TextField(
                                   controller:
                                       _dayNameControllers[_currentDayIndex],
-                                  style: const TextStyle(
-                                    color: Colors.white,
+                                  style: TextStyle(
+                                    color: palette.textPrimary,
                                     fontSize: 12,
                                   ),
                                   maxLines: 1,
                                   decoration: InputDecoration(
                                     hintText: _selectedDays
                                         .toList()[_currentDayIndex],
-                                    hintStyle: const TextStyle(
-                                      color: Color(0xFF7A7F8E),
+                                    hintStyle: TextStyle(
+                                      color: palette.textMuted,
                                       fontSize: 12,
                                     ),
                                     filled: true,
-                                    fillColor: const Color(0xFF252932),
+                                    fillColor: palette.inputFill,
                                     contentPadding: const EdgeInsets.symmetric(
                                       horizontal: 10,
                                       vertical: 8,
@@ -804,21 +831,21 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                           decoration: BoxDecoration(
                                             shape: BoxShape.circle,
                                             border: Border.all(
-                                              color: const Color(0xFF7A7F8E),
+                                              color: palette.textMuted,
                                               width: 2,
                                             ),
                                           ),
-                                          child: const Icon(
+                                          child: Icon(
                                             Icons.add,
-                                            color: Color(0xFF7A7F8E),
+                                            color: palette.textMuted,
                                             size: 40,
                                           ),
                                         ),
                                         const SizedBox(height: 16),
-                                        const Text(
+                                        Text(
                                           'Add exercises for this day',
                                           style: TextStyle(
-                                            color: Color(0xFF7A7F8E),
+                                            color: palette.textMuted,
                                             fontSize: 14,
                                           ),
                                         ),
@@ -845,11 +872,11 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                               vertical: 10,
                                             ),
                                             decoration: BoxDecoration(
-                                              color: const Color(0xFF252932),
+                                              color: palette.surfaceRaised,
                                               borderRadius:
                                                   BorderRadius.circular(8),
                                               border: Border.all(
-                                                color: Colors.white10,
+                                                color: palette.border,
                                               ),
                                             ),
                                             child: Column(
@@ -858,8 +885,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                               children: [
                                                 Text(
                                                   exercise.name,
-                                                  style: const TextStyle(
-                                                    color: Colors.white,
+                                                  style: TextStyle(
+                                                    color: palette.textPrimary,
                                                     fontSize: 13,
                                                     fontWeight: FontWeight.w500,
                                                   ),
@@ -867,8 +894,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                                 const SizedBox(height: 4),
                                                 Text(
                                                   '${exercise.target} • ${exercise.equipment}',
-                                                  style: const TextStyle(
-                                                    color: Color(0xFF7A7F8E),
+                                                  style: TextStyle(
+                                                    color: palette.textMuted,
                                                     fontSize: 11,
                                                   ),
                                                   maxLines: 1,
@@ -890,13 +917,13 @@ class _EditPlanPageState extends State<EditPlanPage> {
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: Colors.yellow,
+                                            color: palette.accent,
                                             width: 2,
                                           ),
                                         ),
-                                        child: const Icon(
+                                        child: Icon(
                                           Icons.add,
-                                          color: Colors.yellow,
+                                          color: palette.accent,
                                           size: 32,
                                         ),
                                       ),
@@ -990,7 +1017,7 @@ class _EditPlanPageState extends State<EditPlanPage> {
                   }
                 },
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.yellow,
+                  backgroundColor: palette.accent,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(13),
                   ),
@@ -1001,8 +1028,8 @@ class _EditPlanPageState extends State<EditPlanPage> {
                   children: [
                     Text(
                       widget.existingPlan != null ? 'UPDATE PLAN' : 'SAVE PLAN',
-                      style: const TextStyle(
-                        color: Color(0xFF0A0B0E),
+                      style: TextStyle(
+                        color: palette.background,
                         fontSize: 16,
                         fontWeight: FontWeight.w900,
                         letterSpacing: 2,
@@ -1013,12 +1040,12 @@ class _EditPlanPageState extends State<EditPlanPage> {
                       width: 22,
                       height: 22,
                       decoration: BoxDecoration(
-                        color: Colors.black26,
+                        color: palette.surfaceRaised,
                         borderRadius: BorderRadius.circular(6),
                       ),
-                      child: const Icon(
+                      child: Icon(
                         Icons.arrow_outward_rounded,
-                        color: Colors.black,
+                        color: palette.textPrimary,
                         size: 13,
                       ),
                     ),

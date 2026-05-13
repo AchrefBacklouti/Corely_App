@@ -5,27 +5,96 @@ class NutritionPageContent extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Matches the React code's dark gradient background
-    return Container(
-      decoration: const BoxDecoration(
-        gradient: LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-          colors: [
-            Colors.black,
-            Color(0xFF0B0F1A),
-            Color(0xFF121826),
-          ],
-        ),
-      ),
-      child: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+    final c = context.colors;
+
+    return SingleChildScrollView(
+      padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _buildHeader(context),
-          const SizedBox(height: 36),
-          _buildStatsRow(),
-          const SizedBox(height: 40),
-          _buildMealsList(),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _MacroCard(
+                label: "Calories",
+                value: "1,980",
+                subtitle: "of 2,400 kcal",
+                progress: 0.82,
+                color: Colors.orange,
+              ),
+              _MacroCard(
+                label: "Protein",
+                value: "132g",
+                subtitle: "of 160g",
+                progress: 0.82,
+                color: Colors.green,
+              ),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _MacroCard(
+                label: "Carbs",
+                value: "210g",
+                subtitle: "of 280g",
+                progress: 0.75,
+                color: Colors.blue,
+              ),
+              _MacroCard(
+                label: "Fats",
+                value: "62g",
+                subtitle: "of 70g",
+                progress: 0.88,
+                color: Colors.purple,
+              ),
+            ],
+          ),
+          const SizedBox(height: 24),
+          Text(
+            "Today’s meals",
+            style: TextStyle(
+              color: c.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          const _MealRow(
+            title: "Breakfast",
+            calories: "420 kcal",
+            description: "Oats, berries, protein shake",
+          ),
+          const SizedBox(height: 10),
+          const _MealRow(
+            title: "Lunch",
+            calories: "680 kcal",
+            description: "Chicken, rice, veggies",
+          ),
+          const SizedBox(height: 10),
+          const _MealRow(
+            title: "Snack",
+            calories: "180 kcal",
+            description: "Greek yogurt, nuts",
+          ),
+          const SizedBox(height: 10),
+          const _MealRow(
+            title: "Dinner",
+            calories: "620 kcal",
+            description: "Salmon, sweet potato, broccoli",
+          ),
+          const SizedBox(height: 26),
+          Text(
+            "Hydration",
+            style: TextStyle(
+              color: c.textPrimary,
+              fontSize: 18,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+          const SizedBox(height: 12),
+          _HydrationCard(),
           const SizedBox(height: 80),
         ],
       ),

@@ -15,102 +15,87 @@ class _NotificationsSettingsState extends State<NotificationsSettings> {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final c = context.colors;
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: c.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
+          icon: Icon(Icons.arrow_back, color: c.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Notifications",
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          'Notifications',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Notification Preferences",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              'Notification Preferences',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
-            SwitchListTile(
-              title: Text(
-                'Workout Reminders',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-              ),
-              subtitle: Text(
-                'Get reminded about your workouts',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.black54,
-                ),
-              ),
+            _NotifTile(
+              title: 'Workout Reminders',
+              subtitle: 'Get reminded about your workouts',
               value: _workoutReminders,
-              onChanged: (bool value) {
-                setState(() => _workoutReminders = value);
-              },
+              onChanged: (v) => setState(() => _workoutReminders = v),
             ),
-            SwitchListTile(
-              title: Text(
-                'Meals Reminders',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-              ),
-              subtitle: Text(
-                'Get reminded to log your meals',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.black54,
-                ),
-              ),
+            _NotifTile(
+              title: 'Meals Reminders',
+              subtitle: 'Get reminded to log your meals',
               value: _mealsReminders,
-              onChanged: (bool value) {
-                setState(() => _mealsReminders = value);
-              },
+              onChanged: (v) => setState(() => _mealsReminders = v),
             ),
-            SwitchListTile(
-              title: Text(
-                'Progress Updates',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                ),
-              ),
-              subtitle: Text(
-                'Weekly progress summaries',
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white70 : Colors.black54,
-                ),
-              ),
+            _NotifTile(
+              title: 'Progress Updates',
+              subtitle: 'Weekly progress summaries',
               value: _progressUpdates,
-              onChanged: (bool value) {
-                setState(() => _progressUpdates = value);
-              },
+              onChanged: (v) => setState(() => _progressUpdates = v),
             ),
           ],
         ),
       ),
+    );
+  }
+}
+
+class _NotifTile extends StatelessWidget {
+  const _NotifTile({
+    required this.title,
+    required this.subtitle,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String title;
+  final String subtitle;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+
+    return SwitchListTile(
+      contentPadding: EdgeInsets.zero,
+      title: Text(
+        title,
+        style: Theme.of(
+          context,
+        ).textTheme.bodyLarge?.copyWith(color: c.textPrimary),
+      ),
+      subtitle: Text(subtitle, style: Theme.of(context).textTheme.bodySmall),
+      value: value,
+      activeThumbColor: Colors.black,
+      activeTrackColor: c.accent,
+      inactiveThumbColor: c.textMuted,
+      inactiveTrackColor: c.border,
+      onChanged: onChanged,
     );
   }
 }

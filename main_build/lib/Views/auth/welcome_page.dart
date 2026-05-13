@@ -1,57 +1,43 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
-import 'package:main_build/Theme/theme_provider.dart';
-
+import 'package:main_build/Theme/theme_scope.dart';
 import 'package:main_build/Views/on_boarding/on_boarding.dart';
 
-class StartPage extends StatefulWidget {
-  final ThemeProvider? themeProvider;
+class StartPage extends StatelessWidget {
+  const StartPage({super.key});
 
-  const StartPage({super.key, this.themeProvider});
-
-  @override
-  State<StartPage> createState() => _StartPageState();
-}
-
-class _StartPageState extends State<StartPage> {
   @override
   Widget build(BuildContext context) {
-    final theme = Theme.of(context);
-    final isDarkMode = theme.brightness == Brightness.dark;
-    final palette =
-        theme.extension<CorelyColors>() ??
-        (isDarkMode ? AppTheme.darkColors : AppTheme.lightColors);
+    final c = context.colors;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
     return Scaffold(
-      backgroundColor: palette.background,
+      backgroundColor: c.background,
       body: Stack(
         children: [
-          // Background image
+          // ── Background image ─────────────────
           Positioned.fill(
             child: Image.asset('assets/img/wpbg.jpg', fit: BoxFit.cover),
           ),
 
-          // Overlay color
+          // ── Themed overlay ───────────────────
           Container(
-            color: isDarkMode
-                ? AppTheme.darkBackground.withValues(alpha: 0.85)
+            color: isDark
+                ? c.background.withValues(alpha: 0.85)
                 : Colors.white.withValues(alpha: 0.72),
           ),
 
-          // Theme toggle button
+          // ── Theme toggle ─────────────────────
           SafeArea(
-            child: Padding(
-              padding: const EdgeInsets.all(16.0),
-              child: Align(
-                alignment: Alignment.topRight,
-                child: FloatingActionButton(
-                  mini: true,
-                  backgroundColor: AppTheme.yellow,
-                  onPressed: () {
-                    widget.themeProvider?.toggleTheme();
-                  },
+            child: Align(
+              alignment: Alignment.topRight,
+              child: Padding(
+                padding: const EdgeInsets.all(16),
+                child: FloatingActionButton.small(
+                  backgroundColor: c.accent,
+                  onPressed: () => ThemeScope.of(context).toggleTheme(),
                   child: Icon(
-                    isDarkMode ? Icons.light_mode : Icons.dark_mode,
+                    isDark ? Icons.light_mode : Icons.dark_mode,
                     color: Colors.black,
                   ),
                 ),
@@ -59,54 +45,51 @@ class _StartPageState extends State<StartPage> {
             ),
           ),
 
-          // Content
+          // ── Content ──────────────────────────
           SafeArea(
             child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 70.0),
+              padding: const EdgeInsets.symmetric(horizontal: 70),
               child: Column(
                 mainAxisAlignment: MainAxisAlignment.center,
-                crossAxisAlignment: CrossAxisAlignment.center,
                 children: [
                   const SizedBox(height: 50),
                   Image.asset(
-                    isDarkMode
+                    isDark
                         ? 'assets/img/logo_dark.png'
                         : 'assets/img/logo_light.png',
                     fit: BoxFit.cover,
                   ),
-
-                  // Subtitle
+                  const SizedBox(height: 16),
                   Text(
                     'Your all-in-one fitness journey.',
                     textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: palette.textSecondary,
+                    style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                      color: c.textSecondary,
                       fontSize: 27,
                       fontWeight: FontWeight.w400,
                     ),
                   ),
                   const SizedBox(height: 300),
 
-                  // Start now button
+                  // Start now
                   SizedBox(
                     width: double.infinity,
                     child: ElevatedButton(
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: AppTheme.yellow,
+                        backgroundColor: c.accent,
+                        foregroundColor: Colors.black,
                         padding: const EdgeInsets.symmetric(vertical: 18),
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(40),
                         ),
                         elevation: 3,
                       ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => CorelyOnboardingFlow(),
-                          ),
-                        );
-                      },
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => const CorelyOnboardingFlow(),
+                        ),
+                      ),
                       child: const Row(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
@@ -122,8 +105,8 @@ class _StartPageState extends State<StartPage> {
                           Text(
                             '>',
                             style: TextStyle(
-                              fontSize: 27,
                               color: Colors.black,
+                              fontSize: 27,
                               fontWeight: FontWeight.bold,
                             ),
                           ),
@@ -134,17 +117,14 @@ class _StartPageState extends State<StartPage> {
 
                   const SizedBox(height: 20),
 
-                  // Log in button
+                  // Log in
                   TextButton(
-                    onPressed: () {
-                      Navigator.pushNamed(context, '/login');
-                    },
+                    onPressed: () => Navigator.pushNamed(context, '/login'),
                     child: Text(
                       'Log In',
-                      style: TextStyle(
-                        color: palette.textPrimary,
+                      style: Theme.of(context).textTheme.titleMedium?.copyWith(
+                        color: c.textPrimary,
                         fontSize: 27,
-                        fontWeight: FontWeight.w500,
                       ),
                     ),
                   ),

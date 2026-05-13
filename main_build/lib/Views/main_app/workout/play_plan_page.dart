@@ -289,10 +289,10 @@ class _PlayPlanPageState extends State<PlayPlanPage> {
           children: [
             Row(
               children: [
-                const Text(
+                Text(
                   'Workout Days',
                   style: TextStyle(
-                    color: Colors.white,
+                    color: palette.textPrimary,
                     fontSize: 20,
                     fontWeight: FontWeight.w700,
                   ),

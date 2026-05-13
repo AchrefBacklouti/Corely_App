@@ -6,154 +6,85 @@ class PrivacySettings extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDarkMode = Theme.of(context).brightness == Brightness.dark;
+    final c = context.colors;
 
     return Scaffold(
-      backgroundColor: isDarkMode
-          ? AppTheme.darkBackground
-          : AppTheme.lightBackground,
+      backgroundColor: c.background,
       appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
         leading: IconButton(
-          icon: Icon(
-            Icons.arrow_back,
-            color: isDarkMode ? Colors.white : Colors.black,
-          ),
+          icon: Icon(Icons.arrow_back, color: c.textPrimary),
           onPressed: () => Navigator.pop(context),
         ),
         title: Text(
-          "Privacy & Security",
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          'Privacy & Security',
+          style: Theme.of(context).textTheme.titleMedium,
         ),
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.all(16.0),
+        padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text(
-              "Privacy Settings",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
+              'Privacy Settings',
+              style: Theme.of(context).textTheme.titleMedium,
             ),
             const SizedBox(height: 16),
-            _buildPrivacyOption(
-              context,
-              "Profile Visibility",
-              "Public",
-              isDarkMode,
-            ),
-            _buildPrivacyOption(
-              context,
-              "Data Collection",
-              "Limited",
-              isDarkMode,
-            ),
-            _buildPrivacyOption(
-              context,
-              "Third-party Apps",
-              "Disabled",
-              isDarkMode,
-            ),
+            const _PrivacyRow(title: 'Profile Visibility', value: 'Public'),
+            const _PrivacyRow(title: 'Data Collection', value: 'Limited'),
+            const _PrivacyRow(title: 'Third-party Apps', value: 'Disabled'),
             const SizedBox(height: 24),
-            Text(
-              "Security",
-              style: TextStyle(
-                color: isDarkMode ? Colors.white : Colors.black,
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
+            Text('Security', style: Theme.of(context).textTheme.titleMedium),
             const SizedBox(height: 16),
-            _buildSecurityOption(
-              "Two-Factor Authentication",
-              "Not enabled",
-              isDarkMode,
+            const _PrivacyRow(
+              title: 'Two-Factor Authentication',
+              value: 'Not enabled',
             ),
             const SizedBox(height: 12),
             ElevatedButton.icon(
-              onPressed: () {
-                ScaffoldMessenger.of(context).showSnackBar(
-                  const SnackBar(content: Text('2FA setup coming soon')),
-                );
-              },
-              icon: const Icon(Icons.security),
-              label: const Text("Enable 2FA"),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppTheme.yellow,
-                foregroundColor: Colors.black,
+              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('2FA setup coming soon')),
               ),
+              icon: const Icon(Icons.security),
+              label: const Text('Enable 2FA'),
+              // Inherits backgroundColor: accent, foregroundColor: black
+              // from AppTheme ElevatedButtonThemeData — no overrides needed.
             ),
           ],
         ),
       ),
     );
   }
+}
 
-  Widget _buildPrivacyOption(
-    BuildContext context,
-    String title,
-    String value,
-    bool isDarkMode,
-  ) {
+class _PrivacyRow extends StatelessWidget {
+  const _PrivacyRow({required this.title, required this.value});
+  final String title;
+  final String value;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = context.colors;
+
     return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 12.0),
+      padding: const EdgeInsets.symmetric(vertical: 12),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                title,
-                style: TextStyle(
-                  color: isDarkMode ? Colors.white : Colors.black,
-                  fontSize: 16,
-                  fontWeight: FontWeight.w500,
-                ),
-              ),
-            ],
+          Text(
+            title,
+            style: Theme.of(
+              context,
+            ).textTheme.bodyLarge?.copyWith(fontWeight: FontWeight.w500),
           ),
           Text(
             value,
-            style: TextStyle(
-              color: isDarkMode ? Colors.white70 : Colors.black54,
-              fontSize: 14,
-            ),
+            style: Theme.of(
+              context,
+            ).textTheme.bodyMedium?.copyWith(color: c.textSecondary),
           ),
         ],
       ),
-    );
-  }
-
-  Widget _buildSecurityOption(String title, String value, bool isDarkMode) {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Text(
-          title,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white : Colors.black,
-            fontSize: 16,
-            fontWeight: FontWeight.w500,
-          ),
-        ),
-        Text(
-          value,
-          style: TextStyle(
-            color: isDarkMode ? Colors.white70 : Colors.black54,
-            fontSize: 14,
-          ),
-        ),
-      ],
     );
   }
 }
