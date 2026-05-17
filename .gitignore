@@ -33,6 +33,18 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Generated plugin registrant files - auto-created by flutter pub get, must not be tracked
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugins.cmake
+**/Flutter/GeneratedPluginRegistrant.swift
+
+# Temp analysis and dev files
+analyze.txt
+analyze2.txt
+analyze_utf8.txt
+devtools_options.yaml
+
 # Symbolication related
 app.*.symbols
 
