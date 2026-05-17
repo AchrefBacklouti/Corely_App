@@ -6,6 +6,7 @@ import 'package:main_build/Theme/theme_scope.dart';
 import 'package:main_build/Views/auth/loading_page.dart';
 import 'package:main_build/Views/auth/welcome_page.dart';
 import 'package:main_build/Views/auth/login_page.dart';
+import 'package:main_build/Views/auth/signup_page.dart';
 import 'package:main_build/Views/main_app/home_page.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
@@ -53,6 +54,7 @@ class _CorelyAppState extends State<CorelyApp> {
             routes: {
               '/': (context) => const LoadingPage(),
               '/welcome': (context) => StartPage(),
+              '/signup': (context) => const SignUpPage(),
               '/login': (context) => const LoginPage(),
               '/home': (context) => const MainShellPage(),
             },
