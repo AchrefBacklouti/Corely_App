@@ -34,6 +34,17 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
     super.initState();
     _loadData();
     _syncExercisesIfStale();
+    LocalPlanService.plansChanged.addListener(_onPlansChanged);
+  }
+
+  void _onPlansChanged() {
+    if (mounted) _loadData();
+  }
+
+  @override
+  void dispose() {
+    LocalPlanService.plansChanged.removeListener(_onPlansChanged);
+    super.dispose();
   }
 
   Future<void> _syncExercisesIfStale() async {

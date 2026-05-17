@@ -1,12 +1,30 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/workout_plans.dart';
 
 class AiChatPage extends StatefulWidget {
-  const AiChatPage({super.key});
+  final String? gender;
+  final int? age;
+  final double? weight;
+  final String? weightUnit;
+  final String? heightDisplay;
+  final String? goal;
+  final int? trainingDays;
+
+  const AiChatPage({
+    super.key,
+    this.gender,
+    this.age,
+    this.weight,
+    this.weightUnit,
+    this.heightDisplay,
+    this.goal,
+    this.trainingDays,
+  });
 
   @override
   State<AiChatPage> createState() => _AiChatPageState();
@@ -26,7 +44,7 @@ class _AiChatPageState extends State<AiChatPage> {
   final Set<int> _savedPlanIndices = {};
 
   static const _apiKey = 'AIzaSyBZf6JIMQCj30NbGExIgv6zIdVZkUMR6gA';
-  static const _systemPrompt =
+  static const _baseSystemPrompt =
       'You are Corely AI, a personal gym trainer and fitness buddy. '
       'You talk like a knowledgeable friend at the gym — casual, motivating, and straight to the point. '
       'You ONLY answer questions about: gym workouts and training programs, exercise form and technique, '
@@ -37,13 +55,63 @@ class _AiChatPageState extends State<AiChatPage> {
       'IMPORTANT: Whenever you provide a full workout plan (a structured response that includes specific days, '
       'exercises, sets and reps), you MUST begin your entire response with the exact text "[WORKOUT_PLAN]" '
       'on its own line. Do not use this tag for general advice, single exercise tips, or nutrition info — '
-      'only for complete, ready-to-follow workout plans.';
+      'only for complete, ready-to-follow workout plans. '
+      'EXERCISE FORMAT: In every workout plan, list each exercise on its own line using EXACTLY this format: '
+      '[EX: Exercise Name | sets | reps] '
+      'Example: [EX: Barbell Squat | 4 | 8-12] — no other format is allowed for exercise entries.';
+
+  String get _systemPrompt {
+    final w = widget;
+    if (w.gender == null) return _baseSystemPrompt;
+    final profile = 'User profile — Gender: ${w.gender}, Age: ${w.age} yrs, '
+        'Weight: ${w.weight?.toStringAsFixed(1)} ${w.weightUnit}, '
+        'Height: ${w.heightDisplay}, Goal: ${w.goal}, '
+        'Training frequency: ${w.trainingDays} days/week. '
+        'Always tailor plans and advice specifically to this user.';
+    return '$_baseSystemPrompt\n\n$profile';
+  }
+
+  static const _hiveBox = 'ai_chat';
+  static const _hiveKey = 'messages';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadMessages();
+  }
 
   @override
   void dispose() {
     _controller.dispose();
     _scrollController.dispose();
     super.dispose();
+  }
+
+  Future<void> _loadMessages() async {
+    final box = await Hive.openBox<String>(_hiveBox);
+    final raw = box.get(_hiveKey);
+    if (raw == null || !mounted) return;
+    try {
+      final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
+      if (list.isEmpty) return;
+      setState(() {
+        _messages
+          ..clear()
+          ..addAll(list.map((m) => _Message(
+                text: m['text'] as String,
+                isBot: m['isBot'] as bool,
+              )));
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
+    } catch (_) {}
+  }
+
+  Future<void> _saveMessages() async {
+    final box = await Hive.openBox<String>(_hiveBox);
+    await box.put(
+      _hiveKey,
+      jsonEncode(_messages.map((m) => {'text': m.text, 'isBot': m.isBot}).toList()),
+    );
   }
 
   void _send() {
@@ -59,6 +127,7 @@ class _AiChatPageState extends State<AiChatPage> {
       _controller.clear();
     });
     _scrollToBottom();
+    _saveMessages();
 
     try {
       final reply = await _callGemini();
@@ -78,6 +147,7 @@ class _AiChatPageState extends State<AiChatPage> {
       });
     }
     _scrollToBottom();
+    _saveMessages();
   }
 
   Future<String> _callGemini() async {
@@ -203,6 +273,12 @@ class _AiChatPageState extends State<AiChatPage> {
       caseSensitive: false,
     );
 
+    // Matches the structured tag the AI is instructed to use for every exercise
+    final exTagRe = RegExp(
+      r'\[EX:\s*(.+?)\s*\|\s*(\d+)\s*\|\s*([\d\-–]+)\]',
+      caseSensitive: false,
+    );
+
     for (var raw in text.split('\n')) {
       final line = raw.replaceAll(RegExp(r'[*#_`]'), '').trim();
       if (line.isEmpty) continue;
@@ -213,6 +289,28 @@ class _AiChatPageState extends State<AiChatPage> {
         var name = line.replaceAll(RegExp(r':\s*$'), '').trim();
         if (name.length > 45) name = name.substring(0, 45);
         dayNames.add(name);
+        continue;
+      }
+
+      // Priority: structured [EX: Name | sets | reps] tag
+      final tagMatch = exTagRe.firstMatch(line);
+      if (tagMatch != null) {
+        if (current == null) {
+          current = [];
+          dayNames.add('Day 1');
+        }
+        final exName = tagMatch.group(1)!.trim();
+        final sets = int.tryParse(tagMatch.group(2) ?? '') ?? 3;
+        final reps = tagMatch.group(3) ?? '10';
+        current.add({
+          'id': exName.hashCode.toString(),
+          'name': exName,
+          'bodyPart': 'general',
+          'target': 'General',
+          'equipment': 'body only',
+          'sets': sets,
+          'reps': reps,
+        });
         continue;
       }
 

@@ -118,7 +118,17 @@ class UserSummary extends StatelessWidget {
                 onPressed: () {
                   Navigator.pushReplacement(
                     context,
-                    MaterialPageRoute(builder: (_) => const MainShellPage()),
+                    MaterialPageRoute(
+                      builder: (_) => MainShellPage(
+                        gender: gender,
+                        age: age,
+                        weight: weight,
+                        weightUnit: weightUnit,
+                        heightDisplay: heightDisplay,
+                        goal: goal,
+                        trainingDays: trainingDays,
+                      ),
+                    ),
                   );
                 },
                 child: const Text(

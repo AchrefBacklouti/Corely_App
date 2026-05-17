@@ -11,7 +11,24 @@ import 'package:main_build/Views/main_app/workout/workout_page_content.dart';
 // Main Shell
 // ─────────────────────────────────────────────
 class MainShellPage extends StatefulWidget {
-  const MainShellPage({super.key});
+  final String? gender;
+  final int? age;
+  final double? weight;
+  final String? weightUnit;
+  final String? heightDisplay;
+  final String? goal;
+  final int? trainingDays;
+
+  const MainShellPage({
+    super.key,
+    this.gender,
+    this.age,
+    this.weight,
+    this.weightUnit,
+    this.heightDisplay,
+    this.goal,
+    this.trainingDays,
+  });
 
   @override
   State<MainShellPage> createState() => _MainShellPageState();
@@ -19,6 +36,7 @@ class MainShellPage extends StatefulWidget {
 
 class _MainShellPageState extends State<MainShellPage> {
   int _index = 0;
+  bool _hasUnreadAiMessage = true;
 
   static const _navIcons = [
     Icons.home_filled,
@@ -26,6 +44,24 @@ class _MainShellPageState extends State<MainShellPage> {
     Icons.show_chart,
     Icons.apple,
   ];
+
+  void _openAiChat() {
+    setState(() => _hasUnreadAiMessage = false);
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => AiChatPage(
+          gender: widget.gender,
+          age: widget.age,
+          weight: widget.weight,
+          weightUnit: widget.weightUnit,
+          heightDisplay: widget.heightDisplay,
+          goal: widget.goal,
+          trainingDays: widget.trainingDays,
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +87,10 @@ class _MainShellPageState extends State<MainShellPage> {
           ],
         ),
       ),
-      floatingActionButton: _AiChatBubble(),
+      floatingActionButton: _AiChatBubble(
+        hasUnread: _hasUnreadAiMessage,
+        onTap: _openAiChat,
+      ),
       floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _BottomNav(
         currentIndex: _index,
@@ -65,39 +104,119 @@ class _MainShellPageState extends State<MainShellPage> {
 // ─────────────────────────────────────────────
 // AI Chat Bubble
 // ─────────────────────────────────────────────
-class _AiChatBubble extends StatelessWidget {
+class _AiChatBubble extends StatefulWidget {
+  final bool hasUnread;
+  final VoidCallback onTap;
+
+  const _AiChatBubble({required this.hasUnread, required this.onTap});
+
+  @override
+  State<_AiChatBubble> createState() => _AiChatBubbleState();
+}
+
+class _AiChatBubbleState extends State<_AiChatBubble>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _shakeCtrl;
+  late final Animation<double> _rotateAnim;
+  late final Animation<double> _scaleAnim;
+  bool _loopActive = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _shakeCtrl = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 700),
+    );
+
+    // Damped rotation wobble — wide at first, decays to zero like a ringing bell
+    _rotateAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 0.0, end: -0.30), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: -0.30, end: 0.30), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.30, end: -0.22), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -0.22, end: 0.22), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.22, end: -0.12), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: -0.12, end: 0.12), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 0.12, end: 0.0), weight: 1),
+    ]).animate(_shakeCtrl);
+
+    // Quick scale pop at the start of each ring, then settles at 1.0
+    _scaleAnim = TweenSequence<double>([
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.18), weight: 1),
+      TweenSequenceItem(tween: Tween(begin: 1.18, end: 1.0), weight: 2),
+      TweenSequenceItem(tween: Tween(begin: 1.0, end: 1.0), weight: 9),
+    ]).animate(_shakeCtrl);
+
+    if (widget.hasUnread) _startLoop();
+  }
+
+  @override
+  void didUpdateWidget(_AiChatBubble old) {
+    super.didUpdateWidget(old);
+    if (!old.hasUnread && widget.hasUnread) {
+      _startLoop();
+    } else if (old.hasUnread && !widget.hasUnread) {
+      _shakeCtrl.stop();
+      _shakeCtrl.value = 0;
+    }
+  }
+
+  Future<void> _startLoop() async {
+    if (_loopActive) return;
+    _loopActive = true;
+    await Future.delayed(const Duration(milliseconds: 600));
+    while (mounted && widget.hasUnread) {
+      _shakeCtrl.forward(from: 0); // fire-and-forget; delay handles timing
+      await Future.delayed(const Duration(milliseconds: 4000)); // 700ms anim + 3.3s pause
+    }
+    _loopActive = false;
+  }
+
+  @override
+  void dispose() {
+    _shakeCtrl.dispose();
+    super.dispose();
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: 58,
-      height: 58,
-      decoration: const BoxDecoration(
-        shape: BoxShape.circle,
-        gradient: LinearGradient(
-          colors: [AppTheme.accent, AppTheme.accent_2],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+    return AnimatedBuilder(
+      animation: _shakeCtrl,
+      builder: (_, child) => Transform.scale(
+        scale: _scaleAnim.value,
+        child: Transform.rotate(
+          angle: _rotateAnim.value,
+          child: child,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: Color(0x662979FF),
-            blurRadius: 14,
-            offset: Offset(0, 4),
-          ),
-        ],
       ),
-      child: Material(
-        color: Colors.transparent,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: () => Navigator.push(
-            context,
-            MaterialPageRoute(builder: (_) => const AiChatPage()),
+      child: Container(
+        width: 58,
+        height: 58,
+        decoration: const BoxDecoration(
+          shape: BoxShape.circle,
+          gradient: LinearGradient(
+            colors: [AppTheme.accent, AppTheme.accent_2],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-          child: Padding(
-            padding: const EdgeInsets.all(12),
-            child: Image.asset('assets/img/bot_4712038.png'),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x662979FF),
+              blurRadius: 14,
+              offset: Offset(0, 4),
+            ),
+          ],
+        ),
+        child: Material(
+          color: Colors.transparent,
+          shape: const CircleBorder(),
+          child: InkWell(
+            customBorder: const CircleBorder(),
+            onTap: widget.onTap,
+            child: Padding(
+              padding: const EdgeInsets.all(12),
+              child: Image.asset('assets/img/bot_4712038.png'),
+            ),
           ),
         ),
       ),
@@ -136,7 +255,7 @@ class _TopBar extends StatelessWidget {
                   gradient: LinearGradient(
                     begin: Alignment.topLeft,
                     end: Alignment.bottomRight,
-                    colors: [AppTheme.accent, AppTheme.accent.withOpacity(0.6)],
+                    colors: [AppTheme.accent, AppTheme.accent.withValues(alpha: 0.6)],
                   ),
                 ),
                 alignment: Alignment.center,
