@@ -1,0 +1,774 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Ascend ExerciseDB Browser</title>
+    <style>
+      :root {
+        --bg: #08111f;
+        --panel: #0d1b33;
+        --panel-2: #102447;
+        --panel-3: #0b172c;
+        --text: #e8f0ff;
+        --muted: #9cb4db;
+        --accent: #2b7fff;
+        --accent-2: #00d4ff;
+        --border: #22406e;
+        --ok: #00d084;
+        --warn: #ffd166;
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, sans-serif;
+        background: radial-gradient(circle at top right, #173769 0%, var(--bg) 45%);
+        color: var(--text);
+      }
+
+      .wrap {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 18px;
+      }
+
+      .header {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 14px;
+      }
+
+      .title h1 {
+        margin: 0 0 6px;
+        font-size: 24px;
+      }
+
+      .title p {
+        margin: 0;
+        color: var(--muted);
+        font-size: 13px;
+      }
+
+      .toolbar {
+        position: sticky;
+        top: 0;
+        z-index: 6;
+        backdrop-filter: blur(10px);
+        background: rgba(8, 17, 31, 0.88);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        padding: 12px;
+        margin-bottom: 14px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .row {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        align-items: center;
+      }
+
+      input,
+      button,
+      textarea,
+      select {
+        border: 1px solid var(--border);
+        border-radius: 10px;
+        background: var(--panel);
+        color: var(--text);
+        padding: 10px 12px;
+      }
+
+      input,
+      select {
+        min-width: 220px;
+        flex: 1;
+      }
+
+      button {
+        cursor: pointer;
+        background: var(--panel-2);
+      }
+
+      button.primary {
+        background: linear-gradient(90deg, var(--accent), var(--accent-2));
+        border-color: var(--accent);
+        color: #04111f;
+        font-weight: 700;
+      }
+
+      button.ghost {
+        background: var(--panel-3);
+      }
+
+      .meta,
+      .status {
+        font-size: 13px;
+      }
+
+      .meta { color: var(--muted); }
+      .status { color: var(--ok); min-height: 16px; }
+      .status.warn { color: var(--warn); }
+
+      .layout {
+        display: grid;
+        grid-template-columns: 1.2fr 0.8fr;
+        gap: 14px;
+        align-items: start;
+      }
+
+      @media (max-width: 1100px) {
+        .layout { grid-template-columns: 1fr; }
+      }
+
+      .card {
+        border: 1px solid var(--border);
+        border-radius: 14px;
+        background: linear-gradient(180deg, var(--panel), #0b1730);
+        overflow: hidden;
+      }
+
+      .section-head {
+        padding: 12px 14px;
+        border-bottom: 1px solid var(--border);
+        display: flex;
+        justify-content: space-between;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .section-head strong { font-size: 14px; }
+      .section-head span { color: var(--muted); font-size: 12px; }
+
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .item {
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        overflow: hidden;
+        background: #0c1d3b;
+      }
+
+      .thumb {
+        height: 180px;
+        background: #08152d;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+
+      .thumb img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .body {
+        padding: 10px;
+        display: grid;
+        gap: 8px;
+      }
+
+      .name {
+        font-size: 14px;
+        line-height: 1.25;
+        font-weight: 700;
+      }
+
+      .id,
+      .pill {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .pillrow {
+        display: flex;
+        gap: 6px;
+        flex-wrap: wrap;
+      }
+
+      .pill {
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 4px 8px;
+        background: rgba(255,255,255,0.03);
+      }
+
+      .check {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 13px;
+      }
+
+      textarea {
+        width: 100%;
+        min-height: 180px;
+        resize: vertical;
+        font-family: Consolas, "Courier New", monospace;
+        white-space: pre;
+      }
+
+      .viewer {
+        padding: 12px;
+        display: grid;
+        gap: 10px;
+      }
+
+      .stats {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+        padding: 12px;
+      }
+
+      .stat {
+        border: 1px solid var(--border);
+        background: var(--panel-3);
+        border-radius: 12px;
+        padding: 10px;
+      }
+
+      .stat .label {
+        color: var(--muted);
+        font-size: 12px;
+        margin-bottom: 6px;
+      }
+
+      .stat .value {
+        font-size: 20px;
+        font-weight: 800;
+      }
+
+      .small {
+        color: var(--muted);
+        font-size: 12px;
+      }
+
+      .split {
+        display: grid;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="wrap">
+      <div class="header">
+        <div class="title">
+          <h1>Ascend ExerciseDB Browser</h1>
+          <p>Load the free API, browse the JSON, select exercises, copy IDs, or download the dataset.</p>
+        </div>
+      </div>
+
+      <div class="toolbar">
+        <div class="row">
+          <button id="loadBtn" class="primary">Load API</button>
+          <button id="loadMoreBtn" class="ghost">Load More</button>
+          <button id="reloadBtn" class="ghost">Reload</button>
+          <button id="saveSnapshotBtn" class="ghost">Save JSON Snapshot</button>
+          <button id="downloadJsonBtn" class="ghost">Download JSON</button>
+          <button id="copyIdsBtn" class="ghost">Copy IDs</button>
+          <button id="copyPairsBtn" class="ghost">Copy ID | Name</button>
+        </div>
+        <div class="row">
+          <input id="searchInput" type="text" placeholder="Search by name, ID, muscle, equipment, body part..." />
+          <select id="viewMode">
+            <option value="cards">Cards</option>
+            <option value="json">Raw JSON</option>
+            <option value="split" selected>Split View</option>
+          </select>
+        </div>
+        <div class="row">
+          <button id="selectFilteredBtn" class="ghost">Select Filtered</button>
+          <button id="clearBtn" class="ghost">Clear Selection</button>
+          <button id="togglePhotoBtn" class="ghost">Photo First</button>
+        </div>
+        <div class="meta" id="metaText">Not loaded yet.</div>
+        <div class="status" id="statusText"></div>
+      </div>
+
+      <div class="stats">
+        <div class="stat"><div class="label">Loaded</div><div class="value" id="loadedCount">0</div></div>
+        <div class="stat"><div class="label">Selected</div><div class="value" id="selectedCount">0</div></div>
+        <div class="stat"><div class="label">Filtered</div><div class="value" id="filteredCount">0</div></div>
+        <div class="stat"><div class="label">Snapshot</div><div class="value" id="snapshotCount">0</div></div>
+      </div>
+
+      <div class="layout" id="layout">
+        <div class="card" id="cardsCard">
+          <div class="section-head">
+            <div>
+              <strong>Exercises</strong>
+              <span id="cardsHint">Showing image-backed exercises from AscendAPI</span>
+            </div>
+            <span id="pageHint">Cursor fetch enabled</span>
+          </div>
+          <div class="grid" id="grid"></div>
+        </div>
+
+        <div class="card" id="jsonCard">
+          <div class="section-head">
+            <div>
+              <strong>JSON Viewer</strong>
+              <span>Raw response preview</span>
+            </div>
+            <span id="jsonModeLabel">selected</span>
+          </div>
+          <div class="viewer">
+            <div class="split">
+              <div class="small">Copyable JSON / export text</div>
+              <textarea id="output" readonly></textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      const API_BASE = "https://oss.exercisedb.dev/api/v1/exercises";
+      const SNAPSHOT_KEY = "ascend_exercisedb_snapshot_v1";
+
+      const state = {
+        all: [],
+        filtered: [],
+        selected: new Set(),
+        photoFirst: true,
+        snapshot: null,
+        viewMode: "split",
+        nextCursor: null,
+        hasMore: false,
+      };
+
+      const grid = document.getElementById("grid");
+      const searchInput = document.getElementById("searchInput");
+      const output = document.getElementById("output");
+      const metaText = document.getElementById("metaText");
+      const statusText = document.getElementById("statusText");
+      const loadedCount = document.getElementById("loadedCount");
+      const filteredCount = document.getElementById("filteredCount");
+      const selectedCount = document.getElementById("selectedCount");
+      const snapshotCount = document.getElementById("snapshotCount");
+      const layout = document.getElementById("layout");
+      const cardsCard = document.getElementById("cardsCard");
+      const jsonCard = document.getElementById("jsonCard");
+      const jsonModeLabel = document.getElementById("jsonModeLabel");
+
+      function setStatus(message, warn = false) {
+        statusText.textContent = message || "";
+        statusText.className = warn ? "status warn" : "status";
+      }
+
+      function toPlainString(value) {
+        if (Array.isArray(value)) return value.join(", ");
+        if (value == null) return "";
+        return String(value);
+      }
+
+      function buildSearchText(item) {
+        return [
+          item.exerciseId,
+          item.name,
+          item.gifUrl,
+          toPlainString(item.bodyParts),
+          toPlainString(item.equipments),
+          toPlainString(item.targetMuscles),
+          toPlainString(item.secondaryMuscles),
+          toPlainString(item.instructions),
+        ]
+          .join(" ")
+          .toLowerCase();
+      }
+
+      async function fetchPage(cursor) {
+        const url = cursor ? `${API_BASE}?cursor=${encodeURIComponent(cursor)}` : API_BASE;
+        let lastError = null;
+        for (let attempt = 0; attempt < 3; attempt += 1) {
+          try {
+            const res = await fetch(url, { mode: "cors" });
+            if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+            return await res.json();
+          } catch (err) {
+            lastError = err;
+            await new Promise((resolve) => setTimeout(resolve, 350 * (attempt + 1)));
+          }
+        }
+        throw lastError || new Error(`Failed to fetch ${url}`);
+      }
+
+      function ingestPage(page, replace = false) {
+        const data = Array.isArray(page?.data) ? page.data : [];
+        const mapped = data.map((item) => ({
+          exerciseId: item.exerciseId,
+          name: item.name,
+          gifUrl: item.gifUrl,
+          bodyParts: item.bodyParts || [],
+          equipments: item.equipments || [],
+          targetMuscles: item.targetMuscles || [],
+          secondaryMuscles: item.secondaryMuscles || [],
+          instructions: item.instructions || [],
+          raw: item,
+        }));
+
+        const existing = replace ? [] : state.all;
+        const seen = new Set(existing.map((item) => item.exerciseId));
+        const merged = [...existing];
+
+        for (const item of mapped) {
+          if (!seen.has(item.exerciseId)) {
+            merged.push(item);
+            seen.add(item.exerciseId);
+          }
+        }
+
+        state.all = sortExercises(merged);
+        state.snapshot = {
+          source: "https://oss.exercisedb.dev/api/v1/exercises",
+          savedAt: new Date().toISOString(),
+          meta: {
+            total: page?.meta?.total ?? state.snapshot?.meta?.total ?? state.all.length,
+            nextCursor: page?.meta?.nextCursor || null,
+            hasNextPage: !!page?.meta?.hasNextPage,
+          },
+          data: state.all.map((item) => ({
+            exerciseId: item.exerciseId,
+            name: item.name,
+            gifUrl: item.gifUrl,
+            bodyParts: item.bodyParts,
+            equipments: item.equipments,
+            targetMuscles: item.targetMuscles,
+            secondaryMuscles: item.secondaryMuscles,
+            instructions: item.instructions,
+          })),
+        };
+
+        state.nextCursor = page?.meta?.nextCursor || null;
+        state.hasMore = !!page?.meta?.hasNextPage && !!state.nextCursor;
+      }
+
+      function sortExercises(list) {
+        const items = [...list];
+        if (state.photoFirst) {
+          items.sort((a, b) => {
+            const aHasPhoto = !!a.gifUrl;
+            const bHasPhoto = !!b.gifUrl;
+            if (aHasPhoto !== bHasPhoto) return aHasPhoto ? -1 : 1;
+            return a.name.localeCompare(b.name);
+          });
+        } else {
+          items.sort((a, b) => a.name.localeCompare(b.name));
+        }
+        return items;
+      }
+
+      function applyFilter() {
+        const q = searchInput.value.trim().toLowerCase();
+        const base = sortExercises(state.all);
+        state.filtered = !q
+          ? base
+          : base.filter((item) => buildSearchText(item).includes(q));
+
+        render();
+      }
+
+      function selectedSorted() {
+        return sortExercises(state.all.filter((item) => state.selected.has(item.exerciseId)));
+      }
+
+      function formatJsonForViewer() {
+        const selected = selectedSorted();
+        if (selected.length) {
+          return JSON.stringify(selected, null, 2);
+        }
+        return JSON.stringify(state.snapshot || { data: [] }, null, 2);
+      }
+
+      function updateViewer() {
+        output.value = formatJsonForViewer();
+        jsonModeLabel.textContent = state.selected.size ? "selected" : "full snapshot";
+        snapshotCount.textContent = state.snapshot?.meta?.total ?? 0;
+      }
+
+      function render() {
+        loadedCount.textContent = state.all.length;
+        filteredCount.textContent = state.filtered.length;
+        selectedCount.textContent = state.selected.size;
+        metaText.textContent = `Loaded ${state.all.length} exercises. Filtered ${state.filtered.length}. Selected ${state.selected.size}.`;
+
+        if (state.viewMode === "cards") {
+          cardsCard.style.display = "block";
+          jsonCard.style.display = "none";
+        } else if (state.viewMode === "json") {
+          cardsCard.style.display = "none";
+          jsonCard.style.display = "block";
+        } else {
+          cardsCard.style.display = "block";
+          jsonCard.style.display = "block";
+        }
+
+        grid.innerHTML = "";
+        for (const item of state.filtered) {
+          const checked = state.selected.has(item.exerciseId);
+          const card = document.createElement("div");
+          card.className = "item";
+
+          const imgWrap = document.createElement("div");
+          imgWrap.className = "thumb";
+          const img = document.createElement("img");
+          img.src = item.gifUrl || "";
+          img.alt = item.name;
+          img.loading = "lazy";
+          img.onerror = () => {
+            imgWrap.innerHTML = '<div class="small">No image</div>';
+          };
+          imgWrap.appendChild(img);
+
+          const body = document.createElement("div");
+          body.className = "body";
+
+          const select = document.createElement("label");
+          select.className = "check";
+          select.innerHTML = `<input type="checkbox" ${checked ? "checked" : ""} /> <span>Select</span>`;
+          const checkbox = select.querySelector("input");
+          checkbox.addEventListener("change", () => {
+            if (checkbox.checked) state.selected.add(item.exerciseId);
+            else state.selected.delete(item.exerciseId);
+            updateViewer();
+            renderStatsOnly();
+          });
+
+          const name = document.createElement("div");
+          name.className = "name";
+          name.textContent = item.name;
+
+          const id = document.createElement("div");
+          id.className = "id";
+          id.textContent = `exerciseId: ${item.exerciseId}`;
+
+          const pills = document.createElement("div");
+          pills.className = "pillrow";
+          const parts = [
+            ...(item.bodyParts || []).map((x) => `body: ${x}`),
+            ...(item.equipments || []).map((x) => `equip: ${x}`),
+          ].slice(0, 3);
+          for (const text of parts) {
+            const pill = document.createElement("span");
+            pill.className = "pill";
+            pill.textContent = text;
+            pills.appendChild(pill);
+          }
+
+          body.appendChild(select);
+          body.appendChild(name);
+          body.appendChild(id);
+          body.appendChild(pills);
+
+          card.appendChild(imgWrap);
+          card.appendChild(body);
+          grid.appendChild(card);
+        }
+
+        updateViewer();
+      }
+
+      function renderStatsOnly() {
+        loadedCount.textContent = state.all.length;
+        filteredCount.textContent = state.filtered.length;
+        selectedCount.textContent = state.selected.size;
+      }
+
+      async function loadData() {
+        const btn = document.getElementById("loadBtn");
+        btn.disabled = true;
+        setStatus("Loading first page from AscendAPI...");
+
+        try {
+          const page = await fetchPage(null);
+          ingestPage(page, true);
+          localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(state.snapshot));
+          applyFilter();
+          setStatus(`Loaded ${state.all.length} exercises. Click Load More to continue if needed.`);
+        } catch (err) {
+          console.error(err);
+          setStatus(`Load failed: ${err.message}. Try Reload or run a local server.`, true);
+          if (!state.all.length) {
+            alert(`Failed to load API data:\n${err.message}`);
+          }
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      async function loadMore() {
+        if (!state.hasMore || !state.nextCursor) {
+          setStatus("No more pages to load.", true);
+          return;
+        }
+
+        const btn = document.getElementById("loadMoreBtn");
+        btn.disabled = true;
+        setStatus("Loading next page...");
+
+        try {
+          const page = await fetchPage(state.nextCursor);
+          ingestPage(page, false);
+          localStorage.setItem(SNAPSHOT_KEY, JSON.stringify(state.snapshot));
+          applyFilter();
+          setStatus(`Loaded ${state.all.length} exercises. More pages: ${state.hasMore ? "yes" : "no"}.`);
+        } catch (err) {
+          console.error(err);
+          setStatus(`Load more failed: ${err.message}`, true);
+        } finally {
+          btn.disabled = false;
+        }
+      }
+
+      function selectFiltered() {
+        for (const item of state.filtered) {
+          state.selected.add(item.exerciseId);
+        }
+        render();
+      }
+
+      function clearSelection() {
+        state.selected.clear();
+        render();
+      }
+
+      async function copyText(text, okMessage) {
+        if (!text.trim()) {
+          alert("Nothing to copy.");
+          return;
+        }
+        try {
+          await navigator.clipboard.writeText(text);
+          setStatus(okMessage);
+        } catch {
+          const ta = output;
+          ta.focus();
+          ta.select();
+          document.execCommand("copy");
+          setStatus(okMessage);
+        }
+      }
+
+      function downloadJson() {
+        const json = JSON.stringify(state.snapshot || { data: [] }, null, 2);
+        const blob = new Blob([json], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = "exercisedb_snapshot.json";
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        URL.revokeObjectURL(url);
+        setStatus("Downloaded JSON snapshot.");
+      }
+
+      function saveSnapshot() {
+        const json = JSON.stringify(state.snapshot || { data: [] }, null, 2);
+        localStorage.setItem(SNAPSHOT_KEY, json);
+        setStatus("Saved JSON snapshot in localStorage.");
+      }
+
+      function togglePhotoFirst() {
+        state.photoFirst = !state.photoFirst;
+        applyFilter();
+        setStatus(state.photoFirst ? "Photo-first sort enabled." : "Photo-first sort disabled.");
+      }
+
+      function reloadFromSnapshot() {
+        const raw = localStorage.getItem(SNAPSHOT_KEY);
+        if (!raw) {
+          setStatus("No saved snapshot found.", true);
+          return;
+        }
+        try {
+          const snap = JSON.parse(raw);
+          state.snapshot = snap;
+          const data = Array.isArray(snap.data) ? snap.data : [];
+          state.all = data.map((item) => ({
+            exerciseId: item.exerciseId,
+            name: item.name,
+            gifUrl: item.gifUrl,
+            bodyParts: item.bodyParts || [],
+            equipments: item.equipments || [],
+            targetMuscles: item.targetMuscles || [],
+            secondaryMuscles: item.secondaryMuscles || [],
+            instructions: item.instructions || [],
+            raw: item,
+          }));
+          applyFilter();
+          setStatus(`Loaded saved snapshot with ${state.all.length} records.`);
+        } catch (err) {
+          setStatus(`Snapshot parse failed: ${err.message}`, true);
+        }
+      }
+
+      document.getElementById("loadBtn").addEventListener("click", loadData);
+      document.getElementById("loadMoreBtn").addEventListener("click", loadMore);
+      document.getElementById("reloadBtn").addEventListener("click", reloadFromSnapshot);
+      document.getElementById("selectFilteredBtn").addEventListener("click", selectFiltered);
+      document.getElementById("clearBtn").addEventListener("click", clearSelection);
+      document.getElementById("copyIdsBtn").addEventListener("click", () => {
+        const text = selectedSorted().map((x) => x.exerciseId).join(", ");
+        copyText(text, "Copied selected IDs.");
+      });
+      document.getElementById("copyPairsBtn").addEventListener("click", () => {
+        const text = selectedSorted().map((x) => `${x.exerciseId} | ${x.name}`).join("\n");
+        copyText(text, "Copied selected ID | Name list.");
+      });
+      document.getElementById("downloadJsonBtn").addEventListener("click", downloadJson);
+      document.getElementById("saveSnapshotBtn").addEventListener("click", saveSnapshot);
+      document.getElementById("togglePhotoBtn").addEventListener("click", togglePhotoFirst);
+      document.getElementById("viewMode").addEventListener("change", (e) => {
+        state.viewMode = e.target.value;
+        render();
+      });
+      searchInput.addEventListener("input", applyFilter);
+
+      (function init() {
+        const saved = localStorage.getItem(SNAPSHOT_KEY);
+        if (saved) {
+          try {
+            const snap = JSON.parse(saved);
+            state.snapshot = snap;
+            const data = Array.isArray(snap.data) ? snap.data : [];
+            state.all = data.map((item) => ({
+              exerciseId: item.exerciseId,
+              name: item.name,
+              gifUrl: item.gifUrl,
+              bodyParts: item.bodyParts || [],
+              equipments: item.equipments || [],
+              targetMuscles: item.targetMuscles || [],
+              secondaryMuscles: item.secondaryMuscles || [],
+              instructions: item.instructions || [],
+              raw: item,
+            }));
+            state.nextCursor = snap.meta?.nextCursor || null;
+            state.hasMore = !!snap.meta?.hasNextPage && !!state.nextCursor;
+            applyFilter();
+            setStatus(`Loaded cached snapshot with ${state.all.length} exercises.`);
+          } catch {
+            setStatus("Saved snapshot exists but could not be parsed.", true);
+          }
+        } else {
+          render();
+          setStatus("Click Load API to fetch ExerciseDB data.");
+        }
+      })();
+    </script>
+  </body>
+</html>
