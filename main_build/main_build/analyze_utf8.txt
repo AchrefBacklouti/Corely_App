@@ -1,0 +1,89 @@
+﻿Analyzing main_build...                                         
+
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Theme\app_theme.dart:387:24 - deprecated_member_use
+   info - The file name 'toggle-Unit.dart' isn't a lower_case_with_underscores identifier - lib\Views\SharedWidgets\toggle-Unit.dart:1:1 - file_names
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\home\home_page_content.dart:148:43 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\home_page.dart:139:63 - deprecated_member_use
+  error - The getter 'colors' isn't defined for the type 'BuildContext' - lib\Views\main_app\nutrition\nutrition_page_content.dart:8:23 - undefined_getter
+  error - The method '_MacroCard' isn't defined for the type 'NutritionPageContent' - lib\Views\main_app\nutrition\nutrition_page_content.dart:18:15 - undefined_method
+  error - The method '_MacroCard' isn't defined for the type 'NutritionPageContent' - lib\Views\main_app\nutrition\nutrition_page_content.dart:25:15 - undefined_method
+  error - The method '_MacroCard' isn't defined for the type 'NutritionPageContent' - lib\Views\main_app\nutrition\nutrition_page_content.dart:38:15 - undefined_method
+  error - The method '_MacroCard' isn't defined for the type 'NutritionPageContent' - lib\Views\main_app\nutrition\nutrition_page_content.dart:45:15 - undefined_method
+  error - The name '_MealRow' isn't a class - lib\Views\main_app\nutrition\nutrition_page_content.dart:64:17 - creation_with_non_type
+  error - The name '_MealRow' isn't a class - lib\Views\main_app\nutrition\nutrition_page_content.dart:70:17 - creation_with_non_type
+  error - The name '_MealRow' isn't a class - lib\Views\main_app\nutrition\nutrition_page_content.dart:76:17 - creation_with_non_type
+  error - The name '_MealRow' isn't a class - lib\Views\main_app\nutrition\nutrition_page_content.dart:82:17 - creation_with_non_type
+  error - The method '_HydrationCard' isn't defined for the type 'NutritionPageContent' - lib\Views\main_app\nutrition\nutrition_page_content.dart:97:11 - undefined_method
+warning - The declaration '_buildHeader' isn't referenced - lib\Views\main_app\nutrition\nutrition_page_content.dart:104:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:155:40 - deprecated_member_use
+warning - The declaration '_buildStatsRow' isn't referenced - lib\Views\main_app\nutrition\nutrition_page_content.dart:166:10 - unused_element
+warning - The declaration '_buildMealsList' isn't referenced - lib\Views\main_app\nutrition\nutrition_page_content.dart:186:10 - unused_element
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:211:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:297:40 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:299:49 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:322:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:324:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:361:46 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\nutrition\nutrition_page_content.dart:435:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\athlete_page.dart:121:41 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\athlete_page.dart:341:35 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:176:12 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\stats\stats_page_content.dart:181:5 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\stats\stats_page_content.dart:188:5 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:363:30 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:364:40 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:370:31 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:371:41 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:394:30 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:394:68 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\stats\stats_page_content.dart:395:9 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:397:31 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:397:70 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\stats\stats_page_content.dart:398:9 - curly_braces_in_flow_control_structures
+   info - The local variable '_get' starts with an underscore - lib\Views\main_app\stats\stats_page_content.dart:401:20 - no_leading_underscores_for_local_identifiers
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:447:25 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:448:35 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:480:26 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:481:36 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\stats\stats_page_content.dart:547:7 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:550:31 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:550:72 - deprecated_member_use
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\stats\stats_page_content.dart:551:7 - curly_braces_in_flow_control_structures
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:553:26 - deprecated_member_use
+   info - 'value' is deprecated and shouldn't be used. Use component accessors like .r or .g, or toARGB32 for an explicit conversion - lib\Views\main_app\stats\stats_page_content.dart:554:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\stats_page_content.dart:708:38 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\stats_page_content.dart:836:54 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\stats_page_content.dart:1226:48 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\stats_page_content.dart:1234:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\stats_page_content.dart:1263:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:290:20 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:294:22 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:344:34 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:349:36 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:415:58 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:627:32 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:648:31 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:658:61 - deprecated_member_use
+   info - 'withOpacity' is deprecated and shouldn't be used. Use .withValues() to avoid precision loss - lib\Views\main_app\stats\trend_detail_page.dart:708:33 - deprecated_member_use
+   info - Don't use 'BuildContext's across async gaps - lib\Views\main_app\workout\create_workout_plan_page.dart:55:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\Views\main_app\workout\edit_day_page.dart:71:7 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\Views\main_app\workout\edit_plan_page.dart:1005:60 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\Views\main_app\workout\edit_plan_page.dart:1006:35 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\Views\main_app\workout\exercise_visibility_page.dart:134:31 - use_build_context_synchronously
+   info - Don't use 'BuildContext's across async gaps - lib\Views\main_app\workout\play_plan_page.dart:260:26 - use_build_context_synchronously
+warning - The value of the local variable 'setsText' isn't used - lib\Views\main_app\workout\start_train.dart:662:11 - unused_local_variable
+warning - The value of the local variable 'restText' isn't used - lib\Views\main_app\workout\start_train.dart:663:11 - unused_local_variable
+warning - The declaration '_InfoRow' isn't referenced - lib\Views\main_app\workout\start_train.dart:1184:7 - unused_element
+warning - The declaration '_TrainInput' isn't referenced - lib\Views\main_app\workout\start_train.dart:1210:7 - unused_element
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\workout\workout_page_content.dart:216:35 - curly_braces_in_flow_control_structures
+   info - Don't use 'BuildContext's across async gaps, guarded by an unrelated 'mounted' check - lib\Views\main_app\workout\workout_page_content.dart:217:37 - use_build_context_synchronously
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\workout\workout_page_content.dart:346:7 - curly_braces_in_flow_control_structures
+   info - Statements in a for should be enclosed in a block - lib\Views\main_app\workout\workout_page_content.dart:627:42 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\Views\main_app\workout\workout_page_content.dart:853:7 - curly_braces_in_flow_control_structures
+   info - Statements in an if should be enclosed in a block - lib\Views\on_boarding\on_boarding.dart:613:9 - curly_braces_in_flow_control_structures
+   info - Don't invoke 'print' in production code - lib\data\exercise_cache_service.dart:65:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\exercise_cache_service.dart:184:7 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\exercise_cache_service.dart:217:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\exercise_cache_service.dart:225:11 - avoid_print
+   info - Don't invoke 'print' in production code - lib\data\plan_share_service.dart:30:7 - avoid_print
+
