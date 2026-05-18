@@ -55,24 +55,3 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
-
-# Root-level Flutter duplicate directories (real project lives in main_build/)
-/android/
-/assets/
-/ios/
-/lib/
-/linux/
-/macos/
-/web/
-/windows/
-/test/
-/pubspec.yaml
-/pubspec.lock
-/.metadata
-/analysis_options.yaml
-/JSON_EXAMPLE.md
-/fetch_exercisedb_one_by_one.py
-/run_emulator.bat
-/wger_image_selector.html
-/__pycache__/
-/debug.log
