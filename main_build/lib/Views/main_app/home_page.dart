@@ -215,7 +215,7 @@ class _AiChatBubbleState extends State<_AiChatBubble>
             onTap: widget.onTap,
             child: Padding(
               padding: const EdgeInsets.all(12),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
           ),
         ),

@@ -441,7 +441,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
               ),
               padding: const EdgeInsets.all(6),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
             const SizedBox(width: 10),
             Column(
@@ -564,7 +564,7 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
               padding: const EdgeInsets.all(4),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
             const SizedBox(width: 8),
           ],
@@ -660,7 +660,7 @@ class _TypingIndicator extends StatelessWidget {
               ),
             ),
             padding: const EdgeInsets.all(4),
-            child: Image.asset('assets/img/bot_4712038.png'),
+            child: Image.asset('assets/img/bot.png'),
           ),
           const SizedBox(width: 8),
           Container(
