@@ -1,0 +1,78 @@
+# Miscellaneous
+*.class
+*.log
+*.pyc
+*.swp
+.DS_Store
+.atom/
+.build/
+.buildlog/
+.history
+.svn/
+.swiftpm/
+migrate_working_dir/
+
+# IntelliJ related
+*.iml
+*.ipr
+*.iws
+.idea/
+
+# The .vscode folder contains launch configuration and tasks you configure in
+# VS Code which you may wish to be included in version control, so this line
+# is commented out by default.
+#.vscode/
+
+# Flutter/Dart/Pub related
+**/doc/api/
+**/ios/Flutter/.last_build_id
+.dart_tool/
+.flutter-plugins-dependencies
+.pub-cache/
+.pub/
+/build/
+/coverage/
+
+# Generated plugin registrant files - auto-created by flutter pub get, must not be tracked
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugins.cmake
+**/Flutter/GeneratedPluginRegistrant.swift
+
+# Temp analysis and dev files
+analyze.txt
+analyze2.txt
+analyze_utf8.txt
+devtools_options.yaml
+
+# Symbolication related
+app.*.symbols
+
+# Obfuscation related
+app.*.map.json
+
+# Android Studio will place build artifacts here
+/android/app/debug
+/android/app/profile
+/android/app/release
+
+# Root-level Flutter duplicate directories (real project lives in main_build/)
+/android/
+/assets/
+/ios/
+/lib/
+/linux/
+/macos/
+/web/
+/windows/
+/test/
+/pubspec.yaml
+/pubspec.lock
+/.metadata
+/analysis_options.yaml
+/JSON_EXAMPLE.md
+/fetch_exercisedb_one_by_one.py
+/run_emulator.bat
+/wger_image_selector.html
+/__pycache__/
+/debug.log
