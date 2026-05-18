@@ -1,0 +1,112 @@
+{
+  "user": {
+    "id": "user_123",
+    "name": "Jordan Lee",
+    "email": "jordan@example.com",
+    "avatar": "assets/img/avatar.png",
+    "age": 28,
+    "heightCm": 178,
+    "weightKg": 78.5,
+    "experience": "intermediate",
+    "primaryGoal": "recomp",
+    "timeZone": "America/New_York"
+  },
+  "settings": {
+    "units": "metric",
+    "theme": "dark",
+    "notifications": {
+      "workoutReminders": true,
+      "nutritionReminders": true,
+      "weeklySummary": true
+    }
+  },
+  "stats": {
+    "streakDays": 5,
+    "workoutsThisWeek": 3,
+    "minutesThisWeek": 142,
+    "caloriesBurnedThisWeek": 1180,
+    "weightHistory": [
+      { "date": "2025-12-28", "weightKg": 79.6 },
+      { "date": "2026-01-04", "weightKg": 79.0 },
+      { "date": "2026-01-11", "weightKg": 78.7 },
+      { "date": "2026-01-18", "weightKg": 78.5 }
+    ]
+  },
+  "goals": {
+    "weeklyWorkoutsTarget": 4,
+    "weeklyMinutesTarget": 180,
+    "dailyStepsTarget": 10000
+  },
+  "workouts": {
+    "customPlans": [
+      {
+        "title": "Push day",
+        "duration": "45 mins",
+        "exercises": "6 moves",
+        "imageAsset": "assets/img/logo_light.png",
+        "difficulty": 2
+      },
+      {
+        "title": "Pull day",
+        "duration": "45 mins",
+        "exercises": "69 moves",
+        "imageAsset": "assets/img/logo_light.png",
+        "difficulty": 4
+      },
+      {
+        "title": "Lower body",
+        "duration": "50 mins",
+        "exercises": "7 moves",
+        "imageAsset": "assets/img/logo_light.png",
+        "difficulty": 3
+      }
+    ],
+    "suggestedPlans": [
+      {
+        "title": "Full body express",
+        "duration": "30 mins",
+        "exercises": "5 moves",
+        "imageAsset": "assets/img/logo_light.png",
+        "difficulty": 2
+      },
+      {
+        "title": "HIIT cardio",
+        "duration": "18 mins",
+        "exercises": "6 rounds",
+        "imageAsset": "assets/img/logo_light.png",
+        "difficulty": 4
+      }
+    ]
+  },
+  "nutrition": {
+    "dailyTargets": {
+      "calories": 2400,
+      "protein": 160,
+      "carbs": 260,
+      "fat": 70
+    },
+    "todayMeals": [
+      {
+        "meal": "Breakfast",
+        "items": [
+          { "name": "Greek yogurt", "calories": 180, "protein": 17, "carbs": 18, "fat": 4 },
+          { "name": "Berries", "calories": 60, "protein": 1, "carbs": 14, "fat": 0 }
+        ]
+      },
+      {
+        "meal": "Lunch",
+        "items": [
+          { "name": "Chicken bowl", "calories": 620, "protein": 48, "carbs": 65, "fat": 18 }
+        ]
+      }
+    ],
+    "hydration": {
+      "goalLiters": 3.0,
+      "consumedLiters": 1.8
+    }
+  },
+  "activityFeed": [
+    { "type": "workout", "title": "Finished Push day", "timestamp": "2026-01-21T09:30:00Z" },
+    { "type": "nutrition", "title": "Logged Lunch", "timestamp": "2026-01-21T12:15:00Z" }
+  ]
+}
