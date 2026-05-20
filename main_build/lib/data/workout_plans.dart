@@ -1,5 +1,11 @@
 enum PlanCategory { cardio, strength, hypertrophy }
 
+String? _cleanAssetPath(String? value) {
+  if (value == null) return null;
+  final cleaned = value.trim().replaceFirst(RegExp(r'^-\s+'), '');
+  return cleaned.isEmpty ? null : cleaned;
+}
+
 class WorkoutDay {
   final String label; // e.g. "Day 1 – Push"
   final List<String>
@@ -93,8 +99,8 @@ class WorkoutPlan {
       title: json['title'] as String? ?? '',
       duration: json['duration'] as String? ?? '',
       exercises: json['exercises'] as String? ?? '',
-      imageAsset: json['imageAsset'] as String?,
-      imagePath: json['imagePath'] as String?,
+      imageAsset: _cleanAssetPath(json['imageAsset'] as String?),
+      imagePath: _cleanAssetPath(json['imagePath'] as String?),
       difficulty: (json['difficulty'] as num?)?.toInt() ?? 2,
       category: category,
       description: json['description'] as String?,
@@ -140,8 +146,8 @@ class WorkoutPlan {
       title: title ?? this.title,
       duration: duration ?? this.duration,
       exercises: exercises ?? this.exercises,
-      imageAsset: imageAsset ?? this.imageAsset,
-      imagePath: imagePath ?? this.imagePath,
+      imageAsset: _cleanAssetPath(imageAsset ?? this.imageAsset),
+      imagePath: _cleanAssetPath(imagePath ?? this.imagePath),
       difficulty: difficulty ?? this.difficulty,
       category: category ?? this.category,
       description: description ?? this.description,
@@ -355,7 +361,7 @@ const List<WorkoutPlan> kSuggestedPlans = [
     title: 'PHAT Programme',
     duration: '80 min',
     exercises: '20 exercises',
-    imageAsset: '- assets/img/plans/Phenq.jpg',
+    imageAsset: 'assets/img/plans/Phenq.jpg',
     difficulty: 4,
     category: PlanCategory.hypertrophy,
     description:
@@ -478,7 +484,7 @@ const List<WorkoutPlan> kSuggestedPlans = [
     title: 'Couch to 5K',
     duration: '30 min',
     exercises: 'Run / Walk intervals',
-    imageAsset: '- assets/img/plans/cardio_1.webp',
+    imageAsset: 'assets/img/plans/cardio_1.webp',
     difficulty: 1,
     category: PlanCategory.cardio,
     description:

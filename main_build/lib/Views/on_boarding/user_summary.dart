@@ -2,6 +2,8 @@ import 'package:main_build/Views/auth/signup_page.dart';
 import 'package:flutter/material.dart';
 // import 'package:main_build/Views/main_app/home_page.dart';
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Controllers/user_provider.dart';
+import 'package:main_build/data/supabase_service.dart';
 
 class UserSummary extends StatelessWidget {
   final String gender;
@@ -11,6 +13,9 @@ class UserSummary extends StatelessWidget {
   final String goal;
   final int trainingDays;
   final String weightUnit;
+  final String heightUnit;
+  final String birthDateDisplay;
+  final String birthDateIso;
 
   const UserSummary({
     super.key,
@@ -21,6 +26,9 @@ class UserSummary extends StatelessWidget {
     required this.goal,
     required this.trainingDays,
     required this.weightUnit,
+    required this.heightUnit,
+    required this.birthDateDisplay,
+    required this.birthDateIso,
   });
 
   @override
@@ -66,7 +74,7 @@ class UserSummary extends StatelessWidget {
               _infoTile(
                 icon: Icons.person_outline,
                 label:
-                    "User: $gender, $age yrs, ${weight.toStringAsFixed(1)} $weightUnit, $heightDisplay",
+                    "User: $gender, $age yrs, $birthDateDisplay, ${weight.toStringAsFixed(1)} $weightUnit, $heightDisplay",
                 context: context,
               ),
               const SizedBox(height: 12),
@@ -96,6 +104,19 @@ class UserSummary extends StatelessWidget {
               _emailButton(
                 label: "Sign up with Email",
                 onPressed: () {
+                  // Store onboarding data in UserProvider before navigating
+                  UserProvider.instance.setTemporaryOnboardingData(
+                    gender: gender,
+                    age: age,
+                    weight: weight,
+                    height: heightDisplay,
+                    goal: goal,
+                    trainingDays: trainingDays,
+                    weightUnit: weightUnit,
+                    heightUnit: heightUnit,
+                    birthDateDisplay: birthDateDisplay,
+                    birthDateIso: birthDateIso,
+                  );
                   Navigator.push(
                     context,
                     MaterialPageRoute(builder: (_) => const SignUpPage()),

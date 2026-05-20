@@ -6,6 +6,7 @@ import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart'; // ← import the shared sheet
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/data_service.dart';
+import 'package:main_build/data/supabase_service.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/plan_share_service.dart';
@@ -52,7 +53,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
     try {
       final results = await Future.wait([
         DataService.getCustomWorkoutPlans(),
-        DataService.getSuggestedWorkoutPlans(),
+        SupabaseService.getSuggestedPlans(), // Updated to fetch from Supabase
       ]);
       if (!mounted) return;
       setState(() {
@@ -212,7 +213,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                               if (confirm == true && mounted) {
                                 await LocalPlanService.deletePlan(index);
                                 await _loadData();
-                                if (mounted)
+                                if (mounted) {
                                   ScaffoldMessenger.of(
                                     pageContext,
                                   ).showSnackBar(
@@ -220,6 +221,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                                       content: Text('${plan.title} deleted'),
                                     ),
                                   );
+                                }
                               }
                             },
                           ),
@@ -342,8 +344,9 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   Widget build(BuildContext context) {
     final c = context.colors;
 
-    if (_isLoading)
+    if (_isLoading) {
       return Center(child: CircularProgressIndicator(color: c.accent));
+    }
 
     if (_loadError != null) {
       return Center(
@@ -624,7 +627,9 @@ class _SuggestedSectionState extends State<_SuggestedSection> {
 
   @override
   void dispose() {
-    for (final c in _controllers.values) c.dispose();
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -849,10 +854,11 @@ class _CategorySection extends StatelessWidget {
   ) async {
     await LocalPlanService.savePlan(plan);
     onDone();
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${plan.title} added to your plans!')),
       );
+    }
   }
 
   // ← Now uses PlanDetailSheet from doc 2, which has the full copy-days flow
@@ -912,6 +918,27 @@ class _SuggestedCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
                     ),
+                  )
+                else if (plan.imagePath != null &&
+                    File(plan.imagePath!).existsSync())
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.file(
+                        File(plan.imagePath!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                else
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/placeholder.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 Container(
                   decoration: BoxDecoration(
@@ -920,8 +947,8 @@ class _SuggestedCard extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.6),
-                        Colors.black.withValues(alpha: 0.1),
+                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.15),
                       ],
                     ),
                   ),
@@ -933,13 +960,11 @@ class _SuggestedCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _DifficultyIcons(level: plan.difficulty),
-                      const SizedBox(height: 6),
                       Text(
                         plan.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
+                        style: TextStyle(
+                          color: c.textPrimary,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -947,8 +972,8 @@ class _SuggestedCard extends StatelessWidget {
                       Text(
                         '${plan.duration} · ${plan.exercises}',
                         style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 12,
+                          color: c.textSecondary,
+                          fontSize: 13,
                         ),
                       ),
                     ],
@@ -1168,6 +1193,16 @@ class _WorkoutCard extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
+                    ),
+                  )
+                else
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/placeholder.png',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 Container(

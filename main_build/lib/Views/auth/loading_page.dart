@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:main_build/data/supabase_service.dart';
+import 'package:main_build/Controllers/user_provider.dart';
 
 class LoadingPage extends StatefulWidget {
   const LoadingPage({super.key});
@@ -29,14 +30,26 @@ class _LoadingPageState extends State<LoadingPage>
 
     _controller.forward();
 
-    Future.delayed(const Duration(seconds: 3), () {
-      if (!mounted) return; // ✅ Fix: prevent using context after dispose
-      final session = Supabase.instance.client.auth.currentSession;
-      Navigator.pushReplacementNamed(
-        context,
-        session == null ? '/welcome' : '/home',
-      );
-    });
+    Future.delayed(const Duration(seconds: 3), _routeFromLocalCache);
+  }
+
+  Future<void> _routeFromLocalCache() async {
+    if (!mounted) return;
+
+    final hasLocalProfile = await SupabaseService.hasLocalUserProfile();
+    if (!mounted) return;
+
+    if (hasLocalProfile) {
+      final cachedProfile = await SupabaseService.getLocalUserProfile();
+      if (!mounted) return;
+      if (cachedProfile != null) {
+        UserProvider.instance.setUserProfile(cachedProfile);
+      }
+      Navigator.pushReplacementNamed(context, '/home');
+      return;
+    }
+
+    Navigator.pushReplacementNamed(context, '/welcome');
   }
 
   @override
