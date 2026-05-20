@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'package:main_build/data/supabase_service.dart';
 import 'package:main_build/Controllers/user_provider.dart';
 import 'settings/notifications_settings.dart';
 import 'settings/account_settings.dart';

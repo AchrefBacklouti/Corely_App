@@ -147,7 +147,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                 _Field(controller: _lastNameController, label: 'Last name'),
                 const SizedBox(height: 12),
                 DropdownButtonFormField<String>(
-                  value: _gender,
+                  initialValue: _gender,
                   decoration: _inputDecoration(context, 'Gender'),
                   dropdownColor: c.surface,
                   items: const [
@@ -193,7 +193,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                     const SizedBox(width: 12),
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _weightUnit,
+                        initialValue: _weightUnit,
                         decoration: _inputDecoration(context, 'Weight unit'),
                         dropdownColor: c.surface,
                         items: const [
@@ -213,7 +213,7 @@ class _AccountSettingsState extends State<AccountSettings> {
                   children: [
                     Expanded(
                       child: DropdownButtonFormField<String>(
-                        value: _heightUnit,
+                        initialValue: _heightUnit,
                         decoration: _inputDecoration(context, 'Height unit'),
                         dropdownColor: c.surface,
                         items: const [

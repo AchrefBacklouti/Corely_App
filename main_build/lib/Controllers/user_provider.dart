@@ -68,7 +68,7 @@ class UserProvider extends ChangeNotifier {
     _tempBirthDateDisplay = birthDateDisplay;
     _tempBirthDateIso = birthDateIso;
     debugPrint(
-      'UserProvider: Stored temporary onboarding data - $gender, $age, ${weight}$weightUnit',
+      'UserProvider: Stored temporary onboarding data - $gender, $age, $weight$weightUnit',
     );
   }
 
