@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:main_build/data/supabase_service.dart';
+import 'package:main_build/Controllers/user_provider.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -23,7 +25,13 @@ class _LoginPageState extends State<LoginPage> {
     if (_supabase.auth.currentSession != null) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (!mounted) return;
-        Navigator.pushReplacementNamed(context, '/home');
+        SupabaseService.getOrCreateCurrentUserProfile().then((profile) {
+          if (profile != null) {
+            UserProvider.instance.setUserProfile(profile);
+            if (!mounted) return;
+            Navigator.pushReplacementNamed(context, '/home');
+          }
+        });
       });
     }
   }
@@ -53,6 +61,14 @@ class _LoginPageState extends State<LoginPage> {
 
     try {
       await _supabase.auth.signInWithPassword(email: email, password: password);
+
+      // Fetch and load or backfill the user profile after successful login
+      if (_supabase.auth.currentUser != null) {
+        final profile = await SupabaseService.getOrCreateCurrentUserProfile();
+        if (profile != null) {
+          UserProvider.instance.setUserProfile(profile);
+        }
+      }
 
       if (!mounted) return;
       Navigator.pushReplacementNamed(context, '/home');

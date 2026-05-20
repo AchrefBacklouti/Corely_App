@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_svg/flutter_svg.dart';
+import 'package:main_build/Controllers/user_provider.dart';
+import 'package:main_build/data/supabase_service.dart';
 import 'package:main_build/Views/SharedWidgets/toggle-Unit.dart';
 import 'package:main_build/Theme/theme_scope.dart';
 import 'athlete_page.dart';
@@ -22,152 +24,21 @@ class MuscleData {
   });
 }
 
-const List<MuscleData> _frontMuscles = [
-  MuscleData(id: 'pec_left', recoveryScore: 100, developmentStatus: 90),
-  MuscleData(id: 'pec_right', recoveryScore: 100, developmentStatus: 100),
-  MuscleData(id: 'shoulder_right', recoveryScore: 0, developmentStatus: 70),
-  MuscleData(id: 'schoulder_left', recoveryScore: 50, developmentStatus: 100),
-  MuscleData(id: 'brachialis_right', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'bi_shorthead_right', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'bi_longhead_right', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'brachialis_left', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'bi_shorthead_left', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'bi_longhead_left', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'abs_loiw', recoveryScore: 100, developmentStatus: 30),
-  MuscleData(id: 'abs_up', recoveryScore: 100, developmentStatus: 50),
-  MuscleData(id: 'obliques_right', recoveryScore: 0, developmentStatus: 80),
-  MuscleData(id: 'obliques_left', recoveryScore: 0, developmentStatus: 80),
-  MuscleData(
-    id: 'top_forearm_right',
-    recoveryScore: 100,
-    developmentStatus: 60,
-  ),
-  MuscleData(
-    id: 'top_forearm _left',
-    recoveryScore: 100,
-    developmentStatus: 70,
-  ),
-  MuscleData(id: 'extensors_right', recoveryScore: 50, developmentStatus: 50),
-  MuscleData(id: 'extensors_left', recoveryScore: 50, developmentStatus: 50),
-  MuscleData(id: 'flexors_right', recoveryScore: 50, developmentStatus: 60),
-  MuscleData(id: 'flexors_left', recoveryScore: 50, developmentStatus: 90),
-  MuscleData(
-    id: 'vastus_medialis_left',
-    recoveryScore: 50,
-    developmentStatus: 100,
-  ),
-  MuscleData(
-    id: 'vastus_medialis_right',
-    recoveryScore: 50,
-    developmentStatus: 100,
-  ),
-  MuscleData(id: 'abductor_right', recoveryScore: 50, developmentStatus: 60),
-  MuscleData(id: 'abductor_left', recoveryScore: 50, developmentStatus: 80),
-  MuscleData(id: 'satorius_left', recoveryScore: 50, developmentStatus: 90),
-  MuscleData(id: 'satorius_right', recoveryScore: 50, developmentStatus: 80),
-  MuscleData(
-    id: 'vastus_literalis_left',
-    recoveryScore: 50,
-    developmentStatus: 20,
-  ),
-  MuscleData(
-    id: 'vastus_literalis_right',
-    recoveryScore: 50,
-    developmentStatus: 20,
-  ),
-  MuscleData(id: 'femoris_left', recoveryScore: 50, developmentStatus: 60),
-  MuscleData(id: 'femoris_right', recoveryScore: 50, developmentStatus: 60),
-  MuscleData(id: 'tensor_left', recoveryScore: 50, developmentStatus: 10),
-  MuscleData(id: 'tensor_right', recoveryScore: 50, developmentStatus: 10),
-  MuscleData(id: 'calf_right_left', recoveryScore: 50, developmentStatus: 0),
-  MuscleData(id: 'calf_left_right', recoveryScore: 50, developmentStatus: 0),
-  MuscleData(id: 'calf_left_left', recoveryScore: 50, developmentStatus: 0),
-  MuscleData(id: 'calf_right_right', recoveryScore: 50, developmentStatus: 0),
-];
+// By default the app shows the anatomy silhouette without any
+// synthetic per-muscle colour overlays. These lists are intentionally
+// empty so the anatomy displays a neutral outline. They can be
+// populated later with real exercise-driven data via
+// `setMuscleData(front, back)` or by passing lists into `AnatomyView`.
+List<MuscleData> _frontMuscles = [];
+List<MuscleData> _backMuscles = [];
 
-const List<MuscleData> _backMuscles = [
-  MuscleData(id: 'traps', recoveryScore: 50, developmentStatus: 100),
-  MuscleData(id: 'lats_right', recoveryScore: 50, developmentStatus: 50),
-  MuscleData(id: 'lats_left', recoveryScore: 50, developmentStatus: 50),
-  MuscleData(id: 'tri_long_right', recoveryScore: 50, developmentStatus: 0),
-  MuscleData(
-    id: 'tri_med_head_right',
-    recoveryScore: 100,
-    developmentStatus: 20,
-  ),
-  MuscleData(
-    id: 'tri_long_head_left',
-    recoveryScore: 100,
-    developmentStatus: 10,
-  ),
-  MuscleData(
-    id: 'tri_med_head_left',
-    recoveryScore: 100,
-    developmentStatus: 60,
-  ),
-  MuscleData(id: 'rhom_3_l', recoveryScore: 50, developmentStatus: 30),
-  MuscleData(id: 'rhom_2_l', recoveryScore: 50, developmentStatus: 50),
-  MuscleData(id: 'rhom_1_l', recoveryScore: 50, developmentStatus: 40),
-  MuscleData(id: 'rhom_3_r', recoveryScore: 50, developmentStatus: 20),
-  MuscleData(id: 'rhom_2_r', recoveryScore: 50, developmentStatus: 20),
-  MuscleData(id: 'rhom_1_r', recoveryScore: 50, developmentStatus: 20),
-  MuscleData(id: 'side_delts_right', recoveryScore: 50, developmentStatus: 90),
-  MuscleData(id: 'side_delts_left', recoveryScore: 50, developmentStatus: 90),
-  MuscleData(id: 'extensorsi_right', recoveryScore: 50, developmentStatus: 50),
-  MuscleData(id: 'top_right', recoveryScore: 50, developmentStatus: 60),
-  MuscleData(id: 'extensors_right', recoveryScore: 50, developmentStatus: 60),
-  MuscleData(
-    id: 'finger_extensors_right',
-    recoveryScore: 50,
-    developmentStatus: 40,
-  ),
-  MuscleData(id: 'extensors_right_2', recoveryScore: 50, developmentStatus: 40),
-  MuscleData(id: 'extesorsi_left', recoveryScore: 50, developmentStatus: 40),
-  MuscleData(id: 'extensorsi_left', recoveryScore: 50, developmentStatus: 40),
-  MuscleData(id: 'top_left', recoveryScore: 50, developmentStatus: 40),
-  MuscleData(id: 'extensors_left', recoveryScore: 50, developmentStatus: 40),
-  MuscleData(
-    id: 'finger_extensors_left',
-    recoveryScore: 100,
-    developmentStatus: 50,
-  ),
-  MuscleData(id: 'glutes_right', recoveryScore: 0, developmentStatus: 90),
-  MuscleData(id: 'glutes_left', recoveryScore: 0, developmentStatus: 90),
-  MuscleData(id: 'tendon_left', recoveryScore: 0, developmentStatus: 20),
-  MuscleData(id: 'tendon_right', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'hams_down_left', recoveryScore: 0, developmentStatus: 30),
-  MuscleData(id: 'hams_down_right', recoveryScore: 0, developmentStatus: 40),
-  MuscleData(id: 'semite_left', recoveryScore: 0, developmentStatus: 10),
-  MuscleData(id: 'semite_right', recoveryScore: 0, developmentStatus: 10),
-  MuscleData(id: 'semime_left', recoveryScore: 0, developmentStatus: 16),
-  MuscleData(id: 'semime_right', recoveryScore: 0, developmentStatus: 16),
-  MuscleData(id: 'adductor_left', recoveryScore: 0, developmentStatus: 20),
-  MuscleData(id: 'adductor_right', recoveryScore: 0, developmentStatus: 20),
-  MuscleData(id: 'hams_sem_left ', recoveryScore: 0, developmentStatus: 90),
-  MuscleData(id: 'hams_sem_right', recoveryScore: 0, developmentStatus: 90),
-  MuscleData(id: 'ilio_left', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(id: 'ilio_right', recoveryScore: 0, developmentStatus: 50),
-  MuscleData(
-    id: 'calf_back_right_right',
-    recoveryScore: 0,
-    developmentStatus: 20,
-  ),
-  MuscleData(
-    id: 'calf_back_left_left',
-    recoveryScore: 0,
-    developmentStatus: 20,
-  ),
-  MuscleData(
-    id: 'calf_back_right_left',
-    recoveryScore: 0,
-    developmentStatus: 10,
-  ),
-  MuscleData(
-    id: 'calf_back_left_right',
-    recoveryScore: 0,
-    developmentStatus: 10,
-  ),
-];
+/// Replace the current muscle overlay data (used when colouring the SVG).
+/// Call with real muscle data when available; pass `null` to leave a side
+/// unchanged.
+void setMuscleData(List<MuscleData>? front, List<MuscleData>? back) {
+  if (front != null) _frontMuscles = front;
+  if (back != null) _backMuscles = back;
+}
 
 // ─────────────────────────────────────────────
 // Color helpers
@@ -508,12 +379,16 @@ class AnatomyView extends StatefulWidget {
   final bool isRecovery;
   final AnatomyViewMode viewMode;
   final ValueChanged<AnatomyViewMode> onViewModeChanged;
+  final List<MuscleData>? frontMuscles;
+  final List<MuscleData>? backMuscles;
 
   const AnatomyView({
     super.key,
     required this.isRecovery,
     required this.viewMode,
     required this.onViewModeChanged,
+    this.frontMuscles,
+    this.backMuscles,
   });
 
   @override
@@ -542,6 +417,10 @@ class _AnatomyViewState extends State<AnatomyView> {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final bgColor = context.colors.background; // invisible strokes
     final outlineColor = context.colors.textPrimary; // silhouette stroke
+
+    // If caller supplied muscle lists use them for this build.
+    if (widget.frontMuscles != null) _frontMuscles = widget.frontMuscles!;
+    if (widget.backMuscles != null) _backMuscles = widget.backMuscles!;
 
     // Already ready with these exact colours — nothing to do.
     if (_SvgCache.isReady(
@@ -746,7 +625,7 @@ class StatsPageContent extends StatefulWidget {
 
 class _StatsPageContentState extends State<StatsPageContent> {
   String _selectedUnit = 'Recovery';
-  AnatomyViewMode _anatomyViewMode = AnatomyViewMode.both;
+  AnatomyViewMode _anatomyViewMode = AnatomyViewMode.frontOnly;
 
   void _openTrendDetail({
     required String title,
@@ -796,7 +675,361 @@ class _StatsPageContentState extends State<StatsPageContent> {
     );
   }
 
-  Widget _buildHunterCard(BuildContext context) {
+  Future<void> _showAddWeightEntryDialog() async {
+    final profile = UserProvider.instance.userProfile;
+    if (profile == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('No profile loaded yet.')));
+      return;
+    }
+
+    final weightCtrl = TextEditingController(
+      text: profile.weight?.toStringAsFixed(1) ?? '',
+    );
+    DateTime selectedDate = DateTime.now();
+
+    final shouldAdd = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) {
+        return StatefulBuilder(
+          builder: (dialogContext, setDialogState) {
+            return AlertDialog(
+              title: const Text('Add test weight entry'),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: weightCtrl,
+                    keyboardType: const TextInputType.numberWithOptions(
+                      decimal: true,
+                    ),
+                    decoration: const InputDecoration(labelText: 'Weight'),
+                  ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          'Date: ${selectedDate.toLocal().toString().split(' ').first}',
+                        ),
+                      ),
+                      TextButton(
+                        onPressed: () async {
+                          final picked = await showDatePicker(
+                            context: dialogContext,
+                            initialDate: selectedDate,
+                            firstDate: DateTime(1900),
+                            lastDate: DateTime.now(),
+                          );
+                          if (picked != null) {
+                            setDialogState(() => selectedDate = picked);
+                          }
+                        },
+                        child: const Text('Pick date'),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(false),
+                  child: const Text('Cancel'),
+                ),
+                ElevatedButton(
+                  onPressed: () => Navigator.of(dialogContext).pop(true),
+                  child: const Text('Add'),
+                ),
+              ],
+            );
+          },
+        );
+      },
+    );
+
+    if (shouldAdd != true) return;
+
+    final parsedWeight = double.tryParse(weightCtrl.text.trim());
+    if (parsedWeight == null) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text('Enter a valid weight.')));
+      return;
+    }
+
+    await SupabaseService.addLocalWeightRecord(
+      userId: profile.userId,
+      weight: parsedWeight,
+      weightUnit: profile.weightUnit ?? 'kg',
+      recordedAt: selectedDate,
+    );
+
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Test weight entry added.')));
+    setState(() {});
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    ThemeScope.of(context);
+    final c = context.colors;
+
+    return AnimatedBuilder(
+      animation: UserProvider.instance,
+      builder: (context, _) {
+        final profile = UserProvider.instance.userProfile;
+        final weightText = profile?.weight != null
+            ? '${profile!.weight!.toStringAsFixed(1)} ${profile.weightUnit ?? 'kg'}'
+            : 'Add your current weight';
+        final goalText = profile?.goal ?? 'Set your goal in onboarding';
+        final nameText = profile?.fullName.isNotEmpty == true
+            ? profile!.fullName
+            : 'Ash';
+
+        return SingleChildScrollView(
+          padding: const EdgeInsets.symmetric(vertical: 22),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _buildHunterCard(context, nameText: nameText, goalText: goalText),
+              const SizedBox(height: 16),
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 22),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const SizedBox(height: 24),
+                    Text(
+                      'Fitness Overview',
+                      style: TextStyle(
+                        color: c.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    UnitToggle(
+                      leftLabel: 'Recovery',
+                      rightLabel: 'Balance',
+                      value: _selectedUnit,
+                      onChanged: (v) => setState(() => _selectedUnit = v),
+                      useMaxWidth: true,
+                    ),
+                    const SizedBox(height: 16),
+                    if (_selectedUnit == 'Recovery') ...[
+                      Text(
+                        'Recovery Overview:',
+                        style: TextStyle(
+                          color: c.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'See which muscles are ready to train again today.',
+                        style: TextStyle(color: c.textSecondary, fontSize: 14),
+                      ),
+                      _legend(context, isRecovery: true),
+                    ] else ...[
+                      Text(
+                        'Balance Overview:',
+                        style: TextStyle(
+                          color: c.textPrimary,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Compare muscle group development to optimise your training plan.',
+                        style: TextStyle(color: c.textSecondary, fontSize: 14),
+                      ),
+                      _legend(context, isRecovery: false),
+                    ],
+                    const SizedBox(height: 16),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(16),
+                      decoration: BoxDecoration(
+                        color: c.surfaceRaised,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: c.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'Profile Snapshot',
+                            style: TextStyle(
+                              color: c.textPrimary,
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          const SizedBox(height: 10),
+                          Text(
+                            'Name: $nameText',
+                            style: TextStyle(
+                              color: c.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Goal: $goalText',
+                            style: TextStyle(
+                              color: c.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Current Weight: $weightText',
+                            style: TextStyle(
+                              color: c.textSecondary,
+                              fontSize: 13,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    AnatomyView(
+                      isRecovery: _selectedUnit == 'Recovery',
+                      viewMode: _anatomyViewMode,
+                      onViewModeChanged: (m) =>
+                          setState(() => _anatomyViewMode = m),
+                    ),
+                    if (_selectedUnit == 'Balance') ...[
+                      const SizedBox(height: 16),
+                      Container(
+                        padding: const EdgeInsets.all(16),
+                        decoration: BoxDecoration(
+                          color: c.surfaceRaised,
+                          border: Border.all(color: c.border),
+                          borderRadius: BorderRadius.circular(14),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  'Balance Score',
+                                  style: TextStyle(
+                                    color: c.textSecondary,
+                                    fontSize: 13,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  '78',
+                                  style: TextStyle(
+                                    color: c.textPrimary,
+                                    fontSize: 28,
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const Column(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Text(
+                                  'Good balance',
+                                  style: TextStyle(
+                                    color: Color(0xFF68F868),
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                                SizedBox(height: 4),
+                                Text(
+                                  'Keep it up!',
+                                  style: TextStyle(
+                                    color: Colors.green,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                    const SizedBox(height: 24),
+                    Text(
+                      'Trends',
+                      style: TextStyle(
+                        color: c.textPrimary,
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    Align(
+                      alignment: Alignment.centerRight,
+                      child: OutlinedButton.icon(
+                        onPressed: _showAddWeightEntryDialog,
+                        icon: const Icon(Icons.add),
+                        label: const Text('Add test weight entry'),
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _TrendCard(
+                      themeColors: c,
+                      title: 'Strength',
+                      trend: '+8% last month',
+                      icon: Icons.trending_up,
+                      unit: 'kg',
+                      accentColor: const Color(0xFF4CAF50),
+                      onTap: () => _openTrendDetail(
+                        title: 'Strength',
+                        unit: 'kg',
+                        accentColor: const Color(0xFF4CAF50),
+                        icon: Icons.trending_up,
+                      ),
+                    ),
+                    const SizedBox(height: 12),
+                    _TrendCard(
+                      themeColors: c,
+                      title: 'Bodyweight',
+                      trend: profile?.weight != null
+                          ? 'Current: ${profile!.weight!.toStringAsFixed(1)} ${profile.weightUnit ?? 'kg'}'
+                          : '-1.2 kg over 4 weeks',
+                      icon: Icons.monitor_weight,
+                      unit: 'kg',
+                      accentColor: const Color(0xFFFF9800),
+                      onTap: () => _openTrendDetail(
+                        title: 'Bodyweight',
+                        unit: 'kg',
+                        accentColor: const Color(0xFFFF9800),
+                        icon: Icons.monitor_weight,
+                      ),
+                    ),
+                    const SizedBox(height: 28),
+                    _ProgressList(),
+                    const SizedBox(height: 80),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  Widget _buildHunterCard(
+    BuildContext context, {
+    required String nameText,
+    required String goalText,
+  }) {
     final c = context.colors;
     return Container(
       margin: const EdgeInsets.symmetric(horizontal: 22),
@@ -822,7 +1055,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
               ),
               const SizedBox(height: 6),
               Text(
-                'Ash',
+                nameText,
                 style: TextStyle(
                   color: c.textPrimary,
                   fontSize: 26,
@@ -831,7 +1064,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 ),
               ),
               Text(
-                'Rookie Athlete',
+                goalText,
                 style: TextStyle(color: c.textSecondary, fontSize: 12),
               ),
               const SizedBox(height: 8),
@@ -843,7 +1076,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
                   border: Border.all(color: c.accent.withOpacity(0.4)),
                 ),
                 child: Text(
-                  'S-RANK',
+                  'USER PROFILE',
                   style: TextStyle(
                     color: c.accent,
                     fontSize: 10,
@@ -857,24 +1090,14 @@ class _StatsPageContentState extends State<StatsPageContent> {
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
                   Text(
-                    'LV. 107',
+                    'LIVE DATA',
                     style: TextStyle(color: c.textSecondary, fontSize: 12),
                   ),
                   Text(
-                    '4455 / 5,900 XP',
+                    'Synced from account',
                     style: TextStyle(color: c.textMuted, fontSize: 11),
                   ),
                 ],
-              ),
-              const SizedBox(height: 4),
-              ClipRRect(
-                borderRadius: BorderRadius.circular(4),
-                child: LinearProgressIndicator(
-                  value: 0.74,
-                  minHeight: 5,
-                  backgroundColor: c.border,
-                  valueColor: AlwaysStoppedAnimation<Color>(c.accent),
-                ),
               ),
             ],
           ),
@@ -909,6 +1132,7 @@ class _StatsPageContentState extends State<StatsPageContent> {
     );
   }
 
+<<<<<<< HEAD
   @override
   Widget build(BuildContext context) {
     ThemeScope.of(
@@ -1094,6 +1318,8 @@ class _StatsPageContentState extends State<StatsPageContent> {
     );
   }
 
+=======
+>>>>>>> 2940a77402d0daa6a093af966ffe8ebe4eb6135a
   Widget _legend(BuildContext context, {required bool isRecovery}) {
     final c = context.colors;
     if (isRecovery) {

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:main_build/data/supabase_service.dart';
 
 // ─────────────────────────────────────────────
 // Scope enum
@@ -60,49 +61,7 @@ class TrendDataPoint {
   const TrendDataPoint({required this.date, required this.value});
 }
 
-List<TrendDataPoint> _generateData({
-  required String metric,
-  required int daysBack,
-}) {
-  final now = DateTime.now();
-  final points = <TrendDataPoint>[];
-
-  // (base kg, gain-per-day, noise amplitude) — realistic per lift
-  final (double base, double step, double noise) = switch (metric) {
-    'Bench' => (80.0, 0.06, 2.5),
-    'Squat' => (120.0, 0.09, 3.0),
-    'Deadlift' => (140.0, 0.10, 3.5),
-    'Overall' => (113.0, 0.08, 2.0),
-    'Strength' => (113.0, 0.08, 2.0),
-    'Bodyweight' => (84.0, -0.025, 0.4),
-    _ => (50.0, 0.10, 2.0),
-  };
-
-  final stepDays = (daysBack / 30).ceil().clamp(1, 7);
-  for (int i = daysBack; i >= 0; i -= stepDays) {
-    final day = now.subtract(Duration(days: i));
-    final progress = (daysBack - i) / daysBack;
-    final seed = (day.day * 13 + day.month * 7) % 10 - 5;
-    final value = base + step * progress * daysBack + seed * noise / 5;
-    points.add(
-      TrendDataPoint(
-        date: day,
-        value: value.clamp(base - 5, base + step * daysBack + 10),
-      ),
-    );
-  }
-  return points;
-}
-
-List<TrendDataPoint> dataForScope(String metric, GraphScope scope) {
-  final days = switch (scope) {
-    GraphScope.month => 30,
-    GraphScope.threeMonths => 90,
-    GraphScope.sixMonths => 180,
-    GraphScope.year => 365,
-  };
-  return _generateData(metric: metric, daysBack: days);
-}
+// Synthetic data generator removed — app uses real data only.
 
 // ─────────────────────────────────────────────
 // Page
@@ -151,9 +110,42 @@ class _TrendDetailPageState extends State<TrendDetailPage>
   }
 
   void _reload() {
+    setState(() => _hoverIndex = null);
+
+    if (widget.title == 'Bodyweight') {
+      // try to load local weight history for current user
+      SupabaseService.getCurrentUserProfile().then((profile) async {
+        if (!mounted) return;
+        if (profile == null) {
+          setState(() => _data = []);
+          _animCtrl.forward(from: 0);
+          return;
+        }
+        final history = await SupabaseService.getLocalWeightHistory(
+          profile.userId,
+          limit: _scope == GraphScope.month
+              ? 30
+              : _scope == GraphScope.threeMonths
+              ? 90
+              : _scope == GraphScope.sixMonths
+              ? 180
+              : 365,
+        );
+        if (!mounted) return;
+        setState(() {
+          _data = history
+              .map((r) => TrendDataPoint(date: r.date, value: r.weight))
+              .toList();
+        });
+        _animCtrl.forward(from: 0);
+      });
+      return;
+    }
+
+    // For non-bodyweight metrics we do not have synthetic/demo data.
+    // Attempt to load any stored data in the future; for now show empty.
     setState(() {
-      _data = dataForScope(_activeMetric, _scope);
-      _hoverIndex = null;
+      _data = [];
     });
     _animCtrl.forward(from: 0);
   }
@@ -162,6 +154,57 @@ class _TrendDetailPageState extends State<TrendDetailPage>
   void dispose() {
     _animCtrl.dispose();
     super.dispose();
+  }
+
+  Future<void> _onEditWeight() async {
+    final profile = await SupabaseService.getCurrentUserProfile();
+    if (profile == null) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('No user profile available')),
+      );
+      return;
+    }
+
+    final initial = _data.isNotEmpty ? _data.last.value.toString() : '';
+    final controller = TextEditingController(text: initial);
+
+    final result = await showDialog<double?>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Update weight'),
+        content: TextField(
+          controller: controller,
+          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+          decoration: const InputDecoration(hintText: 'Weight in kg'),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Cancel'),
+          ),
+          TextButton(
+            onPressed: () {
+              final v = double.tryParse(controller.text);
+              Navigator.of(ctx).pop(v);
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+
+    if (result == null) return;
+    await SupabaseService.addLocalWeightRecord(
+      userId: profile.userId,
+      weight: result,
+      recordedAt: DateTime.now(),
+    );
+    if (!mounted) return;
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Weight saved')));
+    _reload();
   }
 
   double get _minVal => _data.isEmpty
@@ -252,9 +295,10 @@ class _TrendDetailPageState extends State<TrendDetailPage>
 
   // ── Hero numbers ─────────────────────────────
   Widget _buildHeroStats() {
-    final current = _hoverIndex != null
+    final bool hasData = _data.isNotEmpty;
+    final current = _hoverIndex != null && _data.isNotEmpty
         ? _data[_hoverIndex!].value
-        : (_data.isEmpty ? 0.0 : _data.last.value);
+        : (hasData ? _data.last.value : null);
     final isPos = _change >= 0;
 
     return Padding(
@@ -273,12 +317,39 @@ class _TrendDetailPageState extends State<TrendDetailPage>
                   fontWeight: FontWeight.w800,
                   height: 1,
                 ),
-                child: Text('${current.toStringAsFixed(1)} ${widget.unit}'),
+                child: Text(
+                  hasData
+                      ? '${current!.toStringAsFixed(1)} ${widget.unit}'
+                      : '—',
+                ),
               ),
               const SizedBox(height: 4),
-              Text(
-                _scope.fullLabel,
-                style: const TextStyle(color: Color(0xFF7a6e90), fontSize: 12),
+              Row(
+                children: [
+                  Text(
+                    _scope.fullLabel,
+                    style: const TextStyle(
+                      color: Color(0xFF7a6e90),
+                      fontSize: 12,
+                    ),
+                  ),
+                  if (widget.title == 'Bodyweight') ...[
+                    const SizedBox(width: 8),
+                    TextButton.icon(
+                      style: TextButton.styleFrom(
+                        padding: EdgeInsets.zero,
+                        minimumSize: const Size(36, 28),
+                        tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+                      ),
+                      onPressed: _onEditWeight,
+                      icon: Icon(Icons.edit, size: 14, color: _activeColor),
+                      label: Text(
+                        'Edit',
+                        style: TextStyle(color: _activeColor, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ],
               ),
             ],
           ),
@@ -435,6 +506,27 @@ class _TrendDetailPageState extends State<TrendDetailPage>
 
   // ── Chart ────────────────────────────────────
   Widget _buildChart() {
+    if (_data.isEmpty) {
+      return Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20),
+        child: Container(
+          height: 220,
+          decoration: BoxDecoration(
+            color: const Color(0xFF0f0d12),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: const Color(0xFF2a2733)),
+          ),
+          child: Center(
+            child: Text(
+              'No data yet — update weight in Settings or add entries',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: _activeColor.withOpacity(0.9)),
+            ),
+          ),
+        ),
+      );
+    }
+
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 20),
       child: AnimatedBuilder(

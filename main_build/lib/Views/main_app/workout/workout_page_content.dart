@@ -6,6 +6,7 @@ import 'package:main_build/Views/main_app/workout/play_plan_page.dart';
 import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart'; // ← import the shared sheet
 import 'package:main_build/data/workout_plans.dart';
 import 'package:main_build/data/data_service.dart';
+import 'package:main_build/data/supabase_service.dart';
 import 'package:main_build/data/exercise_cache_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/plan_share_service.dart';
@@ -63,7 +64,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
     try {
       final results = await Future.wait([
         DataService.getCustomWorkoutPlans(),
-        DataService.getSuggestedWorkoutPlans(),
+        SupabaseService.getSuggestedPlans(), // Updated to fetch from Supabase
       ]);
       if (!mounted) return;
       setState(() {
@@ -928,6 +929,27 @@ class _SuggestedCard extends StatelessWidget {
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
                     ),
+                  )
+                else if (plan.imagePath != null &&
+                    File(plan.imagePath!).existsSync())
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.file(
+                        File(plan.imagePath!),
+                        fit: BoxFit.cover,
+                      ),
+                    ),
+                  )
+                else
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/placeholder.png',
+                        fit: BoxFit.cover,
+                      ),
+                    ),
                   ),
                 Container(
                   decoration: BoxDecoration(
@@ -936,8 +958,8 @@ class _SuggestedCard extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.6),
-                        Colors.black.withValues(alpha: 0.1),
+                        Colors.black.withValues(alpha: 0.55),
+                        Colors.black.withValues(alpha: 0.15),
                       ],
                     ),
                   ),
@@ -949,23 +971,18 @@ class _SuggestedCard extends StatelessWidget {
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      _DifficultyIcons(level: plan.difficulty),
-                      const SizedBox(height: 6),
                       Text(
                         plan.title,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 17,
+                        style: TextStyle(
+                          color: c.textPrimary,
+                          fontSize: 18,
                           fontWeight: FontWeight.w800,
                         ),
                       ),
                       const SizedBox(height: 4),
                       Text(
                         '${plan.duration} · ${plan.exercises}',
-                        style: TextStyle(
-                          color: Colors.white.withValues(alpha: 0.75),
-                          fontSize: 12,
-                        ),
+                        style: TextStyle(color: c.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
@@ -1184,6 +1201,16 @@ class _WorkoutCard extends StatelessWidget {
                     child: ClipRRect(
                       borderRadius: BorderRadius.circular(16),
                       child: Image.asset(plan.imageAsset!, fit: BoxFit.cover),
+                    ),
+                  )
+                else
+                  Positioned.fill(
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(16),
+                      child: Image.asset(
+                        'assets/images/placeholder.png',
+                        fit: BoxFit.cover,
+                      ),
                     ),
                   ),
                 Container(

@@ -17,17 +17,39 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   // ── User data (raw numeric strings) ───────────
   String? gender;
   String? age;
+  String selectedBirthDay = '1';
+  String selectedBirthMonth = 'January';
+  String selectedBirthYear = DateTime.now().year.toString();
   String selectedWeight = '190';
   String selectedUnitWeight = 'lbs';
   String selectedHeightUnit = 'ft';
   String selectedHeightFt = '5';
   String selectedHeightIn = '9';
   String selectedHeightCm = '175';
-  String selectedGoal = 'Build more muscle';
+  final Set<String> selectedGoals = {'Build more muscle'};
   String selectedTrainingDays = '5';
 
   // ── Raw data lists ─────────────────────────────
   final List<String> ages = List.generate(68, (i) => (13 + i).toString());
+  final List<String> birthDays = List.generate(31, (i) => (i + 1).toString());
+  final List<String> birthMonths = const [
+    'January',
+    'February',
+    'March',
+    'April',
+    'May',
+    'June',
+    'July',
+    'August',
+    'September',
+    'October',
+    'November',
+    'December',
+  ];
+  late final List<String> birthYears = List.generate(
+    DateTime.now().year - 1899,
+    (i) => (DateTime.now().year - i).toString(),
+  );
   final List<String> weightsKg = List.generate(171, (i) => (30 + i).toString());
   final List<String> weightsLbs = List.generate(
     376,
@@ -39,11 +61,27 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     121,
     (i) => (i + 120).toString(),
   );
-  final List<String> goals = [
-    'Build more muscle',
-    'Lose fat',
-    'Recomposition',
-    'Build strength',
+  final List<_GoalCardData> goalCards = const [
+    _GoalCardData(
+      label: 'Build more muscle',
+      imagePath: 'assets/img/plans/dumbells.jpg',
+      description: 'Push for size and strength',
+    ),
+    _GoalCardData(
+      label: 'Lose fat',
+      imagePath: 'assets/img/plans/cardio_1.webp',
+      description: 'Burn calories and stay lean',
+    ),
+    _GoalCardData(
+      label: 'Recomposition',
+      imagePath: 'assets/img/plans/Energy.jpg',
+      description: 'Build muscle while reducing fat',
+    ),
+    _GoalCardData(
+      label: 'Build strength',
+      imagePath: 'assets/img/plans/wendler.png',
+      description: 'Train to lift heavier',
+    ),
   ];
   final List<String> trainingDays = ['2', '3', '4', '5', '6', '7'];
 
@@ -70,14 +108,59 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
   // ── Scroll controllers ────────────────────────
   late FixedExtentScrollController ageController;
+  late FixedExtentScrollController birthDayController;
+  late FixedExtentScrollController birthMonthController;
+  late FixedExtentScrollController birthYearController;
   late FixedExtentScrollController weightController;
   late FixedExtentScrollController heightFtController;
   late FixedExtentScrollController heightInController;
   late FixedExtentScrollController heightCmController;
-  late FixedExtentScrollController goalController;
   late FixedExtentScrollController trainingDaysController;
 
-  double get progress => (_currentStep + 1) / 6;
+  double get progress => (_currentStep + 1) / 7;
+
+  String get selectedGoalLabel {
+    if (selectedGoals.isEmpty) return '';
+    return selectedGoals.join(', ');
+  }
+
+  int _daysInMonth(int year, int month) {
+    final firstDayNextMonth = month == 12
+        ? DateTime(year + 1, 1, 1)
+        : DateTime(year, month + 1, 1);
+    return firstDayNextMonth.subtract(const Duration(days: 1)).day;
+  }
+
+  int _selectedBirthMonthIndex() => birthMonths.indexOf(selectedBirthMonth) + 1;
+
+  void _syncBirthYearFromAge() {
+    final parsedAge = int.tryParse(age ?? '21') ?? 21;
+    selectedBirthYear = (DateTime.now().year - parsedAge).toString();
+  }
+
+  void _clampBirthDayToMonth() {
+    final monthIndex = _selectedBirthMonthIndex();
+    if (monthIndex <= 0) return;
+    final yearValue = int.tryParse(selectedBirthYear) ?? DateTime.now().year;
+    final maxDay = _daysInMonth(yearValue, monthIndex);
+    final currentDay = int.tryParse(selectedBirthDay) ?? 1;
+    if (currentDay > maxDay) {
+      selectedBirthDay = maxDay.toString();
+      if (birthDayController.hasClients) {
+        birthDayController.jumpToItem(maxDay - 1);
+      }
+    }
+  }
+
+  String _birthDateDisplay() =>
+      '$selectedBirthDay $selectedBirthMonth $selectedBirthYear';
+
+  String _birthDateIso() {
+    final monthIndex = _selectedBirthMonthIndex();
+    final yearValue = int.tryParse(selectedBirthYear) ?? DateTime.now().year;
+    final dayValue = int.tryParse(selectedBirthDay) ?? 1;
+    return DateTime(yearValue, monthIndex, dayValue).toIso8601String();
+  }
 
   @override
   void initState() {
@@ -101,8 +184,17 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     ageController = FixedExtentScrollController(
       initialItem: _idx(ages, age ?? '21'),
     );
-    goalController = FixedExtentScrollController(
-      initialItem: _idx(goals, selectedGoal),
+    final initialBirthYear =
+        (DateTime.now().year - (int.tryParse(age ?? '21') ?? 21)).toString();
+    selectedBirthYear = initialBirthYear;
+    birthDayController = FixedExtentScrollController(
+      initialItem: _idx(birthDays, selectedBirthDay),
+    );
+    birthMonthController = FixedExtentScrollController(
+      initialItem: _idx(birthMonths, selectedBirthMonth),
+    );
+    birthYearController = FixedExtentScrollController(
+      initialItem: _idx(birthYears, selectedBirthYear),
     );
     trainingDaysController = FixedExtentScrollController(
       initialItem: _idx(trainingDays, selectedTrainingDays),
@@ -112,18 +204,20 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
   @override
   void dispose() {
     ageController.dispose();
+    birthDayController.dispose();
+    birthMonthController.dispose();
+    birthYearController.dispose();
     weightController.dispose();
     heightFtController.dispose();
     heightInController.dispose();
     heightCmController.dispose();
-    goalController.dispose();
     trainingDaysController.dispose();
     super.dispose();
   }
 
   void _next() {
-    if (_currentStep < 5) {
-      if (_currentStep == 2) {
+    if (_currentStep < 6) {
+      if (_currentStep == 3) {
         // Leaving weight step: sync height unit to match the chosen weight unit.
         setState(() {
           selectedHeightUnit = selectedUnitWeight == 'kg' ? 'cm' : 'ft';
@@ -137,6 +231,9 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     final heightDisplay = selectedHeightUnit == 'ft'
         ? '${selectedHeightFt}ft ${selectedHeightIn}in'
         : '${selectedHeightCm}cm';
+    final goalText = selectedGoalLabel.isEmpty
+        ? 'Build more muscle'
+        : selectedGoalLabel;
     Navigator.push(
       context,
       MaterialPageRoute(
@@ -145,9 +242,12 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
           age: int.parse(age ?? '21'),
           weight: double.parse(selectedWeight),
           heightDisplay: heightDisplay,
-          goal: selectedGoal,
+          goal: goalText,
           trainingDays: int.parse(selectedTrainingDays),
           weightUnit: selectedUnitWeight,
+          heightUnit: selectedHeightUnit,
+          birthDateDisplay: _birthDateDisplay(),
+          birthDateIso: _birthDateIso(),
         ),
       ),
     );
@@ -223,10 +323,11 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
     return switch (_currentStep) {
       0 => _genderStep(),
       1 => _ageStep(),
-      2 => _weightStep(),
-      3 => _heightStep(),
-      4 => _goalStep(),
-      5 => _trainingStep(),
+      2 => _birthDateStep(),
+      3 => _weightStep(),
+      4 => _heightStep(),
+      5 => _goalStep(),
+      6 => _trainingStep(),
       _ => const SizedBox(),
     };
   }
@@ -334,11 +435,104 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
               ages,
               ageValue,
               Theme.of(context).brightness == Brightness.dark,
-              (val) => setState(() => age = val),
+              (val) => setState(() {
+                age = val;
+                _syncBirthYearFromAge();
+                if (birthYearController.hasClients) {
+                  final yearIndex = _idx(birthYears, selectedBirthYear);
+                  birthYearController.jumpToItem(yearIndex);
+                }
+              }),
               fontSize: 36,
               selectedHeight: 260,
               controller: ageController,
             ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _birthDateStep() {
+    final c = context.colors;
+
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (birthDayController.hasClients) {
+        final dayIndex = _idx(birthDays, selectedBirthDay);
+        if (birthDayController.selectedItem != dayIndex) {
+          birthDayController.jumpToItem(dayIndex);
+        }
+      }
+      if (birthMonthController.hasClients) {
+        final monthIndex = _idx(birthMonths, selectedBirthMonth);
+        if (birthMonthController.selectedItem != monthIndex) {
+          birthMonthController.jumpToItem(monthIndex);
+        }
+      }
+      if (birthYearController.hasClients) {
+        final yearIndex = _idx(birthYears, selectedBirthYear);
+        if (birthYearController.selectedItem != yearIndex) {
+          birthYearController.jumpToItem(yearIndex);
+        }
+      }
+    });
+
+    return Column(
+      key: const ValueKey('birth-date'),
+      children: [
+        Text(
+          'What is your date of birth?',
+          style: Theme.of(context).textTheme.bodyMedium?.copyWith(
+            color: c.textSecondary,
+            fontSize: 16,
+          ),
+        ),
+        const SizedBox(height: 30),
+        Expanded(
+          child: Row(
+            children: [
+              Expanded(
+                child: buildPicker(
+                  birthDays,
+                  selectedBirthDay,
+                  Theme.of(context).brightness == Brightness.dark,
+                  (val) => setState(() => selectedBirthDay = val),
+                  fontSize: 28,
+                  selectedHeight: 260,
+                  controller: birthDayController,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: buildPicker(
+                  birthMonths,
+                  selectedBirthMonth,
+                  Theme.of(context).brightness == Brightness.dark,
+                  (val) => setState(() {
+                    selectedBirthMonth = val;
+                    _clampBirthDayToMonth();
+                  }),
+                  fontSize: 18,
+                  selectedHeight: 260,
+                  controller: birthMonthController,
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: buildPicker(
+                  birthYears,
+                  selectedBirthYear,
+                  Theme.of(context).brightness == Brightness.dark,
+                  (val) => setState(() {
+                    selectedBirthYear = val;
+                    _clampBirthDayToMonth();
+                  }),
+                  fontSize: 26,
+                  selectedHeight: 260,
+                  controller: birthYearController,
+                ),
+              ),
+            ],
           ),
         ),
       ],
@@ -557,46 +751,146 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
       key: const ValueKey('goal'),
       children: [
         Text(
-          "What's your main goal right now?",
+          "Pick one or more goals that matter to you right now.",
           style: Theme.of(context).textTheme.bodyMedium?.copyWith(
             color: c.textSecondary,
             fontSize: 16,
           ),
         ),
         const SizedBox(height: 30),
-        ...goals.map((goal) {
-          final selected = selectedGoal == goal;
-          return Padding(
-            padding: const EdgeInsets.only(bottom: 18),
-            child: GestureDetector(
-              onTap: () => setState(() => selectedGoal = goal),
-              child: Row(
-                children: [
-                  AnimatedContainer(
-                    duration: const Duration(milliseconds: 200),
-                    width: 25,
-                    height: 25,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: c.textPrimary, width: 2),
-                      color: selected ? AppTheme.accent : Colors.transparent,
-                    ),
-                    child: selected
-                        ? const Icon(Icons.check, color: Colors.black, size: 18)
-                        : null,
-                  ),
-                  const SizedBox(width: 10),
-                  Text(
-                    goal,
-                    style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: selected ? AppTheme.accent : c.textPrimary,
-                      fontSize: 20,
-                    ),
-                  ),
-                ],
-              ),
+        Expanded(
+          child: GridView.builder(
+            padding: const EdgeInsets.only(bottom: 12),
+            itemCount: goalCards.length,
+            gridDelegate: const SliverGridDelegateWithFixedCrossAxisCount(
+              crossAxisCount: 2,
+              mainAxisSpacing: 14,
+              crossAxisSpacing: 14,
+              childAspectRatio: 0.92,
             ),
-          );
-        }),
+            itemBuilder: (context, index) {
+              final card = goalCards[index];
+              final selected = selectedGoals.contains(card.label);
+              return GestureDetector(
+                onTap: () {
+                  setState(() {
+                    if (selected) {
+                      selectedGoals.remove(card.label);
+                    } else {
+                      selectedGoals.add(card.label);
+                    }
+                  });
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 220),
+                  curve: Curves.easeOut,
+                  decoration: BoxDecoration(
+                    color: selected
+                        ? AppTheme.accent.withOpacity(0.16)
+                        : c.surface,
+                    borderRadius: BorderRadius.circular(18),
+                    border: Border.all(
+                      color: selected ? AppTheme.accent : c.border,
+                      width: selected ? 2.5 : 1.2,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black.withOpacity(selected ? 0.18 : 0.08),
+                        blurRadius: selected ? 18 : 10,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Stack(
+                    children: [
+                      Positioned.fill(
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(16),
+                          child: Image.asset(
+                            card.imagePath,
+                            fit: BoxFit.cover,
+                            color: selected
+                                ? Colors.black.withOpacity(0.12)
+                                : null,
+                            colorBlendMode: BlendMode.darken,
+                          ),
+                        ),
+                      ),
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            borderRadius: BorderRadius.circular(18),
+                            gradient: LinearGradient(
+                              begin: Alignment.topCenter,
+                              end: Alignment.bottomCenter,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withOpacity(
+                                  selected ? 0.42 : 0.55,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.all(14),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            Align(
+                              alignment: Alignment.topRight,
+                              child: AnimatedContainer(
+                                duration: const Duration(milliseconds: 200),
+                                width: 28,
+                                height: 28,
+                                decoration: BoxDecoration(
+                                  color: selected
+                                      ? AppTheme.accent
+                                      : Colors.white24,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: Icon(
+                                  selected ? Icons.check : Icons.add,
+                                  size: 18,
+                                  color: selected ? Colors.black : Colors.white,
+                                ),
+                              ),
+                            ),
+                            Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  card.label,
+                                  style: Theme.of(context).textTheme.titleMedium
+                                      ?.copyWith(
+                                        color: Colors.white,
+                                        fontSize: 20,
+                                        fontWeight: FontWeight.w700,
+                                      ),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  card.description,
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.88),
+                                    fontSize: 13,
+                                    height: 1.2,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              );
+            },
+          ),
+        ),
       ],
     );
   }
@@ -725,7 +1019,7 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(40)),
       ),
       child: Text(
-        _currentStep == 5 ? 'Finish' : 'Select',
+        _currentStep == 6 ? 'Finish' : 'Select',
         style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
       ),
     );
@@ -745,4 +1039,16 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
       _ => "Choose what fits your life — Corely adapts to you.",
     };
   }
+}
+
+class _GoalCardData {
+  final String label;
+  final String imagePath;
+  final String description;
+
+  const _GoalCardData({
+    required this.label,
+    required this.imagePath,
+    required this.description,
+  });
 }
