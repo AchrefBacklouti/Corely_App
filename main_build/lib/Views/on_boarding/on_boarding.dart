@@ -609,8 +609,9 @@ class _CorelyOnboardingFlowState extends State<CorelyOnboardingFlow> {
 
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!trainingDaysController.hasClients) return;
-      if (trainingDaysController.selectedItem != ti)
+      if (trainingDaysController.selectedItem != ti) {
         trainingDaysController.jumpToItem(ti);
+      }
     });
 
     return Column(

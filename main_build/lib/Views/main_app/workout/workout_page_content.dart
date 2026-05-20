@@ -223,7 +223,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                               if (confirm == true && mounted) {
                                 await LocalPlanService.deletePlan(index);
                                 await _loadData();
-                                if (mounted)
+                                if (mounted) {
                                   ScaffoldMessenger.of(
                                     pageContext,
                                   ).showSnackBar(
@@ -231,6 +231,7 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
                                       content: Text('${plan.title} deleted'),
                                     ),
                                   );
+                                }
                               }
                             },
                           ),
@@ -353,8 +354,9 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
   Widget build(BuildContext context) {
     final c = context.colors;
 
-    if (_isLoading)
+    if (_isLoading) {
       return Center(child: CircularProgressIndicator(color: c.accent));
+    }
 
     if (_loadError != null) {
       return Center(
@@ -635,7 +637,9 @@ class _SuggestedSectionState extends State<_SuggestedSection> {
 
   @override
   void dispose() {
-    for (final c in _controllers.values) c.dispose();
+    for (final c in _controllers.values) {
+      c.dispose();
+    }
     super.dispose();
   }
 
@@ -860,10 +864,11 @@ class _CategorySection extends StatelessWidget {
   ) async {
     await LocalPlanService.savePlan(plan);
     onDone();
-    if (context.mounted)
+    if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text('${plan.title} added to your plans!')),
       );
+    }
   }
 
   // ← Now uses PlanDetailSheet from doc 2, which has the full copy-days flow

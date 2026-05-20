@@ -177,15 +177,17 @@ String _colorToHex(Color c) =>
 
 Color _recoveryColor(int score) {
   final t = score.clamp(0, 100) / 100.0;
-  if (t <= 0.5)
+  if (t <= 0.5) {
     return Color.lerp(const Color(0xFF68F868), Colors.yellow, t * 2)!;
+  }
   return Color.lerp(Colors.yellow, Colors.red, (t - 0.5) * 2)!;
 }
 
 Color _developmentColor(int d) {
   final t = d.clamp(0, 100) / 100.0;
-  if (t <= 0.5)
+  if (t <= 0.5) {
     return Color.lerp(const Color(0xFF81D4FA), const Color(0xFF68F868), t * 2)!;
+  }
   return Color.lerp(const Color(0xFF68F868), Colors.red, (t - 0.5) * 2)!;
 }
 
@@ -271,7 +273,8 @@ Future<String> _buildColoredSvg(
         caseSensitive: false,
         dotAll: true,
       ),
-      (m) => '${m[1]}${applyOutline(m[2]!)}${m[3]}${applyOutline(m[4]!)}${m[5]}',
+      (m) =>
+          '${m[1]}${applyOutline(m[2]!)}${m[3]}${applyOutline(m[4]!)}${m[5]}',
     );
   }
 
@@ -391,14 +394,16 @@ class _SvgCache {
   }) async {
     // Colours changed → discard stale strings before rebuilding.
     if (isDark) {
-      if (_darkBg != bgColor.value || _darkOutline != outlineColor.value)
+      if (_darkBg != bgColor.value || _darkOutline != outlineColor.value) {
         _invalidate(true);
+      }
     } else {
-      if (_lightBg != bgColor.value || _lightOutline != outlineColor.value)
+      if (_lightBg != bgColor.value || _lightOutline != outlineColor.value) {
         _invalidate(false);
+      }
     }
 
-    Future<String> _get(
+    Future<String> get(
       String? cached,
       String path,
       List<MuscleData> muscles,
@@ -415,25 +420,25 @@ class _SvgCache {
 
     if (isDark) {
       final r = await Future.wait([
-        _get(
+        get(
           frontRecoveryDark,
           'assets/img/anatomy/face.svg',
           _frontMuscles,
           true,
         ),
-        _get(
+        get(
           backRecoveryDark,
           'assets/img/anatomy/back.svg',
           _backMuscles,
           true,
         ),
-        _get(
+        get(
           frontBalanceDark,
           'assets/img/anatomy/face.svg',
           _frontMuscles,
           false,
         ),
-        _get(
+        get(
           backBalanceDark,
           'assets/img/anatomy/back.svg',
           _backMuscles,
@@ -448,25 +453,25 @@ class _SvgCache {
       _darkOutline = outlineColor.value;
     } else {
       final r = await Future.wait([
-        _get(
+        get(
           frontRecoveryLight,
           'assets/img/anatomy/face_light.svg',
           _frontMuscles,
           true,
         ),
-        _get(
+        get(
           backRecoveryLight,
           'assets/img/anatomy/back_light.svg',
           _backMuscles,
           true,
         ),
-        _get(
+        get(
           frontBalanceLight,
           'assets/img/anatomy/face_light.svg',
           _frontMuscles,
           false,
         ),
-        _get(
+        get(
           backBalanceLight,
           'assets/img/anatomy/back_light.svg',
           _backMuscles,
@@ -543,12 +548,14 @@ class _AnatomyViewState extends State<AnatomyView> {
       isDark: isDark,
       bgColor: bgColor,
       outlineColor: outlineColor,
-    ))
+    )) {
       return;
+    }
 
     // A build is already in flight for these colours — don't double-dispatch.
-    if (_pendingBg == bgColor.value && _pendingOutline == outlineColor.value)
+    if (_pendingBg == bgColor.value && _pendingOutline == outlineColor.value) {
       return;
+    }
 
     _pendingBg = bgColor.value;
     _pendingOutline = outlineColor.value;
@@ -904,7 +911,9 @@ class _StatsPageContentState extends State<StatsPageContent> {
 
   @override
   Widget build(BuildContext context) {
-    ThemeScope.of(context); // depend directly on ThemeProvider so toggleTheme() forces rebuild
+    ThemeScope.of(
+      context,
+    ); // depend directly on ThemeProvider so toggleTheme() forces rebuild
     final c = context.colors;
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 22),
@@ -1298,7 +1307,11 @@ class _ProgressList extends StatelessWidget {
               _ProgressRow(label: 'Bench press', value: '+5 kg', trend: 'Up'),
               _ProgressRow(label: 'Squat', value: '+7 kg', trend: 'Up'),
               _ProgressRow(label: 'Deadlift', value: '+4 kg', trend: 'Up'),
-              _ProgressRow(label: 'Pull-ups', value: '+3 reps', trend: 'Steady'),
+              _ProgressRow(
+                label: 'Pull-ups',
+                value: '+3 reps',
+                trend: 'Steady',
+              ),
             ],
           ),
         ),

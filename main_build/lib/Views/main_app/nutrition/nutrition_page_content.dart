@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import '../../../Theme/app_theme.dart';
 
 class NutritionPageContent extends StatelessWidget {
   const NutritionPageContent({super.key});
