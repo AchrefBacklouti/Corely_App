@@ -971,10 +971,7 @@ class _SuggestedCard extends StatelessWidget {
                       const SizedBox(height: 4),
                       Text(
                         '${plan.duration} · ${plan.exercises}',
-                        style: TextStyle(
-                          color: c.textSecondary,
-                          fontSize: 13,
-                        ),
+                        style: TextStyle(color: c.textSecondary, fontSize: 13),
                       ),
                     ],
                   ),
