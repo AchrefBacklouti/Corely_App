@@ -1,9 +1,10 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Views/main_app/chat_history_page.dart';
 import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart';
+import 'package:main_build/data/chat_session_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/supabase_service.dart';
 import 'package:main_build/data/workout_plans.dart';
@@ -15,6 +16,7 @@ enum _MessageType { text, planCard, recommendationChoice }
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 class AiChatPage extends StatefulWidget {
+  final String sessionId;
   final String? gender;
   final int? age;
   final double? weight;
@@ -25,6 +27,7 @@ class AiChatPage extends StatefulWidget {
 
   const AiChatPage({
     super.key,
+    required this.sessionId,
     this.gender,
     this.age,
     this.weight,
@@ -86,13 +89,10 @@ class _AiChatPageState extends State<AiChatPage> {
     return '$_baseSystemPrompt\n\n$profile';
   }
 
-  static const _hiveBox = 'ai_chat';
-  static const _hiveKey = 'messages';
-
   @override
   void initState() {
     super.initState();
-    _loadMessages();
+    _loadFromSession();
   }
 
   @override
@@ -104,44 +104,42 @@ class _AiChatPageState extends State<AiChatPage> {
 
   // ── Persistence ──────────────────────────────────────────────────────────
 
-  Future<void> _loadMessages() async {
-    final box = await Hive.openBox<String>(_hiveBox);
-    final raw = box.get(_hiveKey);
-    if (raw == null || !mounted) return;
-    try {
-      final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
-      if (list.isEmpty) return;
-      setState(() {
-        _messages
-          ..clear()
-          ..addAll(
-            list.map(
-              (m) => _Message(
-                text: m['text'] as String,
-                isBot: m['isBot'] as bool,
-              ),
+  Future<void> _loadFromSession() async {
+    final session = await ChatSessionService.getSessionById(widget.sessionId);
+    if (!mounted) return;
+    if (session == null || session.messages.isEmpty) return;
+    setState(() {
+      _messages
+        ..clear()
+        ..addAll(
+          session.messages.map(
+            (m) => _Message(
+              text: m['text'] as String? ?? '',
+              isBot: m['isBot'] as bool? ?? true,
             ),
-          );
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    } catch (_) {}
+          ),
+        );
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _saveMessages() async {
-    final box = await Hive.openBox<String>(_hiveBox);
     final serializable = _messages
         .map((m) {
           if (m.type == _MessageType.planCard) {
-            return {
-              'text': m.plan != null ? '[Recommended: ${m.plan!.title}]' : '',
+            return <String, dynamic>{
+              'text': m.plan != null ? '[Plan shown: ${m.plan!.title}]' : '',
               'isBot': true,
             };
           }
-          return {'text': m.text, 'isBot': m.isBot};
+          if (m.type == _MessageType.recommendationChoice) {
+            return <String, dynamic>{'text': m.text, 'isBot': true};
+          }
+          return <String, dynamic>{'text': m.text, 'isBot': m.isBot};
         })
         .where((m) => (m['text'] as String).isNotEmpty)
         .toList();
-    await box.put(_hiveKey, jsonEncode(serializable));
+    await ChatSessionService.updateSession(widget.sessionId, serializable);
   }
 
   // ── Send logic ───────────────────────────────────────────────────────────
@@ -801,6 +799,26 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            tooltip: 'Chat history',
+            onPressed: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatHistoryPage(
+                  gender: widget.gender,
+                  age: widget.age,
+                  weight: widget.weight,
+                  weightUnit: widget.weightUnit,
+                  heightDisplay: widget.heightDisplay,
+                  goal: widget.goal,
+                  trainingDays: widget.trainingDays,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [

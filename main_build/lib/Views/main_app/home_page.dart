@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:main_build/Theme/app_theme.dart';
 import 'package:main_build/Views/main_app/ai_chat_page.dart';
+import 'package:main_build/Views/main_app/chat_history_page.dart';
 import 'package:main_build/Views/main_app/home/home_page_content.dart';
+import 'package:main_build/data/chat_session_service.dart';
 import 'package:main_build/Views/main_app/nutrition/nutrition_page_content.dart';
 import 'package:main_build/Views/main_app/settings_page.dart';
 import 'package:main_build/Views/main_app/stats/stats_page_content.dart';
@@ -45,12 +47,41 @@ class _MainShellPageState extends State<MainShellPage> {
     Icons.apple,
   ];
 
-  void _openAiChat() {
+  Future<void> _openAiChat() async {
     setState(() => _hasUnreadAiMessage = false);
+
+    final showPicker = await ChatSessionService.shouldShowPicker();
+    if (!mounted) return;
+
+    if (showPicker) {
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => ChatHistoryPage(
+            gender: widget.gender,
+            age: widget.age,
+            weight: widget.weight,
+            weightUnit: widget.weightUnit,
+            heightDisplay: widget.heightDisplay,
+            goal: widget.goal,
+            trainingDays: widget.trainingDays,
+          ),
+        ),
+      );
+      return;
+    }
+
+    // Resume active session or start a new one
+    ChatSession? session = await ChatSessionService.getActiveSession();
+    if (!mounted) return;
+    session ??= await ChatSessionService.createSession();
+    if (!mounted) return;
+
     Navigator.push(
       context,
       MaterialPageRoute(
         builder: (_) => AiChatPage(
+          sessionId: session!.id,
           gender: widget.gender,
           age: widget.age,
           weight: widget.weight,
