@@ -43,7 +43,8 @@ class _AiChatPageState extends State<AiChatPage> {
   final _scrollController = ScrollController();
   final List<_Message> _messages = [
     const _Message(
-      text: "Hi! I'm Corely AI, your personal fitness assistant. How can I help you today?",
+      text:
+          "Hi! I'm Corely AI, your personal fitness assistant. How can I help you today?",
       isBot: true,
     ),
   ];
@@ -76,7 +77,8 @@ class _AiChatPageState extends State<AiChatPage> {
   String get _systemPrompt {
     final w = widget;
     if (w.gender == null) return _baseSystemPrompt;
-    final profile = 'User profile — Gender: ${w.gender}, Age: ${w.age} yrs, '
+    final profile =
+        'User profile — Gender: ${w.gender}, Age: ${w.age} yrs, '
         'Weight: ${w.weight?.toStringAsFixed(1)} ${w.weightUnit}, '
         'Height: ${w.heightDisplay}, Goal: ${w.goal}, '
         'Training frequency: ${w.trainingDays} days/week. '
@@ -112,10 +114,14 @@ class _AiChatPageState extends State<AiChatPage> {
       setState(() {
         _messages
           ..clear()
-          ..addAll(list.map((m) => _Message(
+          ..addAll(
+            list.map(
+              (m) => _Message(
                 text: m['text'] as String,
                 isBot: m['isBot'] as bool,
-              )));
+              ),
+            ),
+          );
       });
       WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
     } catch (_) {}
@@ -123,15 +129,18 @@ class _AiChatPageState extends State<AiChatPage> {
 
   Future<void> _saveMessages() async {
     final box = await Hive.openBox<String>(_hiveBox);
-    final serializable = _messages.map((m) {
-      if (m.type == _MessageType.planCard) {
-        return {
-          'text': m.plan != null ? '[Recommended: ${m.plan!.title}]' : '',
-          'isBot': true,
-        };
-      }
-      return {'text': m.text, 'isBot': m.isBot};
-    }).where((m) => (m['text'] as String).isNotEmpty).toList();
+    final serializable = _messages
+        .map((m) {
+          if (m.type == _MessageType.planCard) {
+            return {
+              'text': m.plan != null ? '[Recommended: ${m.plan!.title}]' : '',
+              'isBot': true,
+            };
+          }
+          return {'text': m.text, 'isBot': m.isBot};
+        })
+        .where((m) => (m['text'] as String).isNotEmpty)
+        .toList();
     await box.put(_hiveKey, jsonEncode(serializable));
   }
 
@@ -168,7 +177,13 @@ class _AiChatPageState extends State<AiChatPage> {
         if (!mounted) return;
         setState(() {
           _isTyping = false;
-          _messages.add(_Message(text: "Corely AI is busy right now — give it a sec and try again 💪", isBot: true));
+          _messages.add(
+            _Message(
+              text:
+                  "Corely AI is busy right now — give it a sec and try again 💪",
+              isBot: true,
+            ),
+          );
         });
       }
       _scrollToBottom();
@@ -195,7 +210,13 @@ class _AiChatPageState extends State<AiChatPage> {
       if (!mounted) return;
       setState(() {
         _isTyping = false;
-        _messages.add(_Message(text: "Corely AI is busy right now — give it a sec and try again 💪", isBot: true));
+        _messages.add(
+          _Message(
+            text:
+                "Corely AI is busy right now — give it a sec and try again 💪",
+            isBot: true,
+          ),
+        );
       });
     }
     _scrollToBottom();
@@ -207,25 +228,33 @@ class _AiChatPageState extends State<AiChatPage> {
   List<Map<String, dynamic>> _buildContents() {
     final firstUserIdx = _messages.indexWhere((m) => !m.isBot);
     if (firstUserIdx == -1) return [];
-    return _messages.skip(firstUserIdx).map((m) {
-      String t = m.text;
-      if (m.type == _MessageType.planCard) {
-        t = m.plan != null ? '[Plan shown to user: ${m.plan!.title}]' : '';
-      }
-      return {
-        'role': m.isBot ? 'model' : 'user',
-        'parts': [
-          {'text': t},
-        ],
-      };
-    }).where((m) => ((m['parts'] as List)[0] as Map)['text'].toString().isNotEmpty).toList();
+    return _messages
+        .skip(firstUserIdx)
+        .map((m) {
+          String t = m.text;
+          if (m.type == _MessageType.planCard) {
+            t = m.plan != null ? '[Plan shown to user: ${m.plan!.title}]' : '';
+          }
+          return {
+            'role': m.isBot ? 'model' : 'user',
+            'parts': [
+              {'text': t},
+            ],
+          };
+        })
+        .where(
+          (m) => ((m['parts'] as List)[0] as Map)['text'].toString().isNotEmpty,
+        )
+        .toList();
   }
 
   Future<String> _callGemini({String? extra}) async {
     final url = Uri.parse(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
     );
-    final systemText = extra != null ? '$_systemPrompt\n\n$extra' : _systemPrompt;
+    final systemText = extra != null
+        ? '$_systemPrompt\n\n$extra'
+        : _systemPrompt;
     final body = jsonEncode({
       'system_instruction': {
         'parts': [
@@ -280,18 +309,32 @@ class _AiChatPageState extends State<AiChatPage> {
   List<WorkoutPlan> _rankPlans(List<WorkoutPlan> plans) {
     final goal = (widget.goal ?? '').toLowerCase();
     final days = widget.trainingDays ?? 3;
-    final expLevel = days <= 3 ? 1 : days <= 4 ? 2 : days <= 5 ? 3 : 4;
+    final expLevel = days <= 3
+        ? 1
+        : days <= 4
+        ? 2
+        : days <= 5
+        ? 3
+        : 4;
 
     int score(WorkoutPlan p) {
       int s = 0;
       if (p.category == PlanCategory.cardio &&
-          RegExp(r'weight|fat|cardio|endur|run').hasMatch(goal)) { s += 3; }
+          RegExp(r'weight|fat|cardio|endur|run').hasMatch(goal)) {
+        s += 3;
+      }
       if (p.category == PlanCategory.hypertrophy &&
-          RegExp(r'muscle|size|bulk|hyper|aesthet').hasMatch(goal)) { s += 3; }
+          RegExp(r'muscle|size|bulk|hyper|aesthet').hasMatch(goal)) {
+        s += 3;
+      }
       if (p.category == PlanCategory.strength &&
-          RegExp(r'strength|strong|power|lift').hasMatch(goal)) { s += 3; }
+          RegExp(r'strength|strong|power|lift').hasMatch(goal)) {
+        s += 3;
+      }
       if (p.category == PlanCategory.calisthenics &&
-          RegExp(r'calisthenic|bodyweight|home').hasMatch(goal)) { s += 3; }
+          RegExp(r'calisthenic|bodyweight|home').hasMatch(goal)) {
+        s += 3;
+      }
       s -= (p.difficulty - expLevel).abs();
       return s;
     }
@@ -302,11 +345,14 @@ class _AiChatPageState extends State<AiChatPage> {
   Future<void> _triggerRecommendationFlow() async {
     setState(() {
       _awaitingRecommendationChoice = true;
-      _messages.add(const _Message(
-        text: "I can generate a fully custom plan, or recommend one from our curated library that matches your profile. Which do you prefer?",
-        isBot: true,
-        type: _MessageType.recommendationChoice,
-      ));
+      _messages.add(
+        const _Message(
+          text:
+              "I can generate a fully custom plan, or recommend one from our curated library that matches your profile. Which do you prefer?",
+          isBot: true,
+          type: _MessageType.recommendationChoice,
+        ),
+      );
     });
     _scrollToBottom();
     _saveMessages();
@@ -323,10 +369,13 @@ class _AiChatPageState extends State<AiChatPage> {
       if (plans.isEmpty) {
         setState(() {
           _isTyping = false;
-          _messages.add(const _Message(
-            text: "Couldn't load the library right now — generating a custom plan for you instead!",
-            isBot: true,
-          ));
+          _messages.add(
+            const _Message(
+              text:
+                  "Couldn't load the library right now — generating a custom plan for you instead!",
+              isBot: true,
+            ),
+          );
         });
         _scrollToBottom();
         await _callGeminiAndRespond();
@@ -339,10 +388,13 @@ class _AiChatPageState extends State<AiChatPage> {
       if (!mounted) return;
       setState(() {
         _isTyping = false;
-        _messages.add(const _Message(
-          text: "Ran into an issue loading the library — generating a custom plan for you!",
-          isBot: true,
-        ));
+        _messages.add(
+          const _Message(
+            text:
+                "Ran into an issue loading the library — generating a custom plan for you!",
+            isBot: true,
+          ),
+        );
       });
       _scrollToBottom();
       await _callGeminiAndRespond();
@@ -353,18 +405,22 @@ class _AiChatPageState extends State<AiChatPage> {
     final plan = _recommendationPlans[index];
     setState(() {
       _isTyping = false;
-      _messages.add(_Message(
-        text: index == 0
-            ? "Here's a plan that fits your profile 💪"
-            : "Here's another one from the library:",
-        isBot: true,
-      ));
-      _messages.add(_Message(
-        text: '',
-        isBot: true,
-        type: _MessageType.planCard,
-        plan: plan,
-      ));
+      _messages.add(
+        _Message(
+          text: index == 0
+              ? "Here's a plan that fits your profile 💪"
+              : "Here's another one from the library:",
+          isBot: true,
+        ),
+      );
+      _messages.add(
+        _Message(
+          text: '',
+          isBot: true,
+          type: _MessageType.planCard,
+          plan: plan,
+        ),
+      );
     });
     _scrollToBottom();
     _saveMessages();
@@ -388,7 +444,13 @@ class _AiChatPageState extends State<AiChatPage> {
       if (!mounted) return;
       setState(() {
         _isTyping = false;
-        _messages.add(_Message(text: "Corely AI is busy right now — give it a sec and try again 💪", isBot: true));
+        _messages.add(
+          _Message(
+            text:
+                "Corely AI is busy right now — give it a sec and try again 💪",
+            isBot: true,
+          ),
+        );
       });
     }
     _scrollToBottom();
@@ -397,7 +459,8 @@ class _AiChatPageState extends State<AiChatPage> {
 
   void _onShowAnother() {
     if (_recommendationPlans.isEmpty) return;
-    _recommendationIndex = (_recommendationIndex + 1) % _recommendationPlans.length;
+    _recommendationIndex =
+        (_recommendationIndex + 1) % _recommendationPlans.length;
     _showRecommendationCard(_recommendationIndex);
   }
 
@@ -405,10 +468,12 @@ class _AiChatPageState extends State<AiChatPage> {
     await LocalPlanService.savePlan(plan, source: 'suggested');
     if (!mounted) return;
     setState(() {
-      _messages.add(_Message(
-        text: '"${plan.title}" added to your plans! Check the Workout tab 🎉',
-        isBot: true,
-      ));
+      _messages.add(
+        _Message(
+          text: '"${plan.title}" added to your plans! Check the Workout tab 🎉',
+          isBot: true,
+        ),
+      );
     });
     _scrollToBottom();
     _saveMessages();
@@ -421,10 +486,13 @@ class _AiChatPageState extends State<AiChatPage> {
     _pendingModificationPlan = plan;
     setState(() {
       _messages.add(_Message(text: 'Modify "${plan.title}"', isBot: false));
-      _messages.add(const _Message(
-        text: 'Sure! Tell me what you want to change — e.g. "make it 4 days", "add more cardio", "swap chest for back".',
-        isBot: true,
-      ));
+      _messages.add(
+        const _Message(
+          text:
+              'Sure! Tell me what you want to change — e.g. "make it 4 days", "add more cardio", "swap chest for back".',
+          isBot: true,
+        ),
+      );
     });
     _scrollToBottom();
     _saveMessages();
@@ -447,18 +515,23 @@ class _AiChatPageState extends State<AiChatPage> {
 
   String _buildModificationContext(WorkoutPlan plan) {
     final buf = StringBuffer();
-    buf.writeln('The user wants to modify the following existing workout plan:');
+    buf.writeln(
+      'The user wants to modify the following existing workout plan:',
+    );
     buf.writeln('Title: ${plan.title}');
     buf.writeln('Duration: ${plan.duration}');
-    if (plan.description != null) buf.writeln('Description: ${plan.description}');
+    if (plan.description != null)
+      buf.writeln('Description: ${plan.description}');
     if (plan.days != null) {
       for (final d in plan.days!) {
         buf.writeln('${d.label}: ${d.exercises.join(", ")}');
       }
     }
     buf.writeln('');
-    buf.writeln('Generate a modified version per the user\'s request. '
-        'Start your response with [WORKOUT_PLAN] and use [EX: Name | sets | reps] for every exercise.');
+    buf.writeln(
+      'Generate a modified version per the user\'s request. '
+      'Start your response with [WORKOUT_PLAN] and use [EX: Name | sets | reps] for every exercise.',
+    );
     return buf.toString();
   }
 
@@ -492,7 +565,9 @@ class _AiChatPageState extends State<AiChatPage> {
 
     final parsed = _parseAiWorkout(text);
     final plan = WorkoutPlan(
-      title: nameController.text.trim().isEmpty ? 'AI Plan' : nameController.text.trim(),
+      title: nameController.text.trim().isEmpty
+          ? 'AI Plan'
+          : nameController.text.trim(),
       duration: parsed.duration,
       exercises: parsed.summary,
       difficulty: 2,
@@ -500,11 +575,17 @@ class _AiChatPageState extends State<AiChatPage> {
       dayNames: parsed.dayNames,
       selectedDays: parsed.selectedDays,
     );
-    await LocalPlanService.savePlan(plan, source: 'ai_generated', aiRawText: text);
+    await LocalPlanService.savePlan(
+      plan,
+      source: 'ai_generated',
+      aiRawText: text,
+    );
     if (!mounted) return;
     setState(() => _savedPlanIndices.add(messageIndex));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plan saved! Check My Plans in the Workout tab.')),
+      const SnackBar(
+        content: Text('Plan saved! Check My Plans in the Workout tab.'),
+      ),
     );
   }
 
@@ -516,7 +597,8 @@ class _AiChatPageState extends State<AiChatPage> {
     List<String> selectedDays,
     String summary,
     String duration,
-  }) _parseAiWorkout(String text) {
+  })
+  _parseAiWorkout(String text) {
     final dayNames = <String>[];
     final allDayExercises = <List<Map<String, dynamic>>>[];
     List<Map<String, dynamic>>? current;
@@ -584,7 +666,9 @@ class _AiChatPageState extends State<AiChatPage> {
       if (lower.startsWith('rest') ||
           lower.startsWith('note') ||
           lower.startsWith('tip') ||
-          lower.startsWith('optional')) { continue; }
+          lower.startsWith('optional')) {
+        continue;
+      }
 
       int sets = 3;
       String reps = '10';
@@ -598,7 +682,10 @@ class _AiChatPageState extends State<AiChatPage> {
           sets = s;
           reps = rRaw;
         }
-        ex = ex.substring(0, m.start).replaceAll(RegExp(r'[:\-–,\s]+$'), '').trim();
+        ex = ex
+            .substring(0, m.start)
+            .replaceAll(RegExp(r'[:\-–,\s]+$'), '')
+            .trim();
       } else {
         final repsFirst = RegExp(
           r'(\d+(?:[–\-]\d+)?)\s*reps?\s*,?\s*(\d+)\s*sets?',
@@ -607,7 +694,10 @@ class _AiChatPageState extends State<AiChatPage> {
         if (repsFirst != null) {
           reps = repsFirst.group(1) ?? '10';
           sets = int.tryParse(repsFirst.group(2) ?? '') ?? 3;
-          ex = ex.substring(0, repsFirst.start).replaceAll(RegExp(r'[:\-–,\s]+$'), '').trim();
+          ex = ex
+              .substring(0, repsFirst.start)
+              .replaceAll(RegExp(r'[:\-–,\s]+$'), '')
+              .trim();
         } else {
           final stripped = ex.replaceAll(RegExp(r'[:\s]+$'), '');
           if (ex.endsWith(':') || stripped != ex && stripped.isEmpty) continue;
@@ -629,7 +719,15 @@ class _AiChatPageState extends State<AiChatPage> {
 
     if (current != null) allDayExercises.add(current);
 
-    const weekdays = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+    const weekdays = [
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
+    ];
     final count = dayNames.length.clamp(0, 7);
     final total = allDayExercises.fold(0, (s, d) => s + d.length);
 
@@ -684,7 +782,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
               ),
               padding: const EdgeInsets.all(6),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
             const SizedBox(width: 10),
             Column(
@@ -740,7 +838,9 @@ class _AiChatPageState extends State<AiChatPage> {
                   message: msg,
                   c: c,
                   isSaved: _savedPlanIndices.contains(i),
-                  onSave: msg.looksLikeWorkoutPlan ? () => _saveAsPlan(i) : null,
+                  onSave: msg.looksLikeWorkoutPlan
+                      ? () => _saveAsPlan(i)
+                      : null,
                 );
               },
             ),
@@ -774,18 +874,24 @@ class _Message {
     if (!isBot || type != _MessageType.text) return false;
     if (text.contains('[WORKOUT_PLAN]')) return true;
     final lower = text.toLowerCase();
-    final hasDays = lower.contains('day 1') || lower.contains('day 2') ||
-        lower.contains('day 3') || lower.contains('day one') ||
-        lower.contains('day two') || lower.contains('day three');
+    final hasDays =
+        lower.contains('day 1') ||
+        lower.contains('day 2') ||
+        lower.contains('day 3') ||
+        lower.contains('day one') ||
+        lower.contains('day two') ||
+        lower.contains('day three');
     final hasExerciseTerms =
         (lower.contains('sets') || lower.contains('set')) &&
         (lower.contains('reps') || lower.contains('rep'));
-    final hasWorkoutTerms = lower.contains('workout') ||
+    final hasWorkoutTerms =
+        lower.contains('workout') ||
         lower.contains('program') ||
         lower.contains('routine') ||
         lower.contains('training plan') ||
         lower.contains('exercise plan');
-    return (hasDays && hasExerciseTerms) || (hasExerciseTerms && hasWorkoutTerms);
+    return (hasDays && hasExerciseTerms) ||
+        (hasExerciseTerms && hasWorkoutTerms);
   }
 }
 
@@ -810,7 +916,9 @@ class _MessageBubble extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment: isBot ? MainAxisAlignment.start : MainAxisAlignment.end,
+        mainAxisAlignment: isBot
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (isBot) ...[
@@ -826,17 +934,21 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
               padding: const EdgeInsets.all(4),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
             const SizedBox(width: 8),
           ],
           Flexible(
             child: Column(
-              crossAxisAlignment:
-                  isBot ? CrossAxisAlignment.start : CrossAxisAlignment.end,
+              crossAxisAlignment: isBot
+                  ? CrossAxisAlignment.start
+                  : CrossAxisAlignment.end,
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: isBot ? c.surface : AppTheme.accent,
                     borderRadius: BorderRadius.only(
@@ -864,7 +976,9 @@ class _MessageBubble extends StatelessWidget {
                       mainAxisSize: MainAxisSize.min,
                       children: [
                         Icon(
-                          isSaved ? Icons.check_circle_rounded : Icons.bookmark_add_outlined,
+                          isSaved
+                              ? Icons.check_circle_rounded
+                              : Icons.bookmark_add_outlined,
                           size: 14,
                           color: isSaved ? Colors.green : c.textMuted,
                         ),
@@ -934,7 +1048,11 @@ class _RecommendationChoiceBubble extends StatelessWidget {
                 children: [
                   Text(
                     text,
-                    style: TextStyle(color: c.textPrimary, fontSize: 14, height: 1.4),
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
                   ),
                   if (enabled) ...[
                     const SizedBox(height: 12),
@@ -943,12 +1061,17 @@ class _RecommendationChoiceBubble extends StatelessWidget {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: onLibrary,
-                            icon: const Icon(Icons.library_books_outlined, size: 14),
+                            icon: const Icon(
+                              Icons.library_books_outlined,
+                              size: 14,
+                            ),
                             label: const Text('From Library'),
                             style: ElevatedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               textStyle: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -961,7 +1084,9 @@ class _RecommendationChoiceBubble extends StatelessWidget {
                             style: OutlinedButton.styleFrom(
                               padding: const EdgeInsets.symmetric(vertical: 10),
                               textStyle: const TextStyle(
-                                  fontSize: 12, fontWeight: FontWeight.w600),
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
                             ),
                           ),
                         ),
@@ -1160,7 +1285,7 @@ class _BotAvatar extends StatelessWidget {
         ),
       ),
       padding: const EdgeInsets.all(4),
-      child: Image.asset('assets/img/bot_4712038.png'),
+      child: Image.asset('assets/img/bot.png'),
     );
   }
 }
@@ -1231,9 +1356,10 @@ class _AnimatedDotState extends State<_AnimatedDot>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _opacity = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
-    );
+    _opacity = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _anim, curve: Curves.easeInOut));
     Future.delayed(Duration(milliseconds: widget.delayMs), () {
       if (mounted) _anim.repeat(reverse: true);
     });
@@ -1302,7 +1428,10 @@ class _InputBar extends StatelessWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide: const BorderSide(color: AppTheme.accent, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: AppTheme.accent,
+                      width: 1.5,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,
@@ -1334,7 +1463,11 @@ class _InputBar extends StatelessWidget {
                     ),
                   ],
                 ),
-                child: const Icon(Icons.send_rounded, color: Colors.black, size: 20),
+                child: const Icon(
+                  Icons.send_rounded,
+                  color: Colors.black,
+                  size: 20,
+                ),
               ),
             ),
           ],
