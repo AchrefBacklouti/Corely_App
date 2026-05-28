@@ -1,4 +1,4 @@
-enum PlanCategory { cardio, strength, hypertrophy }
+enum PlanCategory { cardio, strength, hypertrophy, calisthenics }
 
 String? _cleanAssetPath(String? value) {
   if (value == null) return null;
@@ -34,6 +34,8 @@ class WorkoutPlan {
   final PlanCategory? category;
   final String? description; // intro paragraph shown in detail sheet
   final List<WorkoutDay>? days;
+  final String? credit;
+  final String? creditUrl;
 
   // ── Custom-plan fields (used by EditPlanPage / PlayPlanPage) ──
   final List<dynamic> dayExercises; // List<List<Map<String,dynamic>>>
@@ -50,6 +52,8 @@ class WorkoutPlan {
     this.category,
     this.description,
     this.days,
+    this.credit,
+    this.creditUrl,
     this.dayExercises = const [],
     this.dayNames = const [],
     this.selectedDays = const [],
@@ -105,6 +109,8 @@ class WorkoutPlan {
       category: category,
       description: json['description'] as String?,
       days: days,
+      credit: json['credit'] as String?,
+      creditUrl: json['creditUrl'] as String?,
       dayExercises: dayExercises,
       dayNames: dayNames,
       selectedDays: selectedDays,
@@ -122,6 +128,8 @@ class WorkoutPlan {
     if (category != null) 'category': category!.name,
     if (description != null) 'description': description,
     if (days != null) 'days': days!.map((d) => d.toJson()).toList(),
+    if (credit != null) 'credit': credit,
+    if (creditUrl != null) 'creditUrl': creditUrl,
     'dayExercises': dayExercises,
     'dayNames': dayNames,
     'selectedDays': selectedDays,
@@ -138,6 +146,8 @@ class WorkoutPlan {
     PlanCategory? category,
     String? description,
     List<WorkoutDay>? days,
+    String? credit,
+    String? creditUrl,
     List<dynamic>? dayExercises,
     List<String>? dayNames,
     List<String>? selectedDays,
@@ -152,6 +162,8 @@ class WorkoutPlan {
       category: category ?? this.category,
       description: description ?? this.description,
       days: days ?? this.days,
+      credit: credit ?? this.credit,
+      creditUrl: creditUrl ?? this.creditUrl,
       dayExercises: dayExercises ?? this.dayExercises,
       dayNames: dayNames ?? this.dayNames,
       selectedDays: selectedDays ?? this.selectedDays,

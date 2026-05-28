@@ -449,20 +449,15 @@ class SupabaseService {
   }
 
   static Future<List<WorkoutPlan>> getSuggestedPlans() async {
-    try {
-      final rows = await _db
-          .from('workout_plans')
-          .select()
-          .eq('is_active', true)
-          .order('sort_order', ascending: true);
+    final rows = await _db
+        .from('workout_plans')
+        .select()
+        .eq('is_active', true)
+        .order('sort_order', ascending: true);
 
-      return (rows as List)
-          .map((r) => _planFromRow(Map<String, dynamic>.from(r as Map)))
-          .toList();
-    } catch (e) {
-      debugPrint('SupabaseService.getSuggestedPlans: $e');
-      return [];
-    }
+    return (rows as List)
+        .map((r) => _planFromRow(Map<String, dynamic>.from(r as Map)))
+        .toList();
   }
 
   /// Seed the `workout_plans` table from the local `kSuggestedPlans` list.
@@ -617,12 +612,64 @@ class SupabaseService {
     }
 
     List<WorkoutDay>? days;
+    List<dynamic> dayExercises = [];
+    List<String> dayNames = [];
+
     final rawDays = r['days'];
+
     if (rawDays is List && rawDays.isNotEmpty) {
+      // Legacy list format: [{label, exercises: ["Bench Press 4×5", ...]}, ...]
       days = rawDays
           .whereType<Map>()
           .map((d) => WorkoutDay.fromJson(Map<String, dynamic>.from(d)))
           .toList();
+    } else if (rawDays is Map && rawDays.isNotEmpty) {
+      // New DB format: {day_1: {name, exercises: [{name, sets, reps, rest}]}, day_2: ...}
+      final sortedKeys = rawDays.keys.toList()
+        ..sort((a, b) {
+          final aNum = int.tryParse(
+                a.toString().replaceAll(RegExp(r'\D'), ''),
+              ) ??
+              0;
+          final bNum = int.tryParse(
+                b.toString().replaceAll(RegExp(r'\D'), ''),
+              ) ??
+              0;
+          return aNum.compareTo(bNum);
+        });
+
+      for (final key in sortedKeys) {
+        final dayData = rawDays[key];
+        if (dayData is! Map) continue;
+
+        final dayName = dayData['name']?.toString() ?? key.toString();
+        dayNames.add(dayName);
+
+        final rawExercises = dayData['exercises'];
+        final List<Map<String, dynamic>> exerciseMaps = [];
+        final List<String> exerciseStrings = [];
+
+        if (rawExercises is List) {
+          for (final ex in rawExercises) {
+            if (ex is Map) {
+              final m = Map<String, dynamic>.from(ex);
+              exerciseMaps.add(m);
+              final name = m['name']?.toString() ?? '';
+              final sets = m['sets'];
+              final reps = m['reps'];
+              exerciseStrings.add(
+                (sets != null && reps != null) ? '$name $sets×$reps' : name,
+              );
+            } else {
+              exerciseStrings.add(ex.toString());
+            }
+          }
+        }
+
+        dayExercises.add(exerciseMaps);
+        days ??= [];
+        days.add(WorkoutDay(label: dayName, exercises: exerciseStrings));
+      }
     }
 
     return WorkoutPlan(
@@ -635,9 +682,14 @@ class SupabaseService {
       category: category,
       description: r['description'] as String?,
       days: days,
-      dayExercises: (r['day_exercises'] as List?) ?? [],
-      dayNames:
-          (r['day_names'] as List?)?.map((e) => e.toString()).toList() ?? [],
+      credit: r['credit'] as String?,
+      creditUrl: r['credit_url'] as String?,
+      dayExercises: dayExercises.isNotEmpty
+          ? dayExercises
+          : ((r['day_exercises'] as List?) ?? []),
+      dayNames: dayNames.isNotEmpty
+          ? dayNames
+          : ((r['day_names'] as List?)?.map((e) => e.toString()).toList() ?? []),
       selectedDays:
           (r['selected_days'] as List?)?.map((e) => e.toString()).toList() ??
           [],
