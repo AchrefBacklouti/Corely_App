@@ -203,11 +203,7 @@ class _EmptyState extends StatelessWidget {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            Icons.chat_bubble_outline_rounded,
-            size: 64,
-            color: c.textMuted,
-          ),
+          Icon(Icons.chat_bubble_outline_rounded, size: 64, color: c.textMuted),
           const SizedBox(height: 16),
           Text(
             'No conversations yet',
@@ -326,7 +322,11 @@ class _SessionTile extends StatelessWidget {
           _relativeTime(session.lastActive),
           style: TextStyle(color: c.textMuted, fontSize: 12),
         ),
-        trailing: Icon(Icons.chevron_right_rounded, color: c.textMuted, size: 20),
+        trailing: Icon(
+          Icons.chevron_right_rounded,
+          color: c.textMuted,
+          size: 20,
+        ),
       ),
     );
   }

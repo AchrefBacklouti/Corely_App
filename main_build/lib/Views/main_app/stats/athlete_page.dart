@@ -1,5 +1,7 @@
 import 'dart:math' as math;
 import 'package:flutter/material.dart';
+import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Views/main_app/stats/achievements_page.dart';
 
 // ─────────────────────────────────────────────
 // Data model for a claimable workout
@@ -118,7 +120,7 @@ class _XpOrbState extends State<_XpOrb> with SingleTickerProviderStateMixin {
                 color: widget.color,
                 boxShadow: [
                   BoxShadow(
-                    color: widget.color.withOpacity(0.7),
+                    color: widget.color.withValues(alpha: 0.7),
                     blurRadius: 6,
                     spreadRadius: 1,
                   ),
@@ -314,6 +316,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage>
                 _buildSectionLabel('Available Workouts'),
                 const SizedBox(height: 8),
                 Expanded(child: _buildWorkoutList()),
+                _buildAchievementsButton(context),
               ],
             ),
           ),
@@ -338,7 +341,7 @@ class _AthleteProfilePageState extends State<AthleteProfilePage>
           Text(
             'back',
             style: TextStyle(
-              color: Colors.white.withOpacity(0.3),
+              color: Colors.white.withValues(alpha: 0.3),
               fontSize: 11,
               letterSpacing: 2,
               fontFamily: 'monospace',
@@ -460,6 +463,55 @@ class _AthleteProfilePageState extends State<AthleteProfilePage>
       itemBuilder: (_, i) => _WorkoutRow(
         challenge: _workouts[i],
         onClaim: (Offset btnCenter) => _claimXp(_workouts[i], btnCenter),
+      ),
+    );
+  }
+
+  Widget _buildAchievementsButton(BuildContext context) {
+    return GestureDetector(
+      onTap: () => Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AchievementsPage()),
+      ),
+      child: Container(
+        margin: const EdgeInsets.fromLTRB(16, 8, 16, 16),
+        padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+        decoration: BoxDecoration(
+          color: context.colors.surfaceRaised,
+          border: Border.all(color: const Color(0xFF3a2f52)),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            Image.asset('assets/img/achieve.png', width: 30, height: 30),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Achievements',
+                    style: TextStyle(
+                      color: Color(0xFFe8e0f5),
+                      fontSize: 14,
+                      fontWeight: FontWeight.w700,
+                    ),
+                  ),
+                  SizedBox(height: 1),
+                  Text(
+                    'See Achievements',
+                    style: TextStyle(color: Color(0xFF7a6e90), fontSize: 11),
+                  ),
+                ],
+              ),
+            ),
+            const Icon(
+              Icons.chevron_right_rounded,
+              color: Color(0xFF7b5ea7),
+              size: 22,
+            ),
+          ],
+        ),
       ),
     );
   }
