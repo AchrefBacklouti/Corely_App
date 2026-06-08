@@ -45,6 +45,12 @@
 	<true/>
 	<key>UIApplicationSupportsIndirectInputEvents</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Camera is used to scan food product barcodes</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Microphone is used for voice food search</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>Speech recognition is used to search for food by voice</string>
 	<key>CFBundleURLTypes</key>
 	<array>
 		<dict>

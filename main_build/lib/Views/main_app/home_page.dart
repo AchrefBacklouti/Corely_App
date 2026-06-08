@@ -39,6 +39,19 @@ class MainShellPage extends StatefulWidget {
 class _MainShellPageState extends State<MainShellPage> {
   int _index = 0;
   bool _hasUnreadAiMessage = true;
+  late final PageController _pageCtrl;
+
+  @override
+  void initState() {
+    super.initState();
+    _pageCtrl = PageController();
+  }
+
+  @override
+  void dispose() {
+    _pageCtrl.dispose();
+    super.dispose();
+  }
 
   static const _navIcons = [
     Icons.home_filled,
@@ -101,32 +114,40 @@ class _MainShellPageState extends State<MainShellPage> {
     return Scaffold(
       backgroundColor: c.background,
       body: SafeArea(
-        child: Column(
+        child: Stack(
           children: [
-            const _TopBar(),
-            Expanded(
-              child: IndexedStack(
-                index: _index,
-                children: const [
-                  HomePageContent(),
-                  WorkoutPageContent(),
-                  StatsPageContent(),
-                  NutritionPageContent(),
-                ],
-              ),
+            Column(
+              children: [
+                const _TopBar(),
+                Expanded(
+                  child: PageView(
+                    controller: _pageCtrl,
+                    onPageChanged: (i) => setState(() => _index = i),
+                    children: [
+                      const _KeepAlive(child: HomePageContent()),
+                      const _KeepAlive(child: WorkoutPageContent()),
+                      const _KeepAlive(child: StatsPageContent()),
+                      const _KeepAlive(child: NutritionPageContent()),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            _DraggableChatBubble(
+              hasUnread: _hasUnreadAiMessage,
+              onTap: _openAiChat,
             ),
           ],
         ),
       ),
-      floatingActionButton: _AiChatBubble(
-        hasUnread: _hasUnreadAiMessage,
-        onTap: _openAiChat,
-      ),
-      floatingActionButtonLocation: FloatingActionButtonLocation.endFloat,
       bottomNavigationBar: _BottomNav(
         currentIndex: _index,
         icons: _navIcons,
-        onTap: (i) => setState(() => _index = i),
+        onTap: (i) => _pageCtrl.animateToPage(
+          i,
+          duration: const Duration(milliseconds: 350),
+          curve: Curves.easeInOut,
+        ),
       ),
     );
   }
@@ -251,6 +272,94 @@ class _AiChatBubbleState extends State<_AiChatBubble>
           ),
         ),
       ),
+    );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Draggable AI Chat Bubble Wrapper
+// ─────────────────────────────────────────────
+class _DraggableChatBubble extends StatefulWidget {
+  final bool hasUnread;
+  final VoidCallback onTap;
+  const _DraggableChatBubble({required this.hasUnread, required this.onTap});
+
+  @override
+  State<_DraggableChatBubble> createState() => _DraggableChatBubbleState();
+}
+
+class _DraggableChatBubbleState extends State<_DraggableChatBubble> {
+  Offset _pos = Offset.zero;
+  bool _initialized = false;
+  bool _snapping = false;
+  bool _dragging = false;
+
+  static const double _size = 58.0;
+  static const double _edgePad = 14.0;
+  static const double _bottomPad = 92.0; // keeps bubble above bottom nav
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final w = constraints.maxWidth;
+        final h = constraints.maxHeight;
+
+        if (!_initialized) {
+          _pos = Offset(w - _size - _edgePad, h - _size - _bottomPad);
+          _initialized = true;
+        }
+
+        return Stack(
+          children: [
+            AnimatedPositioned(
+              duration: _snapping
+                  ? const Duration(milliseconds: 320)
+                  : Duration.zero,
+              curve: Curves.easeOutBack,
+              left: _pos.dx,
+              top: _pos.dy,
+              width: _size,
+              height: _size,
+              child: GestureDetector(
+                behavior: HitTestBehavior.opaque,
+                onPanStart: (_) => setState(() {
+                  _snapping = false;
+                  _dragging = true;
+                }),
+                onPanUpdate: (d) => setState(() {
+                  _pos = Offset(
+                    (_pos.dx + d.delta.dx).clamp(_edgePad, w - _size - _edgePad),
+                    (_pos.dy + d.delta.dy).clamp(_edgePad, h - _size - _bottomPad),
+                  );
+                }),
+                onPanEnd: (_) {
+                  final snapX = _pos.dx + _size / 2 < w / 2
+                      ? _edgePad
+                      : w - _size - _edgePad;
+                  setState(() {
+                    _snapping = true;
+                    _dragging = false;
+                    _pos = Offset(snapX, _pos.dy);
+                  });
+                },
+                child: AnimatedOpacity(
+                  duration: const Duration(milliseconds: 120),
+                  opacity: _dragging ? 0.82 : 1.0,
+                  child: AnimatedScale(
+                    duration: const Duration(milliseconds: 120),
+                    scale: _dragging ? 0.9 : 1.0,
+                    child: _AiChatBubble(
+                      hasUnread: widget.hasUnread,
+                      onTap: widget.onTap,
+                    ),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        );
+      },
     );
   }
 }
@@ -580,5 +689,28 @@ class FitButton extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+// ─────────────────────────────────────────────
+// Keep-alive wrapper for PageView children
+// ─────────────────────────────────────────────
+class _KeepAlive extends StatefulWidget {
+  final Widget child;
+  const _KeepAlive({required this.child});
+
+  @override
+  State<_KeepAlive> createState() => _KeepAliveState();
+}
+
+class _KeepAliveState extends State<_KeepAlive>
+    with AutomaticKeepAliveClientMixin {
+  @override
+  bool get wantKeepAlive => true;
+
+  @override
+  Widget build(BuildContext context) {
+    super.build(context);
+    return widget.child;
   }
 }

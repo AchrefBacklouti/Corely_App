@@ -1,7 +1,25 @@
 import 'package:flutter/material.dart';
+import 'add_meal_page.dart';
 
-class NutritionPageContent extends StatelessWidget {
+class NutritionPageContent extends StatefulWidget {
   const NutritionPageContent({super.key});
+
+  @override
+  State<NutritionPageContent> createState() => _NutritionPageContentState();
+}
+
+class _NutritionPageContentState extends State<NutritionPageContent> {
+  double _waterMl = 0;
+  static const double _goalMl = 3000;
+
+  void _addWater(double ml) {
+    setState(() => _waterMl = (_waterMl + ml).clamp(0, _goalMl));
+  }
+
+  String _formatWater(double ml) {
+    if (ml >= 1000) return '${(ml / 1000).toStringAsFixed(1)}L';
+    return '${ml.toInt()}ml';
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -13,55 +31,40 @@ class NutritionPageContent extends StatelessWidget {
           colors: [Color(0xFF05070D), Color(0xFF0B0F1A), Color(0xFF121826)],
         ),
       ),
-      child: SingleChildScrollView(
-        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            _buildHeader(),
-
-            const SizedBox(height: 30),
-
-            _buildStatsRow(),
-
-            const SizedBox(height: 32),
-
-            const Text(
-              "Workout Meals",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
+      child: Column(
+        children: [
+          Expanded(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 22),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  _buildHeader(context),
+                  const SizedBox(height: 30),
+                  _buildStatsRow(),
+                  const SizedBox(height: 32),
+                  const Text(
+                    "Workout Meals",
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 22,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                  _buildMealsList(),
+                  const SizedBox(height: 24),
+                ],
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            _buildMealsList(),
-
-            const SizedBox(height: 32),
-
-            const Text(
-              "Hydration",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 22,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-
-            const SizedBox(height: 16),
-
-            const _HydrationCard(),
-
-            const SizedBox(height: 100),
-          ],
-        ),
+          ),
+          _buildWaterBar(context),
+        ],
       ),
     );
   }
 
-  Widget _buildHeader() {
+  Widget _buildHeader(BuildContext context) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -75,7 +78,6 @@ class NutritionPageContent extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 12),
-
         RichText(
           text: const TextSpan(
             style: TextStyle(
@@ -93,32 +95,57 @@ class NutritionPageContent extends StatelessWidget {
             ],
           ),
         ),
-
         const SizedBox(height: 16),
-
         const Text(
           "Discover healthy meals designed to boost your energy, improve recovery, and support your fitness goals.",
           style: TextStyle(color: Colors.white70, fontSize: 15, height: 1.5),
         ),
-
         const SizedBox(height: 24),
-
-        ElevatedButton(
-          onPressed: () {},
-          style: ElevatedButton.styleFrom(
-            backgroundColor: Colors.orange,
-            foregroundColor: Colors.white,
-            elevation: 10,
-            shadowColor: Colors.orange,
-            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 18),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(18),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton(
+                onPressed: () {},
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.orange,
+                  foregroundColor: Colors.white,
+                  elevation: 10,
+                  shadowColor: Colors.orange,
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 28, vertical: 18),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
+                ),
+                child: const Text(
+                  "Explore Plans",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
             ),
-          ),
-          child: const Text(
-            "Explore Plans",
-            style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-          ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => Navigator.push(context,
+                    MaterialPageRoute(builder: (_) => const AddMealPage())),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.white.withOpacity(0.1),
+                  foregroundColor: Colors.orange,
+                  elevation: 0,
+                  side: BorderSide(
+                      color: Colors.orange.withOpacity(0.5), width: 1.5),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 28, vertical: 18),
+                  shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(18)),
+                ),
+                icon: const Icon(Icons.add, size: 20),
+                label: const Text(
+                  "Add Meal",
+                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ),
+          ],
         ),
       ],
     );
@@ -129,21 +156,17 @@ class NutritionPageContent extends StatelessWidget {
       children: [
         Row(
           children: const [
-            Expanded(
-              child: _StatCard(title: "Daily Calories", value: "2,450"),
-            ),
+            Expanded(child: _StatCard(title: "Daily Calories", value: "2,450")),
             SizedBox(width: 16),
-            Expanded(
-              child: _StatCard(title: "Protein Goal", value: "145g"),
-            ),
+            Expanded(child: _StatCard(title: "Protein Goal", value: "145g")),
           ],
         ),
-        SizedBox(height: 16),
+        const SizedBox(height: 16),
         Row(
-          children: [
-            Expanded(
-              child: _StatCard(title: "Water Intake", value: "3.2L"),
-            ),
+          children: const [
+            Expanded(child: _StatCard(title: "Fat Goal", value: "65g")),
+            SizedBox(width: 16),
+            Expanded(child: _StatCard(title: "Carbs Goal", value: "250g")),
           ],
         ),
       ],
@@ -152,20 +175,318 @@ class NutritionPageContent extends StatelessWidget {
 
   Widget _buildMealsList() {
     return Column(
-      children: meals.map((meal) {
-        return Padding(
-          padding: const EdgeInsets.only(bottom: 24),
-          child: _MealCard(meal: meal),
-        );
-      }).toList(),
+      children: meals
+          .map((meal) => Padding(
+                padding: const EdgeInsets.only(bottom: 24),
+                child: _MealCard(meal: meal),
+              ))
+          .toList(),
+    );
+  }
+
+  // ── Sticky water intake bar ──────────────────────────────────────────────────
+  Widget _buildWaterBar(BuildContext context) {
+    final progress = (_waterMl / _goalMl).clamp(0.0, 1.0);
+    final reached = _waterMl >= _goalMl;
+
+    return Container(
+      padding: const EdgeInsets.fromLTRB(20, 14, 16, 20),
+      decoration: BoxDecoration(
+        color: const Color(0xFF0D1117),
+        border: Border(
+          top: BorderSide(color: Colors.blue.withOpacity(0.18), width: 1),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 40,
+            height: 40,
+            decoration: BoxDecoration(
+              color: Colors.blue.withOpacity(0.12),
+              shape: BoxShape.circle,
+              border: Border.all(color: Colors.blue.withOpacity(0.3)),
+            ),
+            child: const Icon(Icons.water_drop, color: Colors.blue, size: 20),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    const Text(
+                      "Water Intake",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 13,
+                          fontWeight: FontWeight.w600),
+                    ),
+                    Text(
+                      reached
+                          ? "Goal reached! 🎉"
+                          : "${_formatWater(_waterMl)} / ${_formatWater(_goalMl)}",
+                      style: TextStyle(
+                          color: reached ? Colors.green[400] : Colors.blue,
+                          fontSize: 12,
+                          fontWeight: FontWeight.bold),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                ClipRRect(
+                  borderRadius: BorderRadius.circular(10),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 400),
+                    curve: Curves.easeOut,
+                    child: LinearProgressIndicator(
+                      value: progress,
+                      minHeight: 7,
+                      backgroundColor: Colors.white.withOpacity(0.07),
+                      valueColor: AlwaysStoppedAnimation<Color>(
+                          reached ? Colors.green : Colors.blue),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 12),
+          GestureDetector(
+            onTap: () => _openWaterSheet(context),
+            child: Container(
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 14, vertical: 9),
+              decoration: BoxDecoration(
+                color: Colors.blue,
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.blue.withOpacity(0.35),
+                    blurRadius: 8,
+                    offset: const Offset(0, 3),
+                  ),
+                ],
+              ),
+              child: const Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.add, color: Colors.white, size: 16),
+                  SizedBox(width: 4),
+                  Text("Add",
+                      style: TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.bold,
+                          fontSize: 13)),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  void _openWaterSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (_) => _WaterAddSheet(
+        onAdd: (ml) => _addWater(ml),
+        remaining: (_goalMl - _waterMl).clamp(0, _goalMl),
+      ),
     );
   }
 }
 
+// ─── Water quick-add sheet ────────────────────────────────────────────────────
+
+class _WaterAddSheet extends StatefulWidget {
+  final ValueChanged<double> onAdd;
+  final double remaining;
+  const _WaterAddSheet({required this.onAdd, required this.remaining});
+
+  @override
+  State<_WaterAddSheet> createState() => _WaterAddSheetState();
+}
+
+class _WaterAddSheetState extends State<_WaterAddSheet> {
+  static const _presets = [150.0, 250.0, 330.0, 500.0, 750.0, 1000.0];
+  static const _labels  = ['150ml', '250ml', '330ml', '500ml', '750ml', '1L'];
+
+  double _custom = 250;
+  double? _selected = 250;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.only(
+        left: 24,
+        right: 24,
+        top: 20,
+        bottom: MediaQuery.of(context).viewInsets.bottom + 28,
+      ),
+      decoration: const BoxDecoration(
+        color: Color(0xFF0D1117),
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Center(
+            child: Container(
+              width: 40,
+              height: 4,
+              decoration: BoxDecoration(
+                color: Colors.white24,
+                borderRadius: BorderRadius.circular(2),
+              ),
+            ),
+          ),
+          const SizedBox(height: 20),
+          const Text(
+            "How much did you drink?",
+            style: TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 6),
+          Text(
+            "${widget.remaining.toInt()}ml remaining to reach your goal",
+            style: const TextStyle(color: Colors.white38, fontSize: 12),
+          ),
+          const SizedBox(height: 20),
+
+          // Quick preset grid
+          Wrap(
+            spacing: 10,
+            runSpacing: 10,
+            children: List.generate(_presets.length, (i) {
+              final sel = _selected == _presets[i];
+              return GestureDetector(
+                onTap: () => setState(() {
+                  _selected = _presets[i];
+                  _custom = _presets[i];
+                }),
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  padding: const EdgeInsets.symmetric(
+                      horizontal: 16, vertical: 10),
+                  decoration: BoxDecoration(
+                    color:
+                        sel ? Colors.blue : const Color(0xFF1C2130),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(
+                      color: sel
+                          ? Colors.blue
+                          : Colors.white.withOpacity(0.08),
+                    ),
+                    boxShadow: sel
+                        ? [
+                            BoxShadow(
+                              color: Colors.blue.withOpacity(0.25),
+                              blurRadius: 8,
+                            )
+                          ]
+                        : [],
+                  ),
+                  child: Text(
+                    _labels[i],
+                    style: TextStyle(
+                        color: sel ? Colors.white : Colors.white60,
+                        fontWeight: sel
+                            ? FontWeight.bold
+                            : FontWeight.normal,
+                        fontSize: 13),
+                  ),
+                ),
+              );
+            }),
+          ),
+
+          const SizedBox(height: 24),
+
+          // Custom slider
+          Row(
+            children: [
+              const Text("Custom",
+                  style: TextStyle(color: Colors.white70, fontSize: 13)),
+              const Spacer(),
+              Text(
+                _custom >= 1000
+                    ? "${(_custom / 1000).toStringAsFixed(2).replaceAll(RegExp(r'0+$'), '').replaceAll(RegExp(r'\.$'), '')}L"
+                    : "${_custom.toInt()}ml",
+                style: const TextStyle(
+                    color: Colors.blue,
+                    fontWeight: FontWeight.bold,
+                    fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 6),
+          SliderTheme(
+            data: SliderThemeData(
+              trackHeight: 4,
+              thumbShape:
+                  const RoundSliderThumbShape(enabledThumbRadius: 10),
+              activeTrackColor: Colors.blue,
+              inactiveTrackColor: Colors.white.withOpacity(0.1),
+              thumbColor: Colors.blue,
+              overlayColor: Colors.blue.withOpacity(0.12),
+            ),
+            child: Slider(
+              value: _custom,
+              min: 50,
+              max: 1000,
+              divisions: 19,
+              onChanged: (v) => setState(() {
+                _custom = v;
+                _selected = _presets.contains(v) ? v : null;
+              }),
+            ),
+          ),
+
+          const SizedBox(height: 20),
+
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton(
+              onPressed: () {
+                widget.onAdd(_custom);
+                Navigator.pop(context);
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.blue,
+                foregroundColor: Colors.white,
+                elevation: 0,
+                padding: const EdgeInsets.symmetric(vertical: 16),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
+              ),
+              child: Text(
+                "Add ${_custom.toInt()}ml",
+                style: const TextStyle(
+                    fontSize: 15, fontWeight: FontWeight.bold),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── _StatCard ────────────────────────────────────────────────────────────────
+
 class _StatCard extends StatelessWidget {
   final String title;
   final String value;
-
   const _StatCard({required this.title, required this.value});
 
   @override
@@ -182,24 +503,21 @@ class _StatCard extends StatelessWidget {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            title,
-            style: const TextStyle(color: Colors.white54, fontSize: 13),
-          ),
+          Text(title,
+              style: const TextStyle(color: Colors.white54, fontSize: 13)),
           const SizedBox(height: 8),
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Text(value,
+              style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 24,
+                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
   }
 }
+
+// ─── Meal data ────────────────────────────────────────────────────────────────
 
 class Meal {
   final String name;
@@ -254,9 +572,10 @@ const List<Meal> meals = [
   ),
 ];
 
+// ─── _MealCard ────────────────────────────────────────────────────────────────
+
 class _MealCard extends StatelessWidget {
   final Meal meal;
-
   const _MealCard({required this.meal});
 
   @override
@@ -269,7 +588,8 @@ class _MealCard extends StatelessWidget {
           colors: [Color(0xFF1A1F2E), Color(0xFF111522)],
         ),
         borderRadius: BorderRadius.circular(32),
-        border: Border.all(color: Colors.orange.withOpacity(0.15), width: 1.2),
+        border:
+            Border.all(color: Colors.orange.withOpacity(0.15), width: 1.2),
         boxShadow: [
           BoxShadow(
             color: Colors.orange.withOpacity(0.12),
@@ -293,33 +613,29 @@ class _MealCard extends StatelessWidget {
                   child: Image.network(meal.image, fit: BoxFit.cover),
                 ),
               ),
-
               Positioned(
                 top: 16,
                 left: 16,
                 child: Container(
                   padding: const EdgeInsets.symmetric(
-                    horizontal: 16,
-                    vertical: 8,
-                  ),
+                      horizontal: 16, vertical: 8),
                   decoration: BoxDecoration(
                     color: Colors.black.withOpacity(0.7),
                     borderRadius: BorderRadius.circular(24),
-                    border: Border.all(color: Colors.orange.withOpacity(0.2)),
+                    border: Border.all(
+                        color: Colors.orange.withOpacity(0.2)),
                   ),
                   child: Text(
                     meal.level,
                     style: TextStyle(
-                      color: Colors.orange[400],
-                      fontSize: 13,
-                      fontWeight: FontWeight.bold,
-                    ),
+                        color: Colors.orange[400],
+                        fontSize: 13,
+                        fontWeight: FontWeight.bold),
                   ),
                 ),
               ),
             ],
           ),
-
           Padding(
             padding: const EdgeInsets.all(24),
             child: Column(
@@ -328,21 +644,15 @@ class _MealCard extends StatelessWidget {
                 Row(
                   children: [
                     Expanded(
-                      child: Text(
-                        meal.name,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 22,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
+                      child: Text(meal.name,
+                          style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 22,
+                              fontWeight: FontWeight.bold)),
                     ),
-
                     Container(
                       padding: const EdgeInsets.symmetric(
-                        horizontal: 12,
-                        vertical: 6,
-                      ),
+                          horizontal: 12, vertical: 6),
                       decoration: BoxDecoration(
                         color: Colors.orange.withOpacity(0.15),
                         borderRadius: BorderRadius.circular(16),
@@ -350,34 +660,28 @@ class _MealCard extends StatelessWidget {
                       child: Text(
                         "${meal.calories} kcal",
                         style: TextStyle(
-                          color: Colors.orange[400],
-                          fontWeight: FontWeight.bold,
-                        ),
+                            color: Colors.orange[400],
+                            fontWeight: FontWeight.bold),
                       ),
                     ),
                   ],
                 ),
-
                 const SizedBox(height: 20),
-
                 Row(
                   children: [
                     Expanded(
-                      child: _MacroBox(label: "PROTEIN", value: meal.protein),
-                    ),
+                        child: _MacroBox(
+                            label: "PROTEIN", value: meal.protein)),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MacroBox(label: "CARBS", value: meal.carbs),
-                    ),
+                        child:
+                            _MacroBox(label: "CARBS", value: meal.carbs)),
                     const SizedBox(width: 12),
                     Expanded(
-                      child: _MacroBox(label: "FATS", value: meal.fats),
-                    ),
+                        child: _MacroBox(label: "FATS", value: meal.fats)),
                   ],
                 ),
-
                 const SizedBox(height: 24),
-
                 SizedBox(
                   width: double.infinity,
                   child: ElevatedButton(
@@ -387,17 +691,15 @@ class _MealCard extends StatelessWidget {
                       foregroundColor: Colors.white,
                       elevation: 10,
                       shadowColor: Colors.orange,
-                      padding: const EdgeInsets.symmetric(vertical: 18),
+                      padding:
+                          const EdgeInsets.symmetric(vertical: 18),
                       shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(18),
-                      ),
+                          borderRadius: BorderRadius.circular(18)),
                     ),
                     child: const Text(
                       "Add To Meal Plan",
                       style: TextStyle(
-                        fontSize: 16,
-                        fontWeight: FontWeight.bold,
-                      ),
+                          fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -410,10 +712,11 @@ class _MealCard extends StatelessWidget {
   }
 }
 
+// ─── _MacroBox ────────────────────────────────────────────────────────────────
+
 class _MacroBox extends StatelessWidget {
   final String label;
   final String value;
-
   const _MacroBox({required this.label, required this.value});
 
   @override
@@ -427,82 +730,18 @@ class _MacroBox extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Text(
-            label,
-            style: const TextStyle(
-              color: Colors.white54,
-              fontSize: 10,
-              letterSpacing: 1,
-              fontWeight: FontWeight.w600,
-            ),
-          ),
-
+          Text(label,
+              style: const TextStyle(
+                  color: Colors.white54,
+                  fontSize: 10,
+                  letterSpacing: 1,
+                  fontWeight: FontWeight.w600)),
           const SizedBox(height: 6),
-
-          Text(
-            value,
-            style: const TextStyle(
-              color: Colors.white,
-              fontSize: 18,
-              fontWeight: FontWeight.bold,
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
-
-class _HydrationCard extends StatelessWidget {
-  const _HydrationCard();
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF1A1F2E), Color(0xFF111522)],
-        ),
-        borderRadius: BorderRadius.circular(24),
-        border: Border.all(color: Colors.blue.withOpacity(0.3)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: const [
-              Icon(Icons.water_drop, color: Colors.blue),
-              SizedBox(width: 10),
-              Text(
-                "Water Intake",
-                style: TextStyle(
+          Text(value,
+              style: const TextStyle(
                   color: Colors.white,
                   fontSize: 18,
-                  fontWeight: FontWeight.bold,
-                ),
-              ),
-            ],
-          ),
-
-          const SizedBox(height: 20),
-
-          ClipRRect(
-            borderRadius: BorderRadius.circular(20),
-            child: LinearProgressIndicator(
-              value: 0.7,
-              minHeight: 10,
-              backgroundColor: Colors.white10,
-              valueColor: const AlwaysStoppedAnimation<Color>(Colors.blue),
-            ),
-          ),
-
-          const SizedBox(height: 14),
-
-          const Text(
-            "2.1L / 3.0L",
-            style: TextStyle(color: Colors.blue, fontWeight: FontWeight.bold),
-          ),
+                  fontWeight: FontWeight.bold)),
         ],
       ),
     );
