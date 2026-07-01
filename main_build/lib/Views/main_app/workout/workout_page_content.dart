@@ -67,13 +67,15 @@ class _WorkoutPageContentState extends State<WorkoutPageContent> {
         SupabaseService.getSuggestedPlans(), // Updated to fetch from Supabase
       ]);
       if (!mounted) return;
+      debugPrint('Supabase suggested plans count: ${results[1].length}');
       setState(() {
         _customPlans = results[0];
         if (results[1].isNotEmpty) _suggestedPlans = results[1];
         _isLoading = false;
       });
-    } catch (_) {
+    } catch (e) {
       if (!mounted) return;
+      debugPrint('WorkoutPage._loadData: $e');
       setState(() {
         _isLoading = false;
         _loadError = 'Unable to load training plans right now.';
@@ -621,19 +623,13 @@ class _SuggestedSection extends StatefulWidget {
 
 class _SuggestedSectionState extends State<_SuggestedSection> {
   final Map<PlanCategory, String> _queries = {
-    PlanCategory.cardio: '',
-    PlanCategory.strength: '',
-    PlanCategory.hypertrophy: '',
+    for (final cat in PlanCategory.values) cat: '',
   };
   final Map<PlanCategory, bool> _searchOpen = {
-    PlanCategory.cardio: false,
-    PlanCategory.strength: false,
-    PlanCategory.hypertrophy: false,
+    for (final cat in PlanCategory.values) cat: false,
   };
   final Map<PlanCategory, TextEditingController> _controllers = {
-    PlanCategory.cardio: TextEditingController(),
-    PlanCategory.strength: TextEditingController(),
-    PlanCategory.hypertrophy: TextEditingController(),
+    for (final cat in PlanCategory.values) cat: TextEditingController(),
   };
 
   @override
@@ -664,6 +660,10 @@ class _SuggestedSectionState extends State<_SuggestedSection> {
       icon: Icons.accessibility_new_rounded,
     ),
     PlanCategory.cardio: (label: 'Cardio', icon: Icons.directions_run),
+    PlanCategory.calisthenics: (
+      label: 'Calisthenics',
+      icon: Icons.self_improvement_rounded,
+    ),
   };
 
   @override

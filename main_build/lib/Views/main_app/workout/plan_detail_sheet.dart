@@ -10,6 +10,7 @@ import 'package:main_build/Views/main_app/workout/edit_plan_page.dart';
 import 'package:main_build/data/local_plan_service.dart';
 import 'package:main_build/data/data_service.dart';
 import 'package:main_build/data/workout_plans.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 // ─────────────────────────────────────────────
 // Plan detail bottom sheet
@@ -187,6 +188,60 @@ class _PlanDetailSheetState extends State<PlanDetailSheet> {
                         color: c.textSecondary,
                         fontSize: 14,
                         height: 1.6,
+                      ),
+                    ),
+                    const SizedBox(height: 20),
+                  ],
+
+                  if (plan.credit != null) ...[
+                    GestureDetector(
+                      onTap: plan.creditUrl != null
+                          ? () => launchUrl(
+                                Uri.parse(plan.creditUrl!),
+                                mode: LaunchMode.externalApplication,
+                              )
+                          : null,
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 12,
+                          vertical: 8,
+                        ),
+                        decoration: BoxDecoration(
+                          color: c.surfaceRaised,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(color: c.border),
+                        ),
+                        child: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(Icons.person_outline,
+                                size: 14, color: c.textMuted),
+                            const SizedBox(width: 6),
+                            Text(
+                              'Credit: ',
+                              style: TextStyle(
+                                  color: c.textMuted, fontSize: 12),
+                            ),
+                            Text(
+                              plan.credit!,
+                              style: TextStyle(
+                                color: plan.creditUrl != null
+                                    ? c.accent
+                                    : c.textSecondary,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                decoration: plan.creditUrl != null
+                                    ? TextDecoration.underline
+                                    : null,
+                              ),
+                            ),
+                            if (plan.creditUrl != null) ...[
+                              const SizedBox(width: 4),
+                              Icon(Icons.open_in_new,
+                                  size: 12, color: c.accent),
+                            ],
+                          ],
+                        ),
                       ),
                     ),
                     const SizedBox(height: 20),

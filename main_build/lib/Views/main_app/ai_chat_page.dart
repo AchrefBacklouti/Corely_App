@@ -1,12 +1,22 @@
 import 'dart:convert';
 import 'package:flutter/material.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 import 'package:http/http.dart' as http;
 import 'package:main_build/Theme/app_theme.dart';
+import 'package:main_build/Views/main_app/chat_history_page.dart';
+import 'package:main_build/Views/main_app/workout/plan_detail_sheet.dart';
+import 'package:main_build/data/chat_session_service.dart';
 import 'package:main_build/data/local_plan_service.dart';
+import 'package:main_build/data/supabase_service.dart';
 import 'package:main_build/data/workout_plans.dart';
 
+// ─── Message type ─────────────────────────────────────────────────────────────
+
+enum _MessageType { text, planCard, recommendationChoice }
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
 class AiChatPage extends StatefulWidget {
+  final String sessionId;
   final String? gender;
   final int? age;
   final double? weight;
@@ -17,6 +27,7 @@ class AiChatPage extends StatefulWidget {
 
   const AiChatPage({
     super.key,
+    required this.sessionId,
     this.gender,
     this.age,
     this.weight,
@@ -34,7 +45,7 @@ class _AiChatPageState extends State<AiChatPage> {
   final _controller = TextEditingController();
   final _scrollController = ScrollController();
   final List<_Message> _messages = [
-    _Message(
+    const _Message(
       text:
           "Hi! I'm Corely AI, your personal fitness assistant. How can I help you today?",
       isBot: true,
@@ -42,6 +53,12 @@ class _AiChatPageState extends State<AiChatPage> {
   ];
   bool _isTyping = false;
   final Set<int> _savedPlanIndices = {};
+
+  // ── Recommendation flow state ────────────────────────────────────────────
+  bool _awaitingRecommendationChoice = false;
+  WorkoutPlan? _pendingModificationPlan;
+  List<WorkoutPlan> _recommendationPlans = [];
+  int _recommendationIndex = 0;
 
   static const _apiKey = 'AIzaSyBZf6JIMQCj30NbGExIgv6zIdVZkUMR6gA';
   static const _baseSystemPrompt =
@@ -63,7 +80,8 @@ class _AiChatPageState extends State<AiChatPage> {
   String get _systemPrompt {
     final w = widget;
     if (w.gender == null) return _baseSystemPrompt;
-    final profile = 'User profile — Gender: ${w.gender}, Age: ${w.age} yrs, '
+    final profile =
+        'User profile — Gender: ${w.gender}, Age: ${w.age} yrs, '
         'Weight: ${w.weight?.toStringAsFixed(1)} ${w.weightUnit}, '
         'Height: ${w.heightDisplay}, Goal: ${w.goal}, '
         'Training frequency: ${w.trainingDays} days/week. '
@@ -71,13 +89,10 @@ class _AiChatPageState extends State<AiChatPage> {
     return '$_baseSystemPrompt\n\n$profile';
   }
 
-  static const _hiveBox = 'ai_chat';
-  static const _hiveKey = 'messages';
-
   @override
   void initState() {
     super.initState();
-    _loadMessages();
+    _loadFromSession();
   }
 
   @override
@@ -87,48 +102,101 @@ class _AiChatPageState extends State<AiChatPage> {
     super.dispose();
   }
 
-  Future<void> _loadMessages() async {
-    final box = await Hive.openBox<String>(_hiveBox);
-    final raw = box.get(_hiveKey);
-    if (raw == null || !mounted) return;
-    try {
-      final list = (jsonDecode(raw) as List).cast<Map<String, dynamic>>();
-      if (list.isEmpty) return;
-      setState(() {
-        _messages
-          ..clear()
-          ..addAll(list.map((m) => _Message(
-                text: m['text'] as String,
-                isBot: m['isBot'] as bool,
-              )));
-      });
-      WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
-    } catch (_) {}
+  // ── Persistence ──────────────────────────────────────────────────────────
+
+  Future<void> _loadFromSession() async {
+    final session = await ChatSessionService.getSessionById(widget.sessionId);
+    if (!mounted) return;
+    if (session == null || session.messages.isEmpty) return;
+    setState(() {
+      _messages
+        ..clear()
+        ..addAll(
+          session.messages.map(
+            (m) => _Message(
+              text: m['text'] as String? ?? '',
+              isBot: m['isBot'] as bool? ?? true,
+            ),
+          ),
+        );
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _scrollToBottom());
   }
 
   Future<void> _saveMessages() async {
-    final box = await Hive.openBox<String>(_hiveBox);
-    await box.put(
-      _hiveKey,
-      jsonEncode(_messages.map((m) => {'text': m.text, 'isBot': m.isBot}).toList()),
-    );
+    final serializable = _messages
+        .map((m) {
+          if (m.type == _MessageType.planCard) {
+            return <String, dynamic>{
+              'text': m.plan != null ? '[Plan shown: ${m.plan!.title}]' : '',
+              'isBot': true,
+            };
+          }
+          if (m.type == _MessageType.recommendationChoice) {
+            return <String, dynamic>{'text': m.text, 'isBot': true};
+          }
+          return <String, dynamic>{'text': m.text, 'isBot': m.isBot};
+        })
+        .where((m) => (m['text'] as String).isNotEmpty)
+        .toList();
+    await ChatSessionService.updateSession(widget.sessionId, serializable);
   }
 
-  void _send() {
-    _doSend();
-  }
+  // ── Send logic ───────────────────────────────────────────────────────────
+
+  void _send() => _doSend();
 
   Future<void> _doSend() async {
     final text = _controller.text.trim();
     if (text.isEmpty) return;
+
     setState(() {
       _messages.add(_Message(text: text, isBot: false));
-      _isTyping = true;
       _controller.clear();
+      // Typing while a choice is pending cancels the flow
+      if (_awaitingRecommendationChoice) _awaitingRecommendationChoice = false;
     });
     _scrollToBottom();
     _saveMessages();
 
+    // ── Pending modification ───────────────────────────────────────────────
+    if (_pendingModificationPlan != null) {
+      final plan = _pendingModificationPlan!;
+      _pendingModificationPlan = null;
+      setState(() => _isTyping = true);
+      try {
+        final reply = await _callGemini(extra: _buildModificationContext(plan));
+        if (!mounted) return;
+        setState(() {
+          _isTyping = false;
+          _messages.add(_Message(text: reply, isBot: true));
+        });
+      } catch (e) {
+        if (!mounted) return;
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            _Message(
+              text:
+                  "Corely AI is busy right now — give it a sec and try again 💪",
+              isBot: true,
+            ),
+          );
+        });
+      }
+      _scrollToBottom();
+      _saveMessages();
+      return;
+    }
+
+    // ── Workout generation intent → recommendation flow ────────────────────
+    if (_isWorkoutGenerationRequest(text)) {
+      await _triggerRecommendationFlow();
+      return;
+    }
+
+    // ── Normal Gemini call ─────────────────────────────────────────────────
+    setState(() => _isTyping = true);
     try {
       final reply = await _callGemini();
       if (!mounted) return;
@@ -140,62 +208,332 @@ class _AiChatPageState extends State<AiChatPage> {
       if (!mounted) return;
       setState(() {
         _isTyping = false;
-        _messages.add(_Message(
-          text: "DEBUG ERROR: $e",
-          isBot: true,
-        ));
+        _messages.add(
+          _Message(
+            text:
+                "Corely AI is busy right now — give it a sec and try again 💪",
+            isBot: true,
+          ),
+        );
       });
     }
     _scrollToBottom();
     _saveMessages();
   }
 
-  Future<String> _callGemini() async {
+  // ── Gemini API ───────────────────────────────────────────────────────────
+
+  List<Map<String, dynamic>> _buildContents() {
+    final firstUserIdx = _messages.indexWhere((m) => !m.isBot);
+    if (firstUserIdx == -1) return [];
+    return _messages
+        .skip(firstUserIdx)
+        .map((m) {
+          String t = m.text;
+          if (m.type == _MessageType.planCard) {
+            t = m.plan != null ? '[Plan shown to user: ${m.plan!.title}]' : '';
+          }
+          return {
+            'role': m.isBot ? 'model' : 'user',
+            'parts': [
+              {'text': t},
+            ],
+          };
+        })
+        .where(
+          (m) => ((m['parts'] as List)[0] as Map)['text'].toString().isNotEmpty,
+        )
+        .toList();
+  }
+
+  Future<String> _callGemini({String? extra}) async {
     final url = Uri.parse(
       'https://generativelanguage.googleapis.com/v1beta/models/gemini-flash-latest:generateContent',
     );
-
-    // Gemini requires the first turn to be 'user' — skip the static greeting.
-    final firstUserIdx = _messages.indexWhere((m) => !m.isBot);
-    final contents = _messages.skip(firstUserIdx).map((m) {
-      return {
-        'role': m.isBot ? 'model' : 'user',
-        'parts': [
-          {'text': m.text},
-        ],
-      };
-    }).toList();
-
+    final systemText = extra != null
+        ? '$_systemPrompt\n\n$extra'
+        : _systemPrompt;
     final body = jsonEncode({
       'system_instruction': {
         'parts': [
-          {'text': _systemPrompt},
+          {'text': systemText},
         ],
       },
-      'contents': contents,
+      'contents': _buildContents(),
     });
 
-    final response = await http
-        .post(
-          url,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-goog-api-key': _apiKey,
-          },
-          body: body,
-        )
-        .timeout(const Duration(seconds: 30));
+    // Retry up to 3 times on 503 (model overloaded) with back-off
+    http.Response? lastResponse;
+    for (var attempt = 0; attempt < 3; attempt++) {
+      if (attempt > 0) {
+        await Future.delayed(Duration(seconds: attempt * 2));
+      }
+      lastResponse = await http
+          .post(
+            url,
+            headers: {
+              'Content-Type': 'application/json',
+              'X-goog-api-key': _apiKey,
+            },
+            body: body,
+          )
+          .timeout(const Duration(seconds: 30));
 
-    if (response.statusCode != 200) {
-      throw Exception('HTTP ${response.statusCode}: ${response.body}');
+      if (lastResponse.statusCode == 200) {
+        final json = jsonDecode(lastResponse.body) as Map<String, dynamic>;
+        final candidates = json['candidates'] as List<dynamic>;
+        final content = candidates[0]['content'] as Map<String, dynamic>;
+        final parts = content['parts'] as List<dynamic>;
+        return parts[0]['text'] as String;
+      }
+      if (lastResponse.statusCode != 503) break;
+    }
+    throw Exception('HTTP ${lastResponse?.statusCode}');
+  }
+
+  // ── Recommendation flow ──────────────────────────────────────────────────
+
+  bool _isWorkoutGenerationRequest(String text) {
+    final lower = text.toLowerCase();
+    final hasVerb = RegExp(
+      r'generat|creat|make\s+me|give\s+me|build|design|write\s+me|suggest|recommend|come\s+up\s+with',
+    ).hasMatch(lower);
+    final hasNoun = RegExp(
+      r'workout|training\s+plan|exercise\s+plan|program|routine|schedule',
+    ).hasMatch(lower);
+    return hasVerb && hasNoun;
+  }
+
+  List<WorkoutPlan> _rankPlans(List<WorkoutPlan> plans) {
+    final goal = (widget.goal ?? '').toLowerCase();
+    final days = widget.trainingDays ?? 3;
+    final expLevel = days <= 3
+        ? 1
+        : days <= 4
+        ? 2
+        : days <= 5
+        ? 3
+        : 4;
+
+    int score(WorkoutPlan p) {
+      int s = 0;
+      if (p.category == PlanCategory.cardio &&
+          RegExp(r'weight|fat|cardio|endur|run').hasMatch(goal)) {
+        s += 3;
+      }
+      if (p.category == PlanCategory.hypertrophy &&
+          RegExp(r'muscle|size|bulk|hyper|aesthet').hasMatch(goal)) {
+        s += 3;
+      }
+      if (p.category == PlanCategory.strength &&
+          RegExp(r'strength|strong|power|lift').hasMatch(goal)) {
+        s += 3;
+      }
+      if (p.category == PlanCategory.calisthenics &&
+          RegExp(r'calisthenic|bodyweight|home').hasMatch(goal)) {
+        s += 3;
+      }
+      s -= (p.difficulty - expLevel).abs();
+      return s;
     }
 
-    final json = jsonDecode(response.body) as Map<String, dynamic>;
-    final candidates = json['candidates'] as List<dynamic>;
-    final content = candidates[0]['content'] as Map<String, dynamic>;
-    final parts = content['parts'] as List<dynamic>;
-    return parts[0]['text'] as String;
+    return [...plans]..sort((a, b) => score(b).compareTo(score(a)));
   }
+
+  Future<void> _triggerRecommendationFlow() async {
+    setState(() {
+      _awaitingRecommendationChoice = true;
+      _messages.add(
+        const _Message(
+          text:
+              "I can generate a fully custom plan, or recommend one from our curated library that matches your profile. Which do you prefer?",
+          isBot: true,
+          type: _MessageType.recommendationChoice,
+        ),
+      );
+    });
+    _scrollToBottom();
+    _saveMessages();
+  }
+
+  Future<void> _onChooseFromLibrary() async {
+    setState(() {
+      _awaitingRecommendationChoice = false;
+      _isTyping = true;
+    });
+    try {
+      final plans = await SupabaseService.getSuggestedPlans();
+      if (!mounted) return;
+      if (plans.isEmpty) {
+        setState(() {
+          _isTyping = false;
+          _messages.add(
+            const _Message(
+              text:
+                  "Couldn't load the library right now — generating a custom plan for you instead!",
+              isBot: true,
+            ),
+          );
+        });
+        _scrollToBottom();
+        await _callGeminiAndRespond();
+        return;
+      }
+      _recommendationPlans = _rankPlans(plans);
+      _recommendationIndex = 0;
+      _showRecommendationCard(0);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isTyping = false;
+        _messages.add(
+          const _Message(
+            text:
+                "Ran into an issue loading the library — generating a custom plan for you!",
+            isBot: true,
+          ),
+        );
+      });
+      _scrollToBottom();
+      await _callGeminiAndRespond();
+    }
+  }
+
+  void _showRecommendationCard(int index) {
+    final plan = _recommendationPlans[index];
+    setState(() {
+      _isTyping = false;
+      _messages.add(
+        _Message(
+          text: index == 0
+              ? "Here's a plan that fits your profile 💪"
+              : "Here's another one from the library:",
+          isBot: true,
+        ),
+      );
+      _messages.add(
+        _Message(
+          text: '',
+          isBot: true,
+          type: _MessageType.planCard,
+          plan: plan,
+        ),
+      );
+    });
+    _scrollToBottom();
+    _saveMessages();
+  }
+
+  Future<void> _onChooseCustomGenerate() async {
+    setState(() => _awaitingRecommendationChoice = false);
+    await _callGeminiAndRespond();
+  }
+
+  Future<void> _callGeminiAndRespond() async {
+    setState(() => _isTyping = true);
+    try {
+      final reply = await _callGemini();
+      if (!mounted) return;
+      setState(() {
+        _isTyping = false;
+        _messages.add(_Message(text: reply, isBot: true));
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isTyping = false;
+        _messages.add(
+          _Message(
+            text:
+                "Corely AI is busy right now — give it a sec and try again 💪",
+            isBot: true,
+          ),
+        );
+      });
+    }
+    _scrollToBottom();
+    _saveMessages();
+  }
+
+  void _onShowAnother() {
+    if (_recommendationPlans.isEmpty) return;
+    _recommendationIndex =
+        (_recommendationIndex + 1) % _recommendationPlans.length;
+    _showRecommendationCard(_recommendationIndex);
+  }
+
+  Future<void> _onAddPlanFromRecommendation(WorkoutPlan plan) async {
+    await LocalPlanService.savePlan(plan, source: 'suggested');
+    if (!mounted) return;
+    setState(() {
+      _messages.add(
+        _Message(
+          text: '"${plan.title}" added to your plans! Check the Workout tab 🎉',
+          isBot: true,
+        ),
+      );
+    });
+    _scrollToBottom();
+    _saveMessages();
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('${plan.title} added to your plans!')),
+    );
+  }
+
+  void _onModifyPlan(WorkoutPlan plan) {
+    _pendingModificationPlan = plan;
+    setState(() {
+      _messages.add(_Message(text: 'Modify "${plan.title}"', isBot: false));
+      _messages.add(
+        const _Message(
+          text:
+              'Sure! Tell me what you want to change — e.g. "make it 4 days", "add more cardio", "swap chest for back".',
+          isBot: true,
+        ),
+      );
+    });
+    _scrollToBottom();
+    _saveMessages();
+  }
+
+  void _previewPlan(WorkoutPlan plan) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (_) => PlanDetailSheet(
+        plan: plan,
+        onPlanAdded: () {
+          Navigator.pop(context);
+          _onAddPlanFromRecommendation(plan);
+        },
+      ),
+    );
+  }
+
+  String _buildModificationContext(WorkoutPlan plan) {
+    final buf = StringBuffer();
+    buf.writeln(
+      'The user wants to modify the following existing workout plan:',
+    );
+    buf.writeln('Title: ${plan.title}');
+    buf.writeln('Duration: ${plan.duration}');
+    if (plan.description != null)
+      buf.writeln('Description: ${plan.description}');
+    if (plan.days != null) {
+      for (final d in plan.days!) {
+        buf.writeln('${d.label}: ${d.exercises.join(", ")}');
+      }
+    }
+    buf.writeln('');
+    buf.writeln(
+      'Generate a modified version per the user\'s request. '
+      'Start your response with [WORKOUT_PLAN] and use [EX: Name | sets | reps] for every exercise.',
+    );
+    return buf.toString();
+  }
+
+  // ── Save AI-generated plan ───────────────────────────────────────────────
 
   Future<void> _saveAsPlan(int messageIndex) async {
     final text = _messages[messageIndex].text;
@@ -243,9 +581,13 @@ class _AiChatPageState extends State<AiChatPage> {
     if (!mounted) return;
     setState(() => _savedPlanIndices.add(messageIndex));
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Plan saved! Check My Plans in the Workout tab.')),
+      const SnackBar(
+        content: Text('Plan saved! Check My Plans in the Workout tab.'),
+      ),
     );
   }
+
+  // ── Workout parser ───────────────────────────────────────────────────────
 
   ({
     List<List<Map<String, dynamic>>> dayExercises,
@@ -253,27 +595,22 @@ class _AiChatPageState extends State<AiChatPage> {
     List<String> selectedDays,
     String summary,
     String duration,
-  }) _parseAiWorkout(String text) {
+  })
+  _parseAiWorkout(String text) {
     final dayNames = <String>[];
     final allDayExercises = <List<Map<String, dynamic>>>[];
     List<Map<String, dynamic>>? current;
 
-    // Matches day-level headers like "Day 1", "Day 1 – Push", "Session A", "Week 2"
     final dayRe = RegExp(
       r'^(?:day\s*\d+|session\s+[a-z]|week\s*\d+|workout\s+[ab])',
       caseSensitive: false,
     );
-    // Matches sets × reps in two forms:
-    //   Form A: "3x10", "3 sets x 10", "3 × 10", "3 sets × 10-12"
-    //   Form B: "3 sets of 10", "3 sets, 10", "3 sets 10 reps"
     final setsRepsRe = RegExp(
       r'(\d+)\s*(?:sets?\s*)?[x×]\s*(\d+(?:[–\-]\d+)?)'
       r'|'
       r'(\d+)\s*sets?\s*(?:(?:of|,)\s*)?(\d+(?:[–\-]\d+)?)\s*(?:reps?)?',
       caseSensitive: false,
     );
-
-    // Matches the structured tag the AI is instructed to use for every exercise
     final exTagRe = RegExp(
       r'\[EX:\s*(.+?)\s*\|\s*(\d+)\s*\|\s*([\d\-–]+)\]',
       caseSensitive: false,
@@ -292,7 +629,6 @@ class _AiChatPageState extends State<AiChatPage> {
         continue;
       }
 
-      // Priority: structured [EX: Name | sets | reps] tag
       final tagMatch = exTagRe.firstMatch(line);
       if (tagMatch != null) {
         if (current == null) {
@@ -314,7 +650,6 @@ class _AiChatPageState extends State<AiChatPage> {
         continue;
       }
 
-      // Auto-start Day 1 if exercise lines appear before any day header
       if (current == null) {
         final hasBullet = RegExp(r'^[-*•]').hasMatch(raw.trim());
         if (!hasBullet && !setsRepsRe.hasMatch(line)) continue;
@@ -322,7 +657,6 @@ class _AiChatPageState extends State<AiChatPage> {
         dayNames.add('Day 1');
       }
 
-      // Strip leading bullet / number markers
       var ex = line.replaceFirst(RegExp(r'^[-*•\d]+[.):]?\s*'), '').trim();
       if (ex.isEmpty) continue;
 
@@ -337,7 +671,6 @@ class _AiChatPageState extends State<AiChatPage> {
       int sets = 3;
       String reps = '10';
 
-      // Form A/B: sets-first — "3x10", "3 sets x 10", "3 sets of 10", "3 sets, 10"
       final m = setsRepsRe.firstMatch(ex);
       if (m != null) {
         final sRaw = m.group(1) ?? m.group(3);
@@ -347,11 +680,11 @@ class _AiChatPageState extends State<AiChatPage> {
           sets = s;
           reps = rRaw;
         }
-        ex = ex.substring(0, m.start)
+        ex = ex
+            .substring(0, m.start)
             .replaceAll(RegExp(r'[:\-–,\s]+$'), '')
             .trim();
       } else {
-        // Form C: reps-first — "8 reps 5 sets", "8 reps, 5 sets"
         final repsFirst = RegExp(
           r'(\d+(?:[–\-]\d+)?)\s*reps?\s*,?\s*(\d+)\s*sets?',
           caseSensitive: false,
@@ -359,12 +692,11 @@ class _AiChatPageState extends State<AiChatPage> {
         if (repsFirst != null) {
           reps = repsFirst.group(1) ?? '10';
           sets = int.tryParse(repsFirst.group(2) ?? '') ?? 3;
-          ex = ex.substring(0, repsFirst.start)
+          ex = ex
+              .substring(0, repsFirst.start)
               .replaceAll(RegExp(r'[:\-–,\s]+$'), '')
               .trim();
         } else {
-          // No sets/reps found at all — skip sub-headers (lines that end with ':')
-          // but keep plain exercise names like "Squats" (saved with 3×10 default)
           final stripped = ex.replaceAll(RegExp(r'[:\s]+$'), '');
           if (ex.endsWith(':') || stripped != ex && stripped.isEmpty) continue;
           ex = stripped;
@@ -372,7 +704,6 @@ class _AiChatPageState extends State<AiChatPage> {
       }
 
       if (ex.isEmpty) continue;
-
       current.add({
         'id': ex.hashCode.toString(),
         'name': ex,
@@ -387,21 +718,27 @@ class _AiChatPageState extends State<AiChatPage> {
     if (current != null) allDayExercises.add(current);
 
     const weekdays = [
-      'Monday', 'Tuesday', 'Wednesday', 'Thursday',
-      'Friday', 'Saturday', 'Sunday',
+      'Monday',
+      'Tuesday',
+      'Wednesday',
+      'Thursday',
+      'Friday',
+      'Saturday',
+      'Sunday',
     ];
     final count = dayNames.length.clamp(0, 7);
-    final selected = List<String>.from(weekdays.take(count));
     final total = allDayExercises.fold(0, (s, d) => s + d.length);
 
     return (
       dayExercises: allDayExercises,
       dayNames: dayNames,
-      selectedDays: selected,
+      selectedDays: List<String>.from(weekdays.take(count)),
       summary: total > 0 ? '$total exercises' : 'AI suggested',
       duration: count > 1 ? '$count-day plan' : 'AI suggested',
     );
   }
+
+  // ── Scroll ───────────────────────────────────────────────────────────────
 
   void _scrollToBottom() {
     WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -414,6 +751,8 @@ class _AiChatPageState extends State<AiChatPage> {
       }
     });
   }
+
+  // ── Build ────────────────────────────────────────────────────────────────
 
   @override
   Widget build(BuildContext context) {
@@ -441,7 +780,7 @@ class _AiChatPageState extends State<AiChatPage> {
                 ),
               ),
               padding: const EdgeInsets.all(6),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
             const SizedBox(width: 10),
             Column(
@@ -460,6 +799,26 @@ class _AiChatPageState extends State<AiChatPage> {
             ),
           ],
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.history_rounded),
+            tooltip: 'Chat history',
+            onPressed: () => Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (_) => ChatHistoryPage(
+                  gender: widget.gender,
+                  age: widget.age,
+                  weight: widget.weight,
+                  weightUnit: widget.weightUnit,
+                  heightDisplay: widget.heightDisplay,
+                  goal: widget.goal,
+                  trainingDays: widget.trainingDays,
+                ),
+              ),
+            ),
+          ),
+        ],
       ),
       body: Column(
         children: [
@@ -469,10 +828,30 @@ class _AiChatPageState extends State<AiChatPage> {
               padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
               itemCount: _messages.length + (_isTyping ? 1 : 0),
               itemBuilder: (context, i) {
-                if (i == _messages.length) {
-                  return _TypingIndicator(c: c);
-                }
+                if (i == _messages.length) return _TypingIndicator(c: c);
                 final msg = _messages[i];
+
+                if (msg.type == _MessageType.planCard && msg.plan != null) {
+                  return _PlanCardBubble(
+                    plan: msg.plan!,
+                    c: c,
+                    onPreview: () => _previewPlan(msg.plan!),
+                    onAdd: () => _onAddPlanFromRecommendation(msg.plan!),
+                    onModify: () => _onModifyPlan(msg.plan!),
+                    onShowAnother: _onShowAnother,
+                  );
+                }
+
+                if (msg.type == _MessageType.recommendationChoice) {
+                  return _RecommendationChoiceBubble(
+                    text: msg.text,
+                    c: c,
+                    enabled: _awaitingRecommendationChoice,
+                    onLibrary: _onChooseFromLibrary,
+                    onCustom: _onChooseCustomGenerate,
+                  );
+                }
+
                 return _MessageBubble(
                   message: msg,
                   c: c,
@@ -491,31 +870,40 @@ class _AiChatPageState extends State<AiChatPage> {
   }
 }
 
-// ─── Data ────────────────────────────────────────
+// ─── Data ─────────────────────────────────────────────────────────────────────
 
 class _Message {
   final String text;
   final bool isBot;
+  final _MessageType type;
+  final WorkoutPlan? plan;
 
-  const _Message({required this.text, required this.isBot});
+  const _Message({
+    required this.text,
+    required this.isBot,
+    this.type = _MessageType.text,
+    this.plan,
+  });
 
-  // Strip the internal tag before showing in the bubble
   String get displayText =>
       text.replaceFirst(RegExp(r'^\[WORKOUT_PLAN\]\s*\n?'), '').trim();
 
   bool get looksLikeWorkoutPlan {
-    if (!isBot) return false;
-    // Primary: AI explicitly tagged this response as a workout plan
+    if (!isBot || type != _MessageType.text) return false;
     if (text.contains('[WORKOUT_PLAN]')) return true;
-    // Fallback: keyword heuristic for edge cases the tag misses
     final lower = text.toLowerCase();
-    final hasDays = lower.contains('day 1') || lower.contains('day 2') ||
-        lower.contains('day 3') || lower.contains('day one') ||
-        lower.contains('day two') || lower.contains('day three');
+    final hasDays =
+        lower.contains('day 1') ||
+        lower.contains('day 2') ||
+        lower.contains('day 3') ||
+        lower.contains('day one') ||
+        lower.contains('day two') ||
+        lower.contains('day three');
     final hasExerciseTerms =
         (lower.contains('sets') || lower.contains('set')) &&
         (lower.contains('reps') || lower.contains('rep'));
-    final hasWorkoutTerms = lower.contains('workout') ||
+    final hasWorkoutTerms =
+        lower.contains('workout') ||
         lower.contains('program') ||
         lower.contains('routine') ||
         lower.contains('training plan') ||
@@ -525,7 +913,7 @@ class _Message {
   }
 }
 
-// ─── Message Bubble ──────────────────────────────
+// ─── Text message bubble ──────────────────────────────────────────────────────
 
 class _MessageBubble extends StatelessWidget {
   const _MessageBubble({
@@ -543,12 +931,12 @@ class _MessageBubble extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isBot = message.isBot;
-
     return Padding(
       padding: const EdgeInsets.only(bottom: 12),
       child: Row(
-        mainAxisAlignment:
-            isBot ? MainAxisAlignment.start : MainAxisAlignment.end,
+        mainAxisAlignment: isBot
+            ? MainAxisAlignment.start
+            : MainAxisAlignment.end,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
           if (isBot) ...[
@@ -564,7 +952,7 @@ class _MessageBubble extends StatelessWidget {
                 ),
               ),
               padding: const EdgeInsets.all(4),
-              child: Image.asset('assets/img/bot_4712038.png'),
+              child: Image.asset('assets/img/bot.png'),
             ),
             const SizedBox(width: 8),
           ],
@@ -576,7 +964,9 @@ class _MessageBubble extends StatelessWidget {
               children: [
                 Container(
                   padding: const EdgeInsets.symmetric(
-                      horizontal: 14, vertical: 10),
+                    horizontal: 14,
+                    vertical: 10,
+                  ),
                   decoration: BoxDecoration(
                     color: isBot ? c.surface : AppTheme.accent,
                     borderRadius: BorderRadius.only(
@@ -608,9 +998,7 @@ class _MessageBubble extends StatelessWidget {
                               ? Icons.check_circle_rounded
                               : Icons.bookmark_add_outlined,
                           size: 14,
-                          color: isSaved
-                              ? Colors.green
-                              : c.textMuted,
+                          color: isSaved ? Colors.green : c.textMuted,
                         ),
                         const SizedBox(width: 4),
                         Text(
@@ -633,11 +1021,297 @@ class _MessageBubble extends StatelessWidget {
   }
 }
 
-// ─── Typing Indicator ────────────────────────────
+// ─── Recommendation choice bubble ─────────────────────────────────────────────
+
+class _RecommendationChoiceBubble extends StatelessWidget {
+  const _RecommendationChoiceBubble({
+    required this.text,
+    required this.c,
+    required this.enabled,
+    required this.onLibrary,
+    required this.onCustom,
+  });
+
+  final String text;
+  final CorelyColors c;
+  final bool enabled;
+  final VoidCallback onLibrary;
+  final VoidCallback onCustom;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _BotAvatar(),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(16),
+                ),
+                border: Border.all(color: c.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    text,
+                    style: TextStyle(
+                      color: c.textPrimary,
+                      fontSize: 14,
+                      height: 1.4,
+                    ),
+                  ),
+                  if (enabled) ...[
+                    const SizedBox(height: 12),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: ElevatedButton.icon(
+                            onPressed: onLibrary,
+                            icon: const Icon(
+                              Icons.library_books_outlined,
+                              size: 14,
+                            ),
+                            label: const Text('From Library'),
+                            style: ElevatedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: OutlinedButton.icon(
+                            onPressed: onCustom,
+                            icon: const Icon(Icons.auto_awesome, size: 14),
+                            label: const Text('Generate'),
+                            style: OutlinedButton.styleFrom(
+                              padding: const EdgeInsets.symmetric(vertical: 10),
+                              textStyle: const TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ] else ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      'Choice made',
+                      style: TextStyle(color: c.textMuted, fontSize: 11),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Plan card bubble ─────────────────────────────────────────────────────────
+
+class _PlanCardBubble extends StatelessWidget {
+  const _PlanCardBubble({
+    required this.plan,
+    required this.c,
+    required this.onPreview,
+    required this.onAdd,
+    required this.onModify,
+    required this.onShowAnother,
+  });
+
+  final WorkoutPlan plan;
+  final CorelyColors c;
+  final VoidCallback onPreview;
+  final VoidCallback onAdd;
+  final VoidCallback onModify;
+  final VoidCallback onShowAnother;
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.start,
+        crossAxisAlignment: CrossAxisAlignment.end,
+        children: [
+          _BotAvatar(),
+          const SizedBox(width: 8),
+          Flexible(
+            child: Container(
+              padding: const EdgeInsets.all(14),
+              decoration: BoxDecoration(
+                color: c.surface,
+                borderRadius: const BorderRadius.only(
+                  topLeft: Radius.circular(16),
+                  topRight: Radius.circular(16),
+                  bottomLeft: Radius.circular(4),
+                  bottomRight: Radius.circular(16),
+                ),
+                border: Border.all(color: c.border),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Title + difficulty
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          plan.title,
+                          style: TextStyle(
+                            color: c.textPrimary,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w700,
+                          ),
+                        ),
+                      ),
+                      Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(
+                          4,
+                          (i) => Icon(
+                            Icons.flash_on,
+                            size: 14,
+                            color: i < plan.difficulty.clamp(1, 4)
+                                ? AppTheme.accent
+                                : c.textMuted,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    '${plan.duration}  ·  ${plan.exercises}',
+                    style: TextStyle(color: c.textMuted, fontSize: 12),
+                  ),
+                  if (plan.description != null) ...[
+                    const SizedBox(height: 8),
+                    Text(
+                      plan.description!,
+                      style: TextStyle(
+                        color: c.textSecondary,
+                        fontSize: 12,
+                        height: 1.4,
+                      ),
+                      maxLines: 3,
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ],
+                  const SizedBox(height: 12),
+                  // Row 1: Preview + Add
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: onPreview,
+                          icon: const Icon(Icons.visibility_outlined, size: 14),
+                          label: const Text('Preview'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: ElevatedButton.icon(
+                          onPressed: onAdd,
+                          icon: const Icon(Icons.add, size: 14),
+                          label: const Text('Add Plan'),
+                          style: ElevatedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 8),
+                  // Row 2: Modify + Show another
+                  Row(
+                    children: [
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: onModify,
+                          icon: const Icon(Icons.edit_outlined, size: 14),
+                          label: const Text('Modify'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          onPressed: onShowAnother,
+                          icon: const Icon(Icons.refresh, size: 14),
+                          label: const Text('Another'),
+                          style: OutlinedButton.styleFrom(
+                            padding: const EdgeInsets.symmetric(vertical: 8),
+                            textStyle: const TextStyle(fontSize: 12),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+// ─── Shared bot avatar ────────────────────────────────────────────────────────
+
+class _BotAvatar extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      width: 28,
+      height: 28,
+      decoration: const BoxDecoration(
+        shape: BoxShape.circle,
+        gradient: LinearGradient(
+          colors: [AppTheme.accent, AppTheme.accent_2],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+      ),
+      padding: const EdgeInsets.all(4),
+      child: Image.asset('assets/img/bot.png'),
+    );
+  }
+}
+
+// ─── Typing indicator ─────────────────────────────────────────────────────────
 
 class _TypingIndicator extends StatelessWidget {
   const _TypingIndicator({required this.c});
-
   final CorelyColors c;
 
   @override
@@ -648,20 +1322,7 @@ class _TypingIndicator extends StatelessWidget {
         mainAxisAlignment: MainAxisAlignment.start,
         crossAxisAlignment: CrossAxisAlignment.end,
         children: [
-          Container(
-            width: 28,
-            height: 28,
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              gradient: LinearGradient(
-                colors: [AppTheme.accent, AppTheme.accent_2],
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-              ),
-            ),
-            padding: const EdgeInsets.all(4),
-            child: Image.asset('assets/img/bot_4712038.png'),
-          ),
+          _BotAvatar(),
           const SizedBox(width: 8),
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -694,7 +1355,6 @@ class _TypingIndicator extends StatelessWidget {
 
 class _AnimatedDot extends StatefulWidget {
   const _AnimatedDot({required this.c, required this.delayMs});
-
   final CorelyColors c;
   final int delayMs;
 
@@ -714,9 +1374,10 @@ class _AnimatedDotState extends State<_AnimatedDot>
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-    _opacity = Tween<double>(begin: 0.3, end: 1.0).animate(
-      CurvedAnimation(parent: _anim, curve: Curves.easeInOut),
-    );
+    _opacity = Tween<double>(
+      begin: 0.3,
+      end: 1.0,
+    ).animate(CurvedAnimation(parent: _anim, curve: Curves.easeInOut));
     Future.delayed(Duration(milliseconds: widget.delayMs), () {
       if (mounted) _anim.repeat(reverse: true);
     });
@@ -744,7 +1405,7 @@ class _AnimatedDotState extends State<_AnimatedDot>
   }
 }
 
-// ─── Input Bar ───────────────────────────────────
+// ─── Input bar ────────────────────────────────────────────────────────────────
 
 class _InputBar extends StatelessWidget {
   const _InputBar({
@@ -785,8 +1446,10 @@ class _InputBar extends StatelessWidget {
                   ),
                   focusedBorder: OutlineInputBorder(
                     borderRadius: BorderRadius.circular(24),
-                    borderSide:
-                        const BorderSide(color: AppTheme.accent, width: 1.5),
+                    borderSide: const BorderSide(
+                      color: AppTheme.accent,
+                      width: 1.5,
+                    ),
                   ),
                   contentPadding: const EdgeInsets.symmetric(
                     horizontal: 16,

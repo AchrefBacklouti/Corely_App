@@ -39,7 +39,10 @@ dependencies:
   hive_flutter: ^1.1.0
   http: ^1.1.0
   image_picker: ^1.2.1
+  mobile_scanner: ^5.2.3
+  speech_to_text: ^6.6.2
   supabase_flutter: ^2.9.0
+  url_launcher: ^6.3.0
 
 dev_dependencies:
   flutter_test:
@@ -79,7 +82,9 @@ flutter:
     
     - assets/img/logo_dark.png
     - assets/img/logo_light.png
-    - assets/img/bot_4712038.png
+    - assets/img/bot.png
+    - assets/img/achieve.png
+    - assets/img/search.png
     - assets/img/anatomy/back.svg
     - assets/img/anatomy/face.svg
     - assets/img/anatomy/face_light.svg
